@@ -322,6 +322,16 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return wrapper
 
+def is_admin():
+    return session.get("rol") == "ADMIN"
+
+def safe_home():
+    return "dashboard" if is_admin() else "ventas"
+
+def admin_only_redirect():
+    flash("Acceso restringido: tu usuario solo tiene Venta, Pedido, Cierre y Salir.", "error")
+    return redirect(url_for("ventas"))
+
 # =========================
 # UI
 # =========================
@@ -334,6 +344,11 @@ BASE_HTML = r'''
 <title>{{title}}</title>
 <style>
 :root{--navy:#082238;--navy2:#0B2D4A;--green:#66D17B;--green2:#16a34a;--blue:#0d73b8;--bg:#f2f4f7;--line:#cbd5e1;--text:#111827;--muted:#64748b;--red:#dc2626;--orange:#f97316}*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}a{text-decoration:none;color:inherit}button,.btn{border:0;background:#e5e7eb;border-radius:4px;padding:10px 16px;font-weight:800;cursor:pointer;box-shadow:inset 0 0 0 1px #999;color:#0f172a;display:inline-block}.btn-primary,button.primary{background:#0B2D4A;color:white}.btn-green{background:#66D17B;color:#082238}.btn-red{background:#fecaca;color:#991b1b}.btn-orange{background:#fb923c;color:white}.btn-blue{background:#0d73b8;color:white}input,select,textarea{width:100%;border:1px solid #b6b6b6;background:white;padding:8px 9px;min-height:34px;color:#0f172a}label{font-weight:800;color:#334155}.login-page{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#061b2b,#0B2D4A);padding:22px}.login-card{width:min(430px,94vw);background:white;border-radius:16px;padding:28px;box-shadow:0 25px 70px rgba(0,0,0,.28);text-align:center}.logo{font-size:44px;font-weight:950;color:#0B2D4A;letter-spacing:-2px}.logo span{color:#f97316}.login-card label{text-align:left;display:block;margin:12px 0 5px}.login-card button{width:100%;margin-top:16px;background:#0B2D4A;color:white}.hint{font-size:12px;color:#64748b;margin-top:14px;line-height:1.5}.app{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100vh}.side{background:#082238;color:white;height:100vh;position:sticky;top:0;overflow:auto}.brand{padding:16px;text-align:center;border-bottom:1px solid rgba(255,255,255,.15)}.brand .logo{font-size:34px;color:white}.brand small{color:#dbeafe;font-weight:800}.nav a{display:flex;align-items:center;gap:8px;padding:12px 14px;font-weight:900;border-bottom:1px solid rgba(255,255,255,.05);color:#eef6ff}.nav a.on,.nav a:hover{background:#66D17B;color:#082238}.main{min-width:0}.topbar{background:#082238;color:white;padding:14px 20px;text-align:center}.topbar h1{margin:0;font-size:28px}.topbar p{margin:3px 0 0;color:#dbeafe;font-weight:700}.content{padding:14px;max-width:1700px;margin:0 auto}.flash{padding:12px 14px;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-weight:800;margin-bottom:10px}.flash.error{background:#fff1f2;border-color:#fecaca;color:#991b1b}.flash.ok{background:#ecfdf5;border-color:#bbf7d0;color:#166534}.tabs{display:flex;gap:0;flex-wrap:wrap;background:#ececec;border-bottom:1px solid #aaa;margin:-14px -14px 14px}.tabs a{padding:16px 24px;font-size:18px;font-weight:950;border:1px solid #aaa;border-bottom:0;background:#e5e5e5;color:#082238}.tabs a.on{background:#66D17B}.panel{border:1px solid #999;background:#f8fafc;padding:14px;margin-bottom:14px}.panel legend,.box-title{font-weight:900;color:#0f172a}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:end}.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;align-items:end}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.kpi{background:white;border:1px solid #222;padding:24px;text-align:center}.kpi h3{margin:0 0 16px;color:#334155}.kpi b{font-size:32px;color:#082238}.kpi .red{color:#dc2626}.table-wrap{overflow:auto;border:1px solid #999;background:white}.table-wrap.small{max-height:360px}.table-wrap table{width:100%;border-collapse:collapse;min-width:900px}th{background:#0B2D4A;color:white;font-size:15px}th,td{border:1px solid #b6b6b6;padding:9px;text-align:center;white-space:nowrap}.row-ok td{background:#e8fff1;color:#047857}.row-bad td{background:#ffe1e1;color:#dc2626}.row-sel td{background:#51728d!important;color:white!important}.badge{display:inline-block;padding:5px 10px;border-radius:999px;font-weight:950;font-size:12px}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.off{background:#fee2e2;color:#991b1b}.muted{color:#64748b}.report-box{width:100%;min-height:420px;font-family:Consolas,monospace;white-space:pre;background:white}.chart{height:360px;border:1px solid #cbd5e1;background:white;padding:18px;display:flex;align-items:end;gap:18px}.bar{width:70px;background:#66D17B;border:1px solid #0f766e;display:flex;align-items:flex-start;justify-content:center;font-weight:900;padding-top:4px;color:#082238}.bar-wrap{text-align:center}.mobile-card{display:none}@media(max-width:900px){.app{display:block}.side{height:auto;position:relative}.brand{display:none}.nav{display:grid;grid-template-columns:repeat(2,1fr)}.nav a{justify-content:center;text-align:center}.topbar h1{font-size:22px}.tabs{overflow-x:auto;flex-wrap:nowrap}.tabs a{font-size:14px;padding:12px}.grid,.grid2,.grid5,.kpis{grid-template-columns:1fr}.content{padding:10px}.panel{padding:10px}.table-wrap{max-height:55vh}button,.btn{width:100%;text-align:center}.desktop-only{display:none}.mobile-card{display:block;background:white;border:1px solid #cbd5e1;padding:12px;margin-bottom:10px;border-radius:10px}.mobile-card b{display:inline-block;min-width:115px;color:#64748b}}
+
+/* ===== MEJORAS PRO NEGOCIO 2.0: LOGO, PESTAÑAS Y CELULAR ===== */
+.logo{font-family:"Segoe UI",Arial,sans-serif}.side{background:radial-gradient(circle at 90% 95%,rgba(102,209,123,.18),transparent 28%),linear-gradient(180deg,#061b2b,#041827)!important}.brand{padding:18px 12px!important}.brand .logo{font-size:38px!important}.brand small{display:block;margin-top:4px}.nav a{border-radius:10px;margin:6px 10px;border-bottom:0!important;min-height:42px}.nav a.on,.nav a:hover{background:linear-gradient(90deg,#66D17B,#0d73b8)!important;color:white!important}.topbar{background:linear-gradient(135deg,#061b2b,#0B2D4A)!important}.topbar h1{font-size:34px!important;letter-spacing:.2px}.tabs{background:white!important;border:1px solid var(--line)!important;border-radius:14px!important;margin:0 0 14px!important;padding:8px!important;gap:8px!important;box-shadow:0 8px 22px rgba(15,35,55,.07)}.tabs a{border:0!important;border-radius:10px!important;background:#eef2f7!important;font-size:15px!important;padding:12px 16px!important}.tabs a.on{background:linear-gradient(90deg,#66D17B,#0d73b8)!important;color:white!important}.panel{border-radius:14px!important;border:1px solid var(--line)!important;background:white!important;box-shadow:0 8px 20px rgba(15,35,55,.06)}button,.btn{border-radius:10px!important;box-shadow:0 6px 16px rgba(15,35,55,.12)!important}input,select,textarea{border-radius:10px!important}.table-wrap{border-radius:12px!important;border:1px solid var(--line)!important}th{background:#0B2D4A!important}.role-note{background:#ecfdf5;border:1px solid #bbf7d0;color:#166534;font-weight:900;border-radius:12px;padding:12px;margin-bottom:14px}.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.danger-zone{border-color:#fecaca!important;background:#fff7f7!important}
+@media(max-width:900px){.app{display:block!important}.side{height:auto!important;position:relative!important}.brand{display:block!important}.brand .logo{font-size:30px!important}.nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:8px!important}.nav a{margin:0!important;justify-content:center!important;text-align:center!important;font-size:13px!important;padding:11px 8px!important}.topbar{padding:16px 12px!important}.topbar h1{font-size:25px!important}.topbar p{font-size:13px!important}.tabs{overflow-x:auto!important;flex-wrap:nowrap!important;padding:7px!important}.tabs a{min-width:max-content!important;font-size:13px!important;padding:10px 12px!important}.content{padding:10px!important}.admin-grid{grid-template-columns:1fr!important}.grid,.grid2,.grid5,.kpis{grid-template-columns:1fr!important}.actions{display:grid!important;grid-template-columns:1fr!important}.table-wrap{max-height:58vh!important;-webkit-overflow-scrolling:touch}.table-wrap table{min-width:820px!important}button,.btn{width:100%!important}.login-card{width:min(410px,94vw)!important;padding:24px!important}.login-card .logo{font-size:38px!important}}
+@media(max-width:430px){.nav{grid-template-columns:1fr!important}.topbar h1{font-size:22px!important}.tabs a{font-size:12px!important}.content{padding:8px!important}.panel{padding:10px!important}}
 </style>
 </head>
 <body>
@@ -342,17 +357,22 @@ BASE_HTML = r'''
   <aside class="side">
     <div class="brand"><div class="logo">AOR<span>IX</span></div><small>{{brand}}</small><br><small>{{session.get('user')}} - {{session.get('rol')}}</small></div>
     <nav class="nav">
+      {% if session.get('rol') == 'ADMIN' %}
       <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊 Panel principal</a>
-      <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾 Ventas</a>
-      <a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚 Pedidos</a>
+      {% endif %}
+      <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾 Venta</a>
+      <a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚 Pedido</a>
+      <a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cerrar_dia')}}">🔒 Cierre</a>
+      {% if session.get('rol') == 'ADMIN' %}
       <a class="{{'on' if active=='inventario' else ''}}" href="{{url_for('inventario')}}">📦 Inventario</a>
       <a class="{{'on' if active=='recetas' else ''}}" href="{{url_for('recetas')}}">🍽️ Recetas</a>
       <a class="{{'on' if active=='caja' else ''}}" href="{{url_for('caja')}}">💵 Caja</a>
       <a class="{{'on' if active=='delivery' else ''}}" href="{{url_for('delivery')}}">🛵 Delivery</a>
       <a class="{{'on' if active=='indicadores' else ''}}" href="{{url_for('indicadores')}}">📈 Indicadores</a>
       <a class="{{'on' if active=='reportes' else ''}}" href="{{url_for('reportes')}}">📄 Reportes</a>
-      <a class="{{'on' if active=='admin' else ''}}" href="{{url_for('admin')}}">⚙️ Administrador</a>
+      <a class="{{'on' if active=='admin' else ''}}" href="{{url_for('admin')}}">⚙️ Usuarios / Admin</a>
       <a class="{{'on' if active=='log' else ''}}" href="{{url_for('logs')}}">🧾 Log</a>
+      {% endif %}
       <a href="{{url_for('logout')}}">🚪 Salir</a>
     </nav>
   </aside>
@@ -385,17 +405,24 @@ def set_ctx(k, v):
         q_exec("INSERT INTO contexto(clave,valor) VALUES(?,?)", (k, str(v)))
 
 def tabs():
+    if session.get("rol") != "ADMIN":
+        return [
+            ("ventas", "Venta", "ventas"),
+            ("pedidos", "Pedido", "pedidos"),
+            ("cierre", "Cierre", "cerrar_dia"),
+        ]
     return [
         ("dashboard", "Panel Principal", "dashboard"),
         ("ventas", "Ventas", "ventas"),
         ("pedidos", "Pedidos", "pedidos"),
+        ("cierre", "Cierre", "cerrar_dia"),
         ("inventario", "Inventario", "inventario"),
         ("recetas", "Recetas", "recetas"),
         ("caja", "Caja", "caja"),
         ("delivery", "Delivery", "delivery"),
         ("indicadores", "Indicadores", "indicadores"),
         ("reportes", "Reportes", "reportes"),
-        ("admin", "Administrador", "admin"),
+        ("admin", "Usuarios / Admin", "admin"),
         ("log", "Log", "logs"),
     ]
 
@@ -463,7 +490,7 @@ def crear_venta_desde_pedido(pedido_id, metodo_pago="EFECTIVO"):
 @app.route("/", methods=["GET", "POST"])
 def login():
     if session.get("user"):
-        return redirect(url_for("dashboard"))
+        return redirect(url_for(safe_home()))
     if request.method == "POST":
         usuario = clean(request.form.get("usuario"))
         clave = request.form.get("clave", "")
@@ -473,18 +500,18 @@ def login():
             session["nombre"] = r["nombre"]
             session["rol"] = r["rol"]
             log_event("LOGIN", "Ingreso correcto")
-            return redirect(url_for("dashboard"))
+            return redirect(url_for(safe_home()))
         flash("Usuario o clave incorrectos.", "error")
     html = """
     <div class="login-page">
       <form class="login-card" method="post">
         <div class="logo">AOR<span>IX</span></div>
-        <h2>Restaurante AORIX</h2>
-        <p class="muted">Acceso al sistema</p>
+        <h2>Negocio 2.0</h2>
+        <p class="muted">Sistema de ventas, pedidos y cierre diario</p>
         <label>Usuario</label><input name="usuario" placeholder="Ingrese su usuario" autofocus>
         <label>Clave</label><input name="clave" type="password" placeholder="Ingrese su clave">
         <button>Ingresar</button>
-        <div class="hint">Demo: admin / admin123<br>Caja: caja / caja123<br>Mozo: mozo / mozo123</div>
+        <div class="hint">Ingrese con el usuario creado por el administrador.</div>
       </form>
     </div>
     """
@@ -501,6 +528,8 @@ def logout():
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
+    if not is_admin():
+        return redirect(url_for("ventas"))
     if request.method == "POST":
         set_ctx("sucursal", request.form.get("sucursal", "Sucursal Principal"))
         set_ctx("turno", request.form.get("turno", "MAÑANA"))
@@ -544,11 +573,13 @@ def dashboard():
 def cerrar_dia():
     set_ctx("dia_cerrado", get_ctx("dia_abierto", today()))
     flash("Día cerrado de forma lógica.", "ok")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("dashboard" if is_admin() else "ventas"))
 
 @app.route("/reabrir_dia")
 @login_required
 def reabrir_dia():
+    if not is_admin():
+        return admin_only_redirect()
     set_ctx("dia_cerrado", "")
     flash("Día reabierto.", "ok")
     return redirect(url_for("dashboard"))
@@ -700,6 +731,7 @@ def ticket(pedido_id):
 # =========================
 @app.route("/inventario", methods=["GET", "POST"])
 @login_required
+@admin_required
 def inventario():
     if request.method == "POST":
         accion = request.form.get("accion", "producto")
@@ -784,6 +816,7 @@ def importar_productos(file_storage):
 # =========================
 @app.route("/recetas", methods=["GET", "POST"])
 @login_required
+@admin_required
 def recetas():
     if request.method == "POST":
         accion = request.form.get("accion", "agregar")
@@ -816,6 +849,7 @@ def recetas():
 # =========================
 @app.route("/caja", methods=["GET", "POST"])
 @login_required
+@admin_required
 def caja():
     if request.method == "POST":
         accion = request.form.get("accion")
@@ -854,6 +888,7 @@ def caja():
 # =========================
 @app.route("/delivery", methods=["GET", "POST"])
 @login_required
+@admin_required
 def delivery():
     if request.method == "POST":
         q_exec("INSERT INTO clientes(nombre,telefono,direccion,referencia,notas,activo) VALUES(?,?,?,?,?,1)", (up(request.form.get("nombre")), clean(request.form.get("telefono")), up(request.form.get("direccion")), up(request.form.get("referencia")), up(request.form.get("notas"))))
@@ -872,6 +907,7 @@ def delivery():
 # =========================
 @app.route("/indicadores")
 @login_required
+@admin_required
 def indicadores():
     fi = request.args.get("fi", today())
     ff = request.args.get("ff", fi)
@@ -896,6 +932,7 @@ def indicadores():
 # =========================
 @app.route("/reportes")
 @login_required
+@admin_required
 def reportes():
     fi = request.args.get("fi", today())
     ff = request.args.get("ff", fi)
@@ -918,6 +955,7 @@ def reportes():
 
 @app.route("/export_excel")
 @login_required
+@admin_required
 def export_excel():
     fi = request.args.get("fi", today())
     ff = request.args.get("ff", fi)
@@ -937,6 +975,7 @@ def export_excel():
 
 @app.route("/export_csv")
 @login_required
+@admin_required
 def export_csv():
     fi = request.args.get("fi", today())
     ff = request.args.get("ff", fi)
@@ -950,6 +989,7 @@ def export_csv():
 
 @app.route("/export_inventario")
 @login_required
+@admin_required
 def export_inventario():
     rows = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY nombre")
     out = StringIO()
@@ -961,6 +1001,7 @@ def export_inventario():
 
 @app.route("/plantilla_inventario")
 @login_required
+@admin_required
 def plantilla_inventario():
     out = StringIO()
     w = csv.writer(out)
@@ -990,6 +1031,12 @@ def admin():
             if usuario and clave:
                 q_exec("INSERT OR REPLACE INTO usuarios(usuario,nombre,clave_hash,rol,activo) VALUES(?,?,?,?,1)", (usuario, nombre, generate_password_hash(clave), rol))
                 flash("Usuario guardado.", "ok")
+        elif accion == "desactivar_usuario":
+            usuario = clean(request.form.get("usuario"))
+            if usuario and usuario != session.get("user"):
+                q_exec("UPDATE usuarios SET activo=0 WHERE usuario=?", (usuario,))
+                log_event("USUARIO DESACTIVADO", usuario)
+                flash("Usuario desactivado correctamente.", "ok")
         elif accion == "sembrar":
             init_db()
             flash("Demo sembrada / verificada.", "ok")
@@ -997,18 +1044,44 @@ def admin():
     sucursales = q_all("SELECT * FROM sucursales ORDER BY nombre")
     usuarios = q_all("SELECT usuario,nombre,rol,activo FROM usuarios ORDER BY usuario")
     tr_s = "".join(f'<tr><td>{s["id"]}</td><td>{s["nombre"]}</td><td>{s["activo"]}</td></tr>' for s in sucursales)
-    tr_u = "".join(f'<tr><td>{u["usuario"]}</td><td>{u["nombre"]}</td><td>{u["rol"]}</td><td>{u["activo"]}</td></tr>' for u in usuarios)
+    tr_u = "".join(f'<tr><td>{u["usuario"]}</td><td>{u["nombre"]}</td><td>{u["rol"]}</td><td>{u["activo"]}</td><td>{"" if u["usuario"]==session.get("user") else f"<form method=\"post\" style=\"margin:0\"><input type=\"hidden\" name=\"accion\" value=\"desactivar_usuario\"><input type=\"hidden\" name=\"usuario\" value=\"{u["usuario"]}\"><button class=\"btn-red\" onclick=\"return confirm(\'¿Desactivar usuario?\')\">Desactivar</button></form>"}</td></tr>' for u in usuarios)
     html = f"""
-    <div class="panel"><div class="box-title">Administrador</div><br><form method="post" class="actions"><input type="hidden" name="accion" value="negocio"><label>Nombre negocio / sucursal:</label><select style="max-width:300px">{select_options(sucursales,'nombre','nombre')}</select><button>Guardar negocio</button><button name="accion" value="sembrar">Sembrar demo</button></form></div>
-    <div class="panel"><div class="box-title">Registrar sucursal</div><br><form method="post" class="actions"><input type="hidden" name="accion" value="sucursal"><label>Nueva sucursal:</label><input name="nombre" style="max-width:280px"><button>Registrar sucursal</button></form></div>
-    <div class="panel"><div class="box-title">Registrar usuario</div><br><form method="post" class="grid5"><input type="hidden" name="accion" value="usuario"><div><label>Usuario</label><input name="usuario"></div><div><label>Nombre</label><input name="nombre"></div><div><label>Clave</label><input name="clave"></div><div><label>Rol</label><select name="rol"><option>ADMIN</option><option>MESERO</option><option>CAJA</option><option>COCINA</option></select></div><button>Guardar usuario</button></form></div>
-    <div class="grid2"><div class="panel"><div class="box-title">Sucursales</div><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Activo</th></tr></thead><tbody>{tr_s}</tbody></table></div></div><div class="panel"><div class="box-title">Usuarios</div><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Activo</th></tr></thead><tbody>{tr_u}</tbody></table></div></div></div>
-    <div class="panel"><div class="box-title">Resumen funcional</div><textarea class="report-box" readonly>VERSION WEB PRO AORIX\n\nMEJORAS ACTIVAS:\n- Sucursales registrables\n- Usuarios registrables\n- Pedido unificado para mismo cliente / mesa / servicio\n- Detalle de ítems en pestaña Pedidos\n- Caja, inventario, recetas, delivery, indicadores, reportes y log\n- Listo para Render con SQLite persistente en /data si está disponible\n\nBase actual: {DB_PATH}</textarea></div>
+    <div class="role-note">✅ Módulo administrador: creación de usuarios, sucursales y control de accesos. Los usuarios que no sean ADMIN solo verán Venta, Pedido, Cierre y Salir.</div>
+    <div class="admin-grid">
+      <div class="panel"><div class="box-title">Crear / actualizar usuario</div><br>
+        <form method="post" class="grid">
+          <input type="hidden" name="accion" value="usuario">
+          <div><label>Usuario</label><input name="usuario" required placeholder="ej: vendedor1"></div>
+          <div><label>Nombre</label><input name="nombre" placeholder="Nombre completo"></div>
+          <div><label>Clave</label><input name="clave" type="password" required placeholder="Clave de acceso"></div>
+          <div><label>Rol</label><select name="rol"><option>OPERADOR</option><option>MESERO</option><option>CAJA</option><option>COCINA</option><option>ADMIN</option></select></div>
+          <button class="btn-blue">Guardar usuario</button>
+        </form>
+      </div>
+      <div class="panel"><div class="box-title">Registrar sucursal</div><br>
+        <form method="post" class="actions"><input type="hidden" name="accion" value="sucursal"><input name="nombre" placeholder="Nueva sucursal"><button class="btn-green">Registrar sucursal</button><button name="accion" value="sembrar" class="btn-orange">Sembrar demo</button></form>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="box-title">Sucursales</div><br><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Activo</th></tr></thead><tbody>{tr_s}</tbody></table></div></div>
+      <div class="panel"><div class="box-title">Usuarios creados</div><br><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Activo</th><th>Acción</th></tr></thead><tbody>{tr_u}</tbody></table></div></div>
+    </div>
+    <div class="panel"><div class="box-title">Resumen funcional</div><textarea class="report-box" readonly>NEGOCIO 2.0 - VERSIÓN PRO
+
+MEJORAS ACTIVAS:
+- Creación y actualización de usuarios por administrador.
+- Accesos limitados para usuarios no ADMIN: Venta, Pedido, Cierre y Salir.
+- Interfaz con logo, pestañas superiores y menú responsive.
+- Diseño adaptado para celular: botones grandes, tablas con scroll interno y navegación compacta.
+- Listo para GitHub + Render con SQLite persistente en /data si está disponible.
+
+Base actual: {DB_PATH}</textarea></div>
     """
     return page(html, "admin")
 
 @app.route("/logs")
 @login_required
+@admin_required
 def logs():
     rows = q_all("SELECT * FROM logs ORDER BY id DESC LIMIT 300")
     trs = "".join(f'<tr><td>{r["fecha"]}</td><td>{r["hora"]}</td><td>{r["usuario"]}</td><td>{r["accion"]}</td><td>{r["detalle"]}</td></tr>' for r in rows) or '<tr><td colspan="5">Sin log.</td></tr>'

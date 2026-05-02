@@ -1,14 +1,29 @@
-# RESTAURANTE AORIX - Render/GitHub
+# Negocio 2.0 - AORIX PRO
 
-Sistema web Flask adaptado del archivo Restaurante_AORIX.py para ejecutarse en Render.
+Aplicación Flask lista para GitHub y Render.
 
-Usuarios iniciales:
+## Mejoras incluidas
+- Creación y actualización de usuarios desde **Usuarios / Admin**.
+- Control por roles:
+  - **ADMIN**: acceso total.
+  - Usuarios no ADMIN: solo **Venta**, **Pedido**, **Cierre** y **Salir**.
+- Interfaz mejorada con logo AORIX, pestañas superiores y menú lateral.
+- Vista responsive para celular: menú compacto, botones grandes y tablas con scroll.
+- Persistencia local/Render usando SQLite en `/data` si está disponible.
+
+## Usuarios iniciales
 - admin / admin123
 - caja / caja123
+- mozo / mozo123
 
-Render:
-- Build Command: `pip install -r requirements.txt`
-- Start Command: `gunicorn app:app`
-- Variables: `SECRET_KEY`, `APP_TIMEZONE=America/Lima`, `PERSIST_DIR=/data`
+## Ejecutar local
+```bash
+pip install -r requirements.txt
+python app.py
+```
 
-Nota: para producción en Render usa disco persistente o base externa para no perder la BD.
+## Render
+Subir el repositorio a GitHub y crear Web Service en Render usando:
+```bash
+gunicorn app:app
+```
