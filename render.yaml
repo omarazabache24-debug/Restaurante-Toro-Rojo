@@ -1,22 +1,14 @@
-databases:
-  - name: comedor-prize-db
-    databaseName: comedor_prize
-    user: comedor_prize_user
-
 services:
   - type: web
-    name: comedor-prize-pro
+    name: restaurante-aorix
     env: python
-    buildCommand: python -m pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
+    plan: free
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     envVars:
       - key: SECRET_KEY
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: comedor-prize-db
-          property: connectionString
-      - key: ENABLE_ADMIN_USER_ALERTS
-        value: "0"
-      - key: ADMIN_AUDIT_EMAIL
-        value: omar.azabache24@gmail.com
+      - key: APP_TIMEZONE
+        value: America/Lima
+      - key: PERSIST_DIR
+        value: /data

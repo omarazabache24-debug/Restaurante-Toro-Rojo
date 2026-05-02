@@ -1,21 +1,14 @@
-# COMEDOR PRIZE PRO FINAL - Integrado con lógica Restaurante AORIX
+# RESTAURANTE AORIX - Render/GitHub
 
-Incluye:
-- Interfaz PRIZE móvil/web.
-- Usuarios admin y operativos.
-- Ventas / Consumos.
-- Pedidos / Entregas.
-- Cerrar día y consolidar.
-- Productos, insumos, recetas y clientes.
-- Ventas PRO, Pedidos PRO, Caja e Indicadores.
-- Preparado para Render con Python 3.11.9.
+Sistema web Flask adaptado del archivo Restaurante_AORIX.py para ejecutarse en Render.
 
-Usuarios demo:
+Usuarios iniciales:
 - admin / admin123
-- adm1 / adm1
-- adm2 / adm2
-- comedor / comedor123
+- caja / caja123
 
 Render:
-Build command: pip install -r requirements.txt
-Start command: gunicorn app:app
+- Build Command: `pip install -r requirements.txt`
+- Start Command: `gunicorn app:app`
+- Variables: `SECRET_KEY`, `APP_TIMEZONE=America/Lima`, `PERSIST_DIR=/data`
+
+Nota: para producción en Render usa disco persistente o base externa para no perder la BD.
