@@ -27,3 +27,6 @@ Subir el repositorio a GitHub y crear Web Service en Render usando:
 ```bash
 gunicorn app:app
 ```
+
+## Corrección Render
+Este ZIP ya viene con `requirements.txt`, `runtime.txt`, `Procfile`, `render.yaml` y `app.py` en la RAÍZ del proyecto. No subir la carpeta contenedora; subir directamente estos archivos al repositorio.
