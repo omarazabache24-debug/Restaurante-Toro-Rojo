@@ -1721,6 +1721,10 @@ input[type="checkbox"]{width:auto!important;min-height:0!important;height:18px!i
         <a class="{{'on' if page=='cierre'}}" href="{{url_for('cierre_dia')}}"><span class="nav-ico">📁</span>Cerrar día</a>
         {% if session.get('role') == 'admin' %}
         <a class="{{'on' if page=='carga'}}" href="{{url_for('carga_masiva')}}"><span class="nav-ico">📥</span>Carga Masiva</a>
+        <a class="{{'on' if page=='catalogos'}}" href="{{url_for('catalogos')}}"><span class="nav-ico">📦</span>Productos / Recetas</a>
+        <a class="{{'on' if page=='ventas_pro'}}" href="{{url_for('restaurante_ventas')}}"><span class="nav-ico">🧾</span>Ventas PRO</a>
+        <a class="{{'on' if page=='pedidos_pro'}}" href="{{url_for('restaurante_pedidos')}}"><span class="nav-ico">🚚</span>Pedidos PRO</a>
+        <a class="{{'on' if page=='caja_pro'}}" href="{{url_for('caja_pro')}}"><span class="nav-ico">💵</span>Caja / Indicadores</a>
         <a class="{{'on' if page=='config'}}" href="{{url_for('configuracion')}}"><span class="nav-ico">⚙️</span>Config. / Usuarios</a>
         {% endif %}
         <a class="logout-link" href="{{url_for('logout')}}"><span class="nav-ico">🚪</span>Salir</a>
@@ -1764,6 +1768,10 @@ input[type="checkbox"]{width:auto!important;min-height:0!important;height:18px!i
           <a href="{{url_for('cierre_dia')}}">🔒 Cerrar día</a>
           {% if session.get('role') == 'admin' %}
           <a href="{{url_for('carga_masiva')}}">📥 Carga masiva de consumos</a>
+          <a href="{{url_for('catalogos')}}">📦 Productos / recetas</a>
+          <a href="{{url_for('restaurante_ventas')}}">🧾 Ventas PRO</a>
+          <a href="{{url_for('restaurante_pedidos')}}">🚚 Pedidos PRO</a>
+          <a href="{{url_for('caja_pro')}}">💵 Caja / indicadores</a>
           <a href="{{url_for('reportes')}}">✉️ Enviar reporte por correo</a>
           {% endif %}
         </div>
@@ -4303,10 +4311,231 @@ def descargar_cierre(filename):
     return send_file(path, as_attachment=True)
 
 
+
+# ============================================================
+# EXTENSIÓN COMEDOR 2.0 / RESTAURANTE AORIX
+# Lógica integrada: productos, insumos, recetas, clientes,
+# ventas, pedidos, caja, listas desplegables y reportes rápidos.
+# ============================================================
+
+def ensure_comedor20_tables():
+    if USE_POSTGRES:
+        stmts = [
+            """CREATE TABLE IF NOT EXISTS productos_menu (id SERIAL PRIMARY KEY,codigo TEXT UNIQUE,nombre TEXT UNIQUE NOT NULL,categoria TEXT DEFAULT 'MENÚ',tipo TEXT DEFAULT 'VENTA',unidad TEXT DEFAULT 'UND',precio REAL DEFAULT 0,costo REAL DEFAULT 0,stock REAL DEFAULT 0,stock_min REAL DEFAULT 0,activo INTEGER DEFAULT 1)""",
+            """CREATE TABLE IF NOT EXISTS insumos_menu (id SERIAL PRIMARY KEY,nombre TEXT UNIQUE NOT NULL,unidad TEXT DEFAULT 'UND',stock REAL DEFAULT 0,stock_min REAL DEFAULT 0,costo REAL DEFAULT 0,activo INTEGER DEFAULT 1)""",
+            """CREATE TABLE IF NOT EXISTS recetas_menu (id SERIAL PRIMARY KEY,producto_id INTEGER NOT NULL,insumo_id INTEGER NOT NULL,cantidad REAL DEFAULT 0,observacion TEXT DEFAULT '')""",
+            """CREATE TABLE IF NOT EXISTS clientes_menu (id SERIAL PRIMARY KEY,nombre TEXT NOT NULL,telefono TEXT DEFAULT '',direccion TEXT DEFAULT '',referencia TEXT DEFAULT '',notas TEXT DEFAULT '',activo INTEGER DEFAULT 1)""",
+            """CREATE TABLE IF NOT EXISTS pedidos_menu (id SERIAL PRIMARY KEY,codigo TEXT UNIQUE,fecha TEXT,hora TEXT,dni TEXT DEFAULT '',trabajador TEXT DEFAULT '',mesa TEXT DEFAULT '',cliente TEXT DEFAULT '',telefono TEXT DEFAULT '',direccion TEXT DEFAULT '',referencia TEXT DEFAULT '',servicio TEXT DEFAULT 'SALÓN',metodo_pago TEXT DEFAULT 'EFECTIVO',comedor TEXT DEFAULT 'Comedor 01',fundo TEXT DEFAULT 'Kawsay Allpa',responsable TEXT DEFAULT '',subtotal REAL DEFAULT 0,descuento REAL DEFAULT 0,total REAL DEFAULT 0,estado TEXT DEFAULT 'PENDIENTE',pagado TEXT DEFAULT 'NO',usuario TEXT DEFAULT '',observacion TEXT DEFAULT '')""",
+            """CREATE TABLE IF NOT EXISTS pedido_detalle_menu (id SERIAL PRIMARY KEY,pedido_id INTEGER,producto_id INTEGER,producto TEXT,cantidad REAL,precio REAL,total REAL)""",
+            """CREATE TABLE IF NOT EXISTS caja_menu (id SERIAL PRIMARY KEY,fecha TEXT,hora TEXT,tipo TEXT,concepto TEXT,monto REAL,usuario TEXT,pedido_id INTEGER DEFAULT NULL,estado TEXT DEFAULT 'OK')""",
+        ]
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                for st in stmts:
+                    cur.execute(st)
+                conn.commit()
+    else:
+        with get_conn() as conn:
+            conn.executescript("""
+            CREATE TABLE IF NOT EXISTS productos_menu (id INTEGER PRIMARY KEY AUTOINCREMENT,codigo TEXT UNIQUE,nombre TEXT UNIQUE NOT NULL,categoria TEXT DEFAULT 'MENÚ',tipo TEXT DEFAULT 'VENTA',unidad TEXT DEFAULT 'UND',precio REAL DEFAULT 0,costo REAL DEFAULT 0,stock REAL DEFAULT 0,stock_min REAL DEFAULT 0,activo INTEGER DEFAULT 1);
+            CREATE TABLE IF NOT EXISTS insumos_menu (id INTEGER PRIMARY KEY AUTOINCREMENT,nombre TEXT UNIQUE NOT NULL,unidad TEXT DEFAULT 'UND',stock REAL DEFAULT 0,stock_min REAL DEFAULT 0,costo REAL DEFAULT 0,activo INTEGER DEFAULT 1);
+            CREATE TABLE IF NOT EXISTS recetas_menu (id INTEGER PRIMARY KEY AUTOINCREMENT,producto_id INTEGER NOT NULL,insumo_id INTEGER NOT NULL,cantidad REAL DEFAULT 0,observacion TEXT DEFAULT '');
+            CREATE TABLE IF NOT EXISTS clientes_menu (id INTEGER PRIMARY KEY AUTOINCREMENT,nombre TEXT NOT NULL,telefono TEXT DEFAULT '',direccion TEXT DEFAULT '',referencia TEXT DEFAULT '',notas TEXT DEFAULT '',activo INTEGER DEFAULT 1);
+            CREATE TABLE IF NOT EXISTS pedidos_menu (id INTEGER PRIMARY KEY AUTOINCREMENT,codigo TEXT UNIQUE,fecha TEXT,hora TEXT,dni TEXT DEFAULT '',trabajador TEXT DEFAULT '',mesa TEXT DEFAULT '',cliente TEXT DEFAULT '',telefono TEXT DEFAULT '',direccion TEXT DEFAULT '',referencia TEXT DEFAULT '',servicio TEXT DEFAULT 'SALÓN',metodo_pago TEXT DEFAULT 'EFECTIVO',comedor TEXT DEFAULT 'Comedor 01',fundo TEXT DEFAULT 'Kawsay Allpa',responsable TEXT DEFAULT '',subtotal REAL DEFAULT 0,descuento REAL DEFAULT 0,total REAL DEFAULT 0,estado TEXT DEFAULT 'PENDIENTE',pagado TEXT DEFAULT 'NO',usuario TEXT DEFAULT '',observacion TEXT DEFAULT '');
+            CREATE TABLE IF NOT EXISTS pedido_detalle_menu (id INTEGER PRIMARY KEY AUTOINCREMENT,pedido_id INTEGER,producto_id INTEGER,producto TEXT,cantidad REAL,precio REAL,total REAL);
+            CREATE TABLE IF NOT EXISTS caja_menu (id INTEGER PRIMARY KEY AUTOINCREMENT,fecha TEXT,hora TEXT,tipo TEXT,concepto TEXT,monto REAL,usuario TEXT,pedido_id INTEGER DEFAULT NULL,estado TEXT DEFAULT 'OK');
+            """)
+            conn.commit()
+    if not q_one("SELECT id FROM productos_menu LIMIT 1"):
+        demos=[("M001","ALMUERZO PRIZE","MENÚ","VENTA","UND",10,7,9999,10),("M002","DESAYUNO PRIZE","MENÚ","VENTA","UND",6,4,9999,10),("M003","CENA PRIZE","MENÚ","VENTA","UND",10,7,9999,10),("B001","GASEOSA PERSONAL","BEBIDAS","VENTA","UND",4,2,100,10),("A001","ADICIONAL","ADICIONAL","VENTA","UND",5,3,9999,10)]
+        for d in demos:
+            try: q_exec("INSERT INTO productos_menu(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)", d)
+            except Exception: pass
+    if not q_one("SELECT id FROM insumos_menu LIMIT 1"):
+        for d in [("ARROZ","KG",100,10,4),("POLLO","KG",100,10,12),("VERDURA","KG",80,10,3),("ENVASE","UND",500,50,0.8)]:
+            try: q_exec("INSERT INTO insumos_menu(nombre,unidad,stock,stock_min,costo,activo) VALUES(?,?,?,?,?,1)", d)
+            except Exception: pass
+
+def options_html(rows, value_key="id", text_key="nombre", selected=None, extra_text=None):
+    out=[]
+    for r in rows:
+        val=str(r[value_key])
+        sel="selected" if selected is not None and str(selected)==val else ""
+        txt=str(r[text_key])
+        if extra_text:
+            txt += " - " + extra_text(r)
+        out.append(f'<option value="{val}" {sel}>{txt}</option>')
+    return "".join(out)
+
+def descontar_receta_menu(producto_id, cantidad):
+    for r in q_all("SELECT * FROM recetas_menu WHERE producto_id=?", (producto_id,)):
+        q_exec("UPDATE insumos_menu SET stock=COALESCE(stock,0)-? WHERE id=?", (float(r['cantidad'] or 0)*float(cantidad or 0), r['insumo_id']))
+
+def descontar_producto_menu(producto_id, cantidad):
+    q_exec("UPDATE productos_menu SET stock=COALESCE(stock,0)-? WHERE id=?", (float(cantidad or 0), producto_id))
+    descontar_receta_menu(producto_id, cantidad)
+
+def cobrar_pedido_menu(pedido_id, metodo_pago="EFECTIVO"):
+    p=q_one("SELECT * FROM pedidos_menu WHERE id=?", (pedido_id,))
+    if not p or p['pagado']=='SI':
+        return False
+    for d in q_all("SELECT * FROM pedido_detalle_menu WHERE pedido_id=?", (pedido_id,)):
+        descontar_producto_menu(d['producto_id'], d['cantidad'])
+    q_exec("UPDATE pedidos_menu SET pagado='SI', estado='PAGADO', metodo_pago=? WHERE id=?", (metodo_pago, pedido_id))
+    q_exec("INSERT INTO caja_menu(fecha,hora,tipo,concepto,monto,usuario,pedido_id) VALUES(?,?,?,?,?,?,?)", (hoy_iso(), hora_now(), "INGRESO", f"COBRO PEDIDO {p['codigo']}", p['total'], session.get('user',''), pedido_id))
+    audit_event('COBRO_PEDIDO_PRO','pedidos_menu',pedido_id,f"Cobrado {p['codigo']}")
+    return True
+
+@app.route('/catalogos', methods=['GET','POST'])
+@login_required
+@roles_required('admin')
+def catalogos():
+    ensure_comedor20_tables()
+    if request.method=='POST':
+        accion=request.form.get('accion','producto')
+        try:
+            if accion=='producto':
+                nombre=clean_text(request.form.get('nombre')).upper()
+                codigo=clean_text(request.form.get('codigo')) or ('P'+now_app().strftime('%H%M%S'))
+                if not nombre:
+                    flash('Producto obligatorio.', 'error')
+                    return redirect(url_for('catalogos'))
+                data=(codigo,nombre,request.form.get('categoria','MENÚ'),request.form.get('tipo','VENTA'),request.form.get('unidad','UND'),float(request.form.get('precio') or 0),float(request.form.get('costo') or 0),float(request.form.get('stock') or 0),float(request.form.get('stock_min') or 0))
+                ex=q_one('SELECT id FROM productos_menu WHERE nombre=?',(nombre,))
+                if ex:
+                    q_exec('UPDATE productos_menu SET codigo=?,categoria=?,tipo=?,unidad=?,precio=?,costo=?,stock=?,stock_min=?,activo=1 WHERE nombre=?', data[:1]+data[2:]+(nombre,))
+                else:
+                    q_exec('INSERT INTO productos_menu(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)', data)
+                flash('Producto guardado.', 'ok')
+            elif accion=='insumo':
+                q_exec('INSERT INTO insumos_menu(nombre,unidad,stock,stock_min,costo,activo) VALUES(?,?,?,?,?,1)', (clean_text(request.form.get('nombre')).upper(),request.form.get('unidad','UND'),float(request.form.get('stock') or 0),float(request.form.get('stock_min') or 0),float(request.form.get('costo') or 0)))
+                flash('Insumo guardado.', 'ok')
+            elif accion=='receta':
+                q_exec('INSERT INTO recetas_menu(producto_id,insumo_id,cantidad,observacion) VALUES(?,?,?,?)',(int(request.form.get('producto_id')),int(request.form.get('insumo_id')),float(request.form.get('cantidad') or 0),clean_text(request.form.get('observacion')).upper()))
+                flash('Receta agregada.', 'ok')
+            elif accion=='cliente':
+                q_exec('INSERT INTO clientes_menu(nombre,telefono,direccion,referencia,notas,activo) VALUES(?,?,?,?,?,1)', (clean_text(request.form.get('nombre')).upper(),clean_text(request.form.get('telefono')),clean_text(request.form.get('direccion')).upper(),clean_text(request.form.get('referencia')).upper(),clean_text(request.form.get('notas')).upper()))
+                flash('Cliente guardado.', 'ok')
+        except Exception as e:
+            flash(f'No se pudo guardar: {e}', 'error')
+        return redirect(url_for('catalogos'))
+    productos=q_all('SELECT * FROM productos_menu WHERE activo=1 ORDER BY nombre')
+    insumos=q_all('SELECT * FROM insumos_menu WHERE activo=1 ORDER BY nombre')
+    recetas=q_all('SELECT r.id,p.nombre producto,i.nombre insumo,i.unidad,r.cantidad,r.observacion FROM recetas_menu r JOIN productos_menu p ON p.id=r.producto_id JOIN insumos_menu i ON i.id=r.insumo_id ORDER BY p.nombre,i.nombre')
+    clientes=q_all('SELECT * FROM clientes_menu WHERE activo=1 ORDER BY id DESC LIMIT 80')
+    opts_p=options_html(productos, extra_text=lambda r: f"{money(r['precio'])} | stock {r['stock']}")
+    opts_i=options_html(insumos, extra_text=lambda r: f"{r['unidad']} | stock {r['stock']}")
+    trp=''.join(f"<tr><td>{r['codigo']}</td><td>{r['nombre']}</td><td>{r['categoria']}</td><td>{r['unidad']}</td><td>{money(r['precio'])}</td><td>{r['stock']}</td><td>{r['stock_min']}</td></tr>" for r in productos) or '<tr><td colspan=7>Sin productos.</td></tr>'
+    tri=''.join(f"<tr><td>{r['nombre']}</td><td>{r['unidad']}</td><td>{r['stock']}</td><td>{r['stock_min']}</td><td>{money(r['costo'])}</td></tr>" for r in insumos) or '<tr><td colspan=5>Sin insumos.</td></tr>'
+    trr=''.join(f"<tr><td>{r['producto']}</td><td>{r['insumo']}</td><td>{r['unidad']}</td><td>{r['cantidad']}</td><td>{r['observacion']}</td></tr>" for r in recetas) or '<tr><td colspan=5>Sin recetas.</td></tr>'
+    trc=''.join(f"<tr><td>{r['nombre']}</td><td>{r['telefono']}</td><td>{r['direccion']}</td><td>{r['referencia']}</td><td>{r['notas']}</td></tr>" for r in clientes) or '<tr><td colspan=5>Sin clientes.</td></tr>'
+    html=topbar('Productos / Recetas / Clientes','Lógica integrada desde Restaurante AORIX')+f"""
+    <div class='main-grid'>
+      <section>
+        <div class='card'><h3>Producto de venta</h3><form method='post' class='form-grid'><input type='hidden' name='accion' value='producto'><input name='codigo' placeholder='Código'><input name='nombre' placeholder='Nombre producto' required><select name='categoria'><option>MENÚ</option><option>BEBIDAS</option><option>ADICIONAL</option><option>PLATOS</option></select><select name='tipo'><option>VENTA</option><option>INSUMO</option></select><select name='unidad'><option>UND</option><option>PLATO</option><option>KG</option><option>PORCION</option></select><input name='precio' type='number' step='0.01' placeholder='Precio venta'><input name='costo' type='number' step='0.01' placeholder='Costo'><input name='stock' type='number' step='0.01' placeholder='Stock'><input name='stock_min' type='number' step='0.01' placeholder='Stock mínimo'><button class='btn btn-green'>Guardar producto</button></form></div>
+        <div class='card'><h3>Insumos</h3><form method='post' class='form-grid'><input type='hidden' name='accion' value='insumo'><input name='nombre' placeholder='Nombre insumo' required><select name='unidad'><option>UND</option><option>KG</option><option>PORCION</option></select><input name='stock' type='number' step='0.01' placeholder='Stock'><input name='stock_min' type='number' step='0.01' placeholder='Mínimo'><input name='costo' type='number' step='0.01' placeholder='Costo'><button class='btn btn-blue'>Guardar insumo</button></form></div>
+        <div class='card'><h3>Receta / descuento automático</h3><form method='post' class='form-grid'><input type='hidden' name='accion' value='receta'><select name='producto_id'>{opts_p}</select><select name='insumo_id'>{opts_i}</select><input name='cantidad' type='number' step='0.0001' placeholder='Cantidad insumo'><input name='observacion' placeholder='Observación'><button class='btn btn-orange'>Agregar receta</button></form></div>
+        <div class='card'><h3>Cliente frecuente / delivery</h3><form method='post' class='form-grid'><input type='hidden' name='accion' value='cliente'><input name='nombre' placeholder='Cliente' required><input name='telefono' placeholder='Teléfono'><input name='direccion' placeholder='Dirección'><input name='referencia' placeholder='Referencia'><input name='notas' placeholder='Notas'><button class='btn btn-green'>Guardar cliente</button></form></div>
+      </section>
+      <aside class='right-panel'><div class='card'><h3>Accesos</h3><div class='quick'><a href='{url_for('restaurante_ventas')}'>🧾 Registrar venta</a><a href='{url_for('restaurante_pedidos')}'>🚚 Control pedidos</a><a href='{url_for('caja_pro')}'>💵 Caja e indicadores</a></div></div></aside>
+    </div>
+    <div class='card'><h3>Productos</h3><div class='table-wrap'><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Unidad</th><th>Precio</th><th>Stock</th><th>Mín.</th></tr></thead><tbody>{trp}</tbody></table></div></div>
+    <div class='card'><h3>Insumos</h3><div class='table-wrap'><table><thead><tr><th>Insumo</th><th>Unidad</th><th>Stock</th><th>Mín.</th><th>Costo</th></tr></thead><tbody>{tri}</tbody></table></div></div>
+    <div class='card'><h3>Recetas</h3><div class='table-wrap'><table><thead><tr><th>Producto</th><th>Insumo</th><th>Unidad</th><th>Cantidad</th><th>Observación</th></tr></thead><tbody>{trr}</tbody></table></div></div>
+    <div class='card'><h3>Clientes</h3><div class='table-wrap'><table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Dirección</th><th>Referencia</th><th>Notas</th></tr></thead><tbody>{trc}</tbody></table></div></div>
+    """
+    return render_page(html, 'catalogos')
+
+@app.route('/ventas_pro', methods=['GET','POST'])
+@login_required
+@roles_required('admin')
+def restaurante_ventas():
+    ensure_comedor20_tables()
+    if request.method=='POST':
+        producto_id=int(request.form.get('producto_id') or 0)
+        prod=q_one('SELECT * FROM productos_menu WHERE id=? AND activo=1',(producto_id,))
+        if not prod:
+            flash('Selecciona producto válido.', 'error'); return redirect(url_for('restaurante_ventas'))
+        cantidad=float(request.form.get('cantidad') or 1); precio=float(prod['precio'] or 0); descuento=float(request.form.get('descuento') or 0); subtotal=precio*cantidad; total=max(subtotal-descuento,0)
+        dni=clean_dni(request.form.get('dni')); trabajador=''
+        if dni:
+            tr=q_one('SELECT nombre,area FROM trabajadores WHERE dni=?',(dni,)); trabajador=tr['nombre'] if tr else clean_text(request.form.get('cliente')).upper()
+        codigo='PED-'+now_app().strftime('%Y%m%d%H%M%S')
+        q_exec('INSERT INTO pedidos_menu(codigo,fecha,hora,dni,trabajador,mesa,cliente,telefono,direccion,referencia,servicio,metodo_pago,comedor,fundo,responsable,subtotal,descuento,total,estado,pagado,usuario,observacion) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (codigo, request.form.get('fecha') or hoy_iso(), hora_now(), dni, trabajador, request.form.get('mesa',''), clean_text(request.form.get('cliente')).upper(), clean_text(request.form.get('telefono')), clean_text(request.form.get('direccion')).upper(), clean_text(request.form.get('referencia')).upper(), request.form.get('servicio','SALÓN'), request.form.get('metodo_pago','EFECTIVO'), request.form.get('comedor','Comedor 01'), request.form.get('fundo','Kawsay Allpa'), clean_text(request.form.get('responsable')).upper(), subtotal, descuento, total, 'PENDIENTE', 'NO', session.get('user',''), clean_text(request.form.get('observacion')).upper()))
+        pedido=q_one('SELECT id FROM pedidos_menu WHERE codigo=?',(codigo,))
+        if pedido:
+            q_exec('INSERT INTO pedido_detalle_menu(pedido_id,producto_id,producto,cantidad,precio,total) VALUES(?,?,?,?,?,?)',(pedido['id'], producto_id, prod['nombre'], cantidad, precio, total))
+        flash('Pedido / venta guardado correctamente.', 'ok')
+        return redirect(url_for('restaurante_ventas'))
+    productos=q_all('SELECT * FROM productos_menu WHERE activo=1 ORDER BY nombre')
+    clientes=q_all('SELECT * FROM clientes_menu WHERE activo=1 ORDER BY nombre')
+    opts_p=options_html(productos, extra_text=lambda r: f"{money(r['precio'])} | stock {r['stock']}")
+    opts_c=''.join(f"<option value='{r['nombre']}'>{r['nombre']} - {r['telefono']}</option>" for r in clientes)
+    recientes=q_all('SELECT * FROM pedidos_menu ORDER BY id DESC LIMIT 80')
+    trs=''.join(f"<tr><td>{r['codigo']}</td><td>{r['fecha']}</td><td>{r['hora']}</td><td>{r['dni']}</td><td>{r['trabajador'] or r['cliente']}</td><td>{r['servicio']}</td><td>{r['comedor']}</td><td>{r['fundo']}</td><td>{money(r['total'])}</td><td>{r['estado']}</td></tr>" for r in recientes) or '<tr><td colspan=10>Sin ventas.</td></tr>'
+    html=topbar('Ventas PRO / Registrar pedido','Cuadros, listas desplegables y lógica de Restaurante AORIX')+f"""
+    <div class='card'><form method='post' class='form-grid'>
+    <input type='date' name='fecha' value='{hoy_iso()}'><input name='dni' placeholder='DNI trabajador'><input list='clientes_list' name='cliente' placeholder='Cliente / trabajador'><datalist id='clientes_list'>{opts_c}</datalist><select name='mesa'><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option></select><select name='servicio'><option>SALÓN</option><option>DELIVERY</option><option>RECOJO</option><option>COMEDOR</option></select><select name='producto_id'>{opts_p}</select><input name='cantidad' type='number' step='0.01' value='1'><select name='metodo_pago'><option>EFECTIVO</option><option>YAPE</option><option>TARJETA</option><option>TRANSFERENCIA</option><option>CONCESIONARIA</option></select><select name='comedor'>{''.join(f'<option>{x}</option>' for x in opciones_comedor())}</select><select name='fundo'>{''.join(f'<option>{x}</option>' for x in opciones_fundo())}</select><input name='responsable' placeholder='Responsable'><input name='descuento' type='number' step='0.01' value='0'><input name='telefono' placeholder='Teléfono'><input name='direccion' placeholder='Dirección'><input name='referencia' placeholder='Referencia'><input name='observacion' placeholder='Observación'><button class='btn btn-green'>Guardar pedido / venta</button></form></div>
+    <div class='card'><h3>Últimos pedidos / ventas</h3><div class='table-wrap'><table><thead><tr><th>Código</th><th>Fecha</th><th>Hora</th><th>DNI</th><th>Cliente</th><th>Servicio</th><th>Comedor</th><th>Fundo</th><th>Total</th><th>Estado</th></tr></thead><tbody>{trs}</tbody></table></div></div>
+    """
+    return render_page(html, 'ventas_pro')
+
+@app.route('/pedidos_pro', methods=['GET','POST'])
+@login_required
+@roles_required('admin')
+def restaurante_pedidos():
+    ensure_comedor20_tables()
+    if request.method=='POST':
+        pid=int(request.form.get('pedido_id') or 0); accion=request.form.get('accion')
+        if accion=='estado':
+            q_exec('UPDATE pedidos_menu SET estado=? WHERE id=?',(request.form.get('estado','PENDIENTE'),pid)); flash('Estado actualizado.','ok')
+        elif accion=='cobrar':
+            flash('Pedido cobrado.' if cobrar_pedido_menu(pid,request.form.get('metodo_pago','EFECTIVO')) else 'No se pudo cobrar.', 'ok')
+        elif accion=='eliminar':
+            q_exec('DELETE FROM pedido_detalle_menu WHERE pedido_id=?',(pid,)); q_exec('DELETE FROM pedidos_menu WHERE id=?',(pid,)); flash('Pedido eliminado.','ok')
+        return redirect(url_for('restaurante_pedidos'))
+    estado=request.args.get('estado','TODOS'); buscar=clean_text(request.args.get('buscar',''))
+    sql='SELECT * FROM pedidos_menu WHERE 1=1'; params=[]
+    if estado!='TODOS': sql+=' AND estado=?'; params.append(estado)
+    if buscar: sql+=' AND (dni LIKE ? OR trabajador LIKE ? OR cliente LIKE ? OR codigo LIKE ?)'; params += [f'%{buscar}%']*4
+    sql+=' ORDER BY id DESC LIMIT 250'
+    rows=q_all(sql, tuple(params)); opts=''.join(f"<option value='{r['id']}'>{r['codigo']} - {r['trabajador'] or r['cliente']} - {money(r['total'])} - {r['estado']}</option>" for r in rows)
+    trs=''.join(f"<tr><td>{r['id']}</td><td>{r['codigo']}</td><td>{r['fecha']}</td><td>{r['hora']}</td><td>{r['dni']}</td><td>{r['trabajador'] or r['cliente']}</td><td>{r['servicio']}</td><td>{money(r['total'])}</td><td>{r['estado']}</td><td>{r['pagado']}</td></tr>" for r in rows) or '<tr><td colspan=10>Sin pedidos.</td></tr>'
+    html=topbar('Pedidos PRO','Control de estados, entrega y cobro')+f"""
+    <div class='card'><form method='get' class='form-grid'><select name='estado'><option>TODOS</option><option>PENDIENTE</option><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option><option>PAGADO</option></select><input name='buscar' value='{buscar}' placeholder='Buscar DNI, cliente, código'><button class='btn btn-blue'>Filtrar</button><a class='btn' href='{url_for('restaurante_pedidos')}'>Actualizar</a></form></div>
+    <div class='card'><form method='post' class='form-grid'><select name='pedido_id'>{opts}</select><select name='estado'><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option><option>PAGADO</option></select><select name='metodo_pago'><option>EFECTIVO</option><option>YAPE</option><option>TARJETA</option><option>TRANSFERENCIA</option><option>CONCESIONARIA</option></select><button name='accion' value='estado' class='btn btn-blue'>Cambiar estado</button><button name='accion' value='cobrar' class='btn btn-green'>Cobrar</button><button name='accion' value='eliminar' class='btn btn-orange'>Eliminar</button></form></div>
+    <div class='card'><h3>Listado de pedidos</h3><div class='table-wrap'><table><thead><tr><th>ID</th><th>Código</th><th>Fecha</th><th>Hora</th><th>DNI</th><th>Cliente</th><th>Servicio</th><th>Total</th><th>Estado</th><th>Pagado</th></tr></thead><tbody>{trs}</tbody></table></div></div>
+    """
+    return render_page(html,'pedidos_pro')
+
+@app.route('/caja_pro', methods=['GET','POST'])
+@login_required
+@roles_required('admin')
+def caja_pro():
+    ensure_comedor20_tables()
+    if request.method=='POST':
+        q_exec('INSERT INTO caja_menu(fecha,hora,tipo,concepto,monto,usuario) VALUES(?,?,?,?,?,?)',(hoy_iso(),hora_now(),request.form.get('tipo','INGRESO'),clean_text(request.form.get('concepto')).upper(),float(request.form.get('monto') or 0),session.get('user','')))
+        flash('Movimiento registrado.','ok'); return redirect(url_for('caja_pro'))
+    fi=request.args.get('fi',hoy_iso()); ff=request.args.get('ff',fi)
+    ventas=q_one('SELECT COALESCE(SUM(total),0) t, COUNT(*) c FROM pedidos_menu WHERE fecha BETWEEN ? AND ? AND pagado=\'SI\'',(fi,ff))
+    pendientes=q_one('SELECT COUNT(*) c FROM pedidos_menu WHERE fecha BETWEEN ? AND ? AND estado NOT IN (\'PAGADO\',\'ENTREGADO\')',(fi,ff))['c']
+    ingresos=q_one('SELECT COALESCE(SUM(monto),0) t FROM caja_menu WHERE fecha BETWEEN ? AND ? AND tipo=\'INGRESO\'',(fi,ff))['t']
+    egresos=q_one('SELECT COALESCE(SUM(monto),0) t FROM caja_menu WHERE fecha BETWEEN ? AND ? AND tipo=\'EGRESO\'',(fi,ff))['t']
+    rows=q_all('SELECT * FROM caja_menu WHERE fecha BETWEEN ? AND ? ORDER BY id DESC LIMIT 200',(fi,ff))
+    trs=''.join(f"<tr><td>{r['fecha']}</td><td>{r['hora']}</td><td>{r['tipo']}</td><td>{r['concepto']}</td><td>{money(r['monto'])}</td><td>{r['usuario']}</td></tr>" for r in rows) or '<tr><td colspan=6>Sin movimientos.</td></tr>'
+    html=topbar('Caja / Indicadores PRO','Resumen económico de ventas, pedidos y movimientos')+f"""
+    <div class='card'><form method='get' class='form-grid'><input type='date' name='fi' value='{fi}'><input type='date' name='ff' value='{ff}'><button class='btn btn-blue'>Filtrar</button></form></div>
+    <div class='kpi-grid'><div class='kpi'><span>Ventas pagadas</span><b>{money(ventas['t'])}</b><small>{ventas['c']} pedido(s)</small></div><div class='kpi'><span>Pendientes</span><b>{pendientes}</b><small>por entregar/cobrar</small></div><div class='kpi'><span>Ingresos caja</span><b>{money(ingresos)}</b><small>movimientos</small></div><div class='kpi'><span>Saldo caja</span><b>{money(float(ingresos or 0)-float(egresos or 0))}</b><small>ingresos - egresos</small></div></div>
+    <div class='card'><h3>Movimiento manual</h3><form method='post' class='form-grid'><select name='tipo'><option>INGRESO</option><option>EGRESO</option></select><input name='concepto' placeholder='Concepto'><input name='monto' type='number' step='0.01' placeholder='Monto'><button class='btn btn-green'>Registrar</button></form></div>
+    <div class='card'><h3>Movimientos</h3><div class='table-wrap'><table><thead><tr><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Usuario</th></tr></thead><tbody>{trs}</tbody></table></div></div>
+    """
+    return render_page(html,'caja_pro')
+
 # =========================
 # INICIO
 # =========================
 init_db()
+ensure_comedor20_tables()
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
