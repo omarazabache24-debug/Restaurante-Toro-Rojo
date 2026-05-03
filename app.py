@@ -349,6 +349,13 @@ BASE_HTML = r'''
 .logo{font-family:"Segoe UI",Arial,sans-serif}.side{background:radial-gradient(circle at 90% 95%,rgba(102,209,123,.18),transparent 28%),linear-gradient(180deg,#061b2b,#041827)!important}.brand{padding:18px 12px!important}.brand .logo{font-size:38px!important}.brand small{display:block;margin-top:4px}.nav a{border-radius:10px;margin:6px 10px;border-bottom:0!important;min-height:42px}.nav a.on,.nav a:hover{background:linear-gradient(90deg,#66D17B,#0d73b8)!important;color:white!important}.topbar{background:linear-gradient(135deg,#061b2b,#0B2D4A)!important}.topbar h1{font-size:34px!important;letter-spacing:.2px}.tabs{background:white!important;border:1px solid var(--line)!important;border-radius:14px!important;margin:0 0 14px!important;padding:8px!important;gap:8px!important;box-shadow:0 8px 22px rgba(15,35,55,.07)}.tabs a{border:0!important;border-radius:10px!important;background:#eef2f7!important;font-size:15px!important;padding:12px 16px!important}.tabs a.on{background:linear-gradient(90deg,#66D17B,#0d73b8)!important;color:white!important}.panel{border-radius:14px!important;border:1px solid var(--line)!important;background:white!important;box-shadow:0 8px 20px rgba(15,35,55,.06)}button,.btn{border-radius:10px!important;box-shadow:0 6px 16px rgba(15,35,55,.12)!important}input,select,textarea{border-radius:10px!important}.table-wrap{border-radius:12px!important;border:1px solid var(--line)!important}th{background:#0B2D4A!important}.role-note{background:#ecfdf5;border:1px solid #bbf7d0;color:#166534;font-weight:900;border-radius:12px;padding:12px;margin-bottom:14px}.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.danger-zone{border-color:#fecaca!important;background:#fff7f7!important}
 @media(max-width:900px){.app{display:block!important}.side{height:auto!important;position:relative!important}.brand{display:block!important}.brand .logo{font-size:30px!important}.nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:8px!important}.nav a{margin:0!important;justify-content:center!important;text-align:center!important;font-size:13px!important;padding:11px 8px!important}.topbar{padding:16px 12px!important}.topbar h1{font-size:25px!important}.topbar p{font-size:13px!important}.tabs{overflow-x:auto!important;flex-wrap:nowrap!important;padding:7px!important}.tabs a{min-width:max-content!important;font-size:13px!important;padding:10px 12px!important}.content{padding:10px!important}.admin-grid{grid-template-columns:1fr!important}.grid,.grid2,.grid5,.kpis{grid-template-columns:1fr!important}.actions{display:grid!important;grid-template-columns:1fr!important}.table-wrap{max-height:58vh!important;-webkit-overflow-scrolling:touch}.table-wrap table{min-width:820px!important}button,.btn{width:100%!important}.login-card{width:min(410px,94vw)!important;padding:24px!important}.login-card .logo{font-size:38px!important}}
 @media(max-width:430px){.nav{grid-template-columns:1fr!important}.topbar h1{font-size:22px!important}.tabs a{font-size:12px!important}.content{padding:8px!important}.panel{padding:10px!important}}
+
+/* ===== ULTRA MEJORA AORIX RESTAURANTE - WEB + CELULAR ===== */
+:root{--dark:#071827;--dark2:#0B2D4A;--accent:#ff7a18;--ok:#22c55e;--sky:#0ea5e9;--panel:#ffffff;--soft:#f5f7fb;--ink:#0f172a}
+body{background:linear-gradient(180deg,#eef4f8,#f7fafc)!important}.login-page{background:radial-gradient(circle at 10% 10%,rgba(255,122,24,.18),transparent 28%),linear-gradient(160deg,#06111f,#0B2D4A 58%,#03131f)!important}.login-card{border-radius:28px!important;padding:34px 30px!important;background:rgba(255,255,255,.96)!important}.login-card .logo{font-size:54px!important}.login-card h2{font-size:28px;margin:10px 0 4px}.app{grid-template-columns:230px minmax(0,1fr)!important}.side{background:linear-gradient(180deg,#061b2b,#05121f 55%,#062c25)!important;box-shadow:8px 0 25px rgba(2,8,23,.12)}.brand{min-height:176px;display:grid;place-items:center;align-content:center}.brand .logo{font-size:44px!important}.nav{padding:10px}.nav a{font-size:15px!important;letter-spacing:.1px;min-height:48px;border-radius:14px!important}.nav a.on,.nav a:hover{background:linear-gradient(90deg,#22c55e,#0ea5e9)!important;color:#fff!important;transform:translateX(2px)}.topbar{padding:18px 20px!important;background:linear-gradient(135deg,#071827,#0B2D4A)!important}.topbar h1{font-size:38px!important}.content{padding:18px!important}.tabs{position:sticky;top:0;z-index:7;border-radius:18px!important;padding:10px!important;gap:10px!important}.tabs a{border-radius:14px!important;font-size:15px!important;padding:13px 18px!important}.tabs a.on{box-shadow:0 10px 18px rgba(34,197,94,.20)!important}.panel{border-radius:22px!important;padding:20px!important;border:1px solid #dbe5ef!important}.box-title{font-size:20px}.grid,.grid2,.grid5{gap:16px!important}.kpis{gap:16px!important}.kpi{border:0!important;border-radius:22px!important;box-shadow:0 10px 25px rgba(15,35,55,.08);background:linear-gradient(180deg,#fff,#f8fafc)!important}.kpi h3{font-size:16px}.kpi b{font-size:36px!important}.actions button,.actions .btn,button,.btn{border:0!important;border-radius:14px!important;box-shadow:0 10px 20px rgba(15,35,55,.10)!important;min-height:46px}.primary,.btn-primary,button.primary{background:linear-gradient(90deg,#0B2D4A,#0d73b8)!important;color:white!important}.btn-green{background:linear-gradient(90deg,#22c55e,#0ea5e9)!important;color:white!important}.btn-red{background:linear-gradient(90deg,#ef4444,#991b1b)!important;color:white!important}.btn-orange{background:linear-gradient(90deg,#fb923c,#f97316)!important;color:white!important}input,select,textarea{border-radius:14px!important;min-height:45px!important;border:1px solid #cbd5e1!important}.table-wrap{border-radius:18px!important}.table-wrap table{min-width:950px}th{background:#082238!important;height:44px}.report-card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}.mini-report{background:#fff;border-radius:18px;padding:18px;border:1px solid #e2e8f0;box-shadow:0 8px 18px rgba(15,35,55,.07)}.mini-report b{font-size:24px}.chart-pro{height:310px;background:linear-gradient(180deg,#fff,#f8fafc);border-radius:18px;border:1px solid #e2e8f0;padding:18px;display:flex;align-items:end;gap:14px;overflow:auto}.bar{border-radius:12px 12px 0 0!important;background:linear-gradient(180deg,#0ea5e9,#22c55e)!important;border:0!important;min-width:76px;color:white!important}.search-row{display:grid;grid-template-columns:minmax(260px,1fr) 170px 160px;gap:12px;align-items:end;margin:12px 0}.mobile-only{display:none}
+@media(max-width:900px){body{background:#111!important;color:#e5e7eb!important}.app{display:block!important}.side{height:auto!important;position:relative!important;border-bottom:1px solid rgba(255,255,255,.08)}.brand{display:block!important;min-height:auto!important;padding:22px 12px!important}.brand .logo{font-size:42px!important}.nav{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:9px!important;padding:10px 14px 18px!important}.nav a{background:rgba(255,255,255,.05)!important;margin:0!important;justify-content:center!important;text-align:center!important;font-size:15px!important}.main{background:#141414!important}.topbar{padding:22px 12px!important}.topbar h1{font-size:32px!important;line-height:1.1}.topbar p{font-size:16px}.content{padding:12px!important}.tabs{position:relative!important;background:#1f1f1f!important;border-color:#3f3f46!important;border-radius:24px!important;overflow-x:auto!important;flex-wrap:nowrap!important}.tabs a{background:#2d2d30!important;color:#e5e7eb!important;min-width:max-content}.tabs a.on{background:linear-gradient(90deg,#064e3b,#0B2D4A)!important}.panel{background:#1f1f1f!important;border-color:#424242!important;color:#e5e7eb!important}.box-title,label{color:#f8fafc!important}.grid,.grid2,.grid5,.kpis,.report-card-grid,.search-row{grid-template-columns:1fr!important}.actions{display:grid!important;grid-template-columns:1fr!important}.actions input,.actions select{max-width:none!important}.kpi{background:#202020!important;color:#fff!important}.kpi h3{color:#e5e7eb}.kpi b{color:#fff!important}input,select,textarea{background:#4a4a4a!important;color:white!important;border-color:#666!important;font-size:16px!important;min-height:58px!important}button,.btn{width:100%!important;min-height:58px!important;font-size:16px!important}.table-wrap{background:#202020!important;border-color:#555!important;max-height:55vh!important}.table-wrap table{min-width:820px!important}td{color:#f3f4f6!important;background:#202020}.desktop-only{display:none!important}.mobile-only{display:block!important}.report-box{background:#202020!important;color:#e5e7eb!important}.chart-pro{background:#202020!important;border-color:#555!important}.flash{border-radius:16px!important}}
+@media(max-width:430px){.nav{grid-template-columns:1fr!important}.brand small{font-size:14px}.topbar h1{font-size:28px!important}.content{padding:10px!important}.panel{padding:18px!important}.tabs a{font-size:15px!important;padding:13px 16px!important}.box-title{font-size:22px}}
+
 </style>
 </head>
 <body>
@@ -362,7 +369,7 @@ BASE_HTML = r'''
       {% endif %}
       <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾 Venta</a>
       <a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚 Pedido</a>
-      <a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cerrar_dia')}}">🔒 Cierre</a>
+      <a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒 Cierre</a>
       {% if session.get('rol') == 'ADMIN' %}
       <a class="{{'on' if active=='inventario' else ''}}" href="{{url_for('inventario')}}">📦 Inventario</a>
       <a class="{{'on' if active=='recetas' else ''}}" href="{{url_for('recetas')}}">🍽️ Recetas</a>
@@ -409,13 +416,13 @@ def tabs():
         return [
             ("ventas", "Venta", "ventas"),
             ("pedidos", "Pedido", "pedidos"),
-            ("cierre", "Cierre", "cerrar_dia"),
+            ("cierre", "Cierre", "cierre"),
         ]
     return [
         ("dashboard", "Panel Principal", "dashboard"),
         ("ventas", "Ventas", "ventas"),
         ("pedidos", "Pedidos", "pedidos"),
-        ("cierre", "Cierre", "cerrar_dia"),
+        ("cierre", "Cierre", "cierre"),
         ("inventario", "Inventario", "inventario"),
         ("recetas", "Recetas", "recetas"),
         ("caja", "Caja", "caja"),
@@ -584,6 +591,52 @@ def reabrir_dia():
     flash("Día reabierto.", "ok")
     return redirect(url_for("dashboard"))
 
+
+@app.route("/cierre", methods=["GET", "POST"])
+@login_required
+def cierre():
+    f = get_ctx("dia_abierto", today())
+    if request.method == "POST":
+        accion = request.form.get("accion")
+        if accion == "cerrar":
+            set_ctx("dia_cerrado", f)
+            log_event("CIERRE", f"Día cerrado {f}")
+            flash("Día cerrado correctamente. Ya puedes revisar el resumen y exportar reportes.", "ok")
+        elif accion == "reabrir" and is_admin():
+            set_ctx("dia_cerrado", "")
+            log_event("REABRIR", f"Día reabierto {f}")
+            flash("Día reabierto correctamente.", "ok")
+        return redirect(url_for("cierre"))
+    cerrado = get_ctx("dia_cerrado", "") == f
+    ventas_hoy = q_one("SELECT COALESCE(SUM(total),0) t, COUNT(*) c FROM ventas WHERE fecha=?", (f,))
+    pedidos = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=?", (f,))["c"]
+    pendientes = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND estado NOT IN ('PAGADO','ENTREGADO')", (f,))["c"]
+    caja_ing = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='INGRESO'", (f,))["t"]
+    caja_egr = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='EGRESO'", (f,))["t"]
+    estado = "CERRADO" if cerrado else "ABIERTO"
+    cls = "off" if cerrado else "ok"
+    admin_btn = f'<button name="accion" value="reabrir" class="btn-orange">🔓 Reabrir día</button>' if is_admin() else ''
+    html = f"""
+    <div class="panel">
+      <div class="box-title">🔒 Cierre del día</div><br>
+      <div class="role-note">Estado actual: <span class="badge {cls}">{estado}</span> · Fecha: <b>{f}</b></div>
+      <div class="kpis">
+        <div class="kpi"><h3>Ventas del día</h3><b>{money(ventas_hoy['t'])}</b></div>
+        <div class="kpi"><h3>Pedidos</h3><b>{pedidos}</b></div>
+        <div class="kpi"><h3>Pendientes</h3><b class="red">{pendientes}</b></div>
+        <div class="kpi"><h3>Caja neta</h3><b>{money(float(caja_ing or 0)-float(caja_egr or 0))}</b></div>
+      </div><br>
+      <form method="post" class="actions">
+        <button name="accion" value="cerrar" class="btn-red">🔒 Cerrar día</button>
+        {admin_btn}
+        <a class="btn" href="{url_for('reportes',fi=f,ff=f)}">📄 Ver reporte del día</a>
+        <a class="btn" href="{url_for('export_excel',fi=f,ff=f)}">📊 Exportar Excel</a>
+      </form>
+    </div>
+    <div class="panel"><div class="box-title">Recomendación operativa</div><p>Antes de cerrar, verifica pedidos pendientes, caja y stock bajo. El cierre es lógico: no borra datos y el administrador puede reabrir el día.</p></div>
+    """
+    return page(html, "cierre")
+
 # =========================
 # VENTAS
 # =========================
@@ -592,6 +645,10 @@ def reabrir_dia():
 def ventas():
     if request.method == "POST":
         accion = request.form.get("accion", "guardar_pedido")
+        if accion == "importar_productos" and "archivo" in request.files:
+            count = importar_productos(request.files["archivo"])
+            flash(f"Carga inicio día completada: {count} productos actualizados.", "ok")
+            return redirect(url_for("ventas"))
         if accion == "guardar_pedido":
             producto_id = int(request.form.get("producto_id") or 0)
             prod = q_one("SELECT * FROM productos WHERE id=? AND activo=1", (producto_id,))
@@ -625,7 +682,12 @@ def ventas():
                 flash("No se pudo cobrar: verifica que el pedido exista y no esté pagado.", "error")
             return redirect(url_for("ventas"))
 
-    productos = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY nombre")
+    buscar_prod = clean(request.args.get("buscar", ""))
+    if buscar_prod:
+        like = f"%{buscar_prod.upper()}%"
+        productos = q_all("SELECT * FROM productos WHERE activo=1 AND (UPPER(nombre) LIKE ? OR UPPER(categoria) LIKE ? OR UPPER(codigo) LIKE ?) ORDER BY nombre", (like, like, like))
+    else:
+        productos = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY nombre")
     opts_prod = "".join(f'<option value="{p["id"]}">{p["nombre"]} - {money(p["precio"])} - Stock {p["stock"]}</option>' for p in productos)
     rows = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY CASE WHEN stock>0 THEN 0 ELSE 1 END, nombre LIMIT 120")
     tr_prod = "".join(
@@ -638,6 +700,7 @@ def ventas():
     tr_det = "".join(f'<tr><td>{r["codigo"]}</td><td>{r["producto"]}</td><td>{r["cantidad"]}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>' for r in detalle) or '<tr><td colspan="5">Sin detalle.</td></tr>'
     html = f"""
     <div class="panel"><div class="box-title">Nueva venta / pedido</div><br>
+      <form method="post" enctype="multipart/form-data" class="actions" style="margin-bottom:12px"><input type="hidden" name="accion" value="importar_productos"><input type="file" name="archivo" accept=".xlsx,.csv" style="max-width:360px"><button class="btn-orange">📥 Cargar día / importar Excel productos</button><a class="btn" href="{url_for('plantilla_inventario')}">📄 Plantilla inicio día</a></form>
       <form method="post">
         <input type="hidden" name="accion" value="guardar_pedido">
         <div class="grid5">
@@ -661,7 +724,7 @@ def ventas():
         <button class="btn-green">Cobrar y ticket</button>
       </form>
     </div>
-    <div class="panel"><div class="box-title">Catálogo dinámico de productos para venta</div><br><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div>
+    <div class="panel"><div class="box-title">Catálogo dinámico de productos para venta</div><form method="get" class="search-row"><input name="buscar" value="{buscar_prod}" placeholder="Buscar producto por nombre, categoría o código"><button>🔎 Buscar</button><a class="btn" href="{url_for('ventas')}">Limpiar búsqueda</a></form><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div>
     <div class="panel"><div class="box-title">Detalle actual / últimos ítems</div><br><div class="table-wrap small"><table><thead><tr><th>Pedido</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{tr_det}</tbody></table></div></div>
     """
     return page(html, "ventas")
@@ -686,6 +749,14 @@ def pedidos():
         elif accion == "pagado":
             crear_venta_desde_pedido(pedido_id, "EFECTIVO")
             flash("Pedido marcado como pagado.", "ok")
+        elif accion == "quitar_item":
+            item_id = int(request.form.get("item_id") or 0)
+            if item_id:
+                q_exec("DELETE FROM pedido_detalle WHERE id=? AND pedido_id=?", (item_id, pedido_id))
+                total = q_one("SELECT COALESCE(SUM(total),0) t FROM pedido_detalle WHERE pedido_id=?", (pedido_id,))["t"]
+                q_exec("UPDATE pedidos SET subtotal=?, total=?-COALESCE(descuento,0) WHERE id=?", (total, total, pedido_id))
+                flash("Item retirado del pedido.", "ok")
+            return redirect(url_for("pedidos"))
         elif accion == "limpiar":
             q_exec("DELETE FROM pedido_detalle WHERE pedido_id=?", (pedido_id,))
             q_exec("DELETE FROM pedidos WHERE id=?", (pedido_id,))
@@ -697,15 +768,17 @@ def pedidos():
         rows = q_all("SELECT * FROM pedidos ORDER BY id DESC LIMIT 200")
     else:
         rows = q_all("SELECT * FROM pedidos WHERE estado=? ORDER BY id DESC", (estado,))
-    opts_p = "".join(f'<option value="{r["id"]}">{r["codigo"]} - {r["cliente"]} - {r["estado"]}</option>' for r in rows)
+    opts_p = '<option value="">Selecciona pedido</option>' + "".join(f'<option value="{r["id"]}">{r["codigo"]} - {r["cliente"]} - {r["estado"]}</option>' for r in rows)
     trs = "".join(f'<tr><td>{r["id"]}</td><td>{r["codigo"]}</td><td>{r["fecha"]}</td><td>{r["hora"]}</td><td>{r["mesa"]}</td><td>{r["cliente"]}</td><td>{r["servicio"]}</td><td>{r["estado"]}</td><td>{money(r["total"])}</td><td>{r["pagado"]}</td></tr>' for r in rows) or '<tr><td colspan="10">Sin pedidos.</td></tr>'
     detalles = q_all("SELECT d.*,p.codigo FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 80")
+    item_opts = '<option value="">Selecciona item del pedido</option>' + "".join(f'<option value="{r["id"]}">#{r["id"]} - {r["codigo"]} - {r["producto"]}</option>' for r in detalles)
     trd = "".join(f'<tr><td>{r["pedido_id"]}</td><td>{r["codigo"]}</td><td>{r["id"]}</td><td>{r["producto"]}</td><td>{r["cantidad"]}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>' for r in detalles) or '<tr><td colspan="7">Sin detalle.</td></tr>'
     html = f"""
     <div class="panel"><div class="box-title">Control de pedidos</div><br>
       <form method="get" class="actions"><label>Estado</label><select name="estado" style="max-width:220px"><option>TODOS</option><option>PENDIENTE</option><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option><option>PAGADO</option></select><button>Refrescar</button></form><br>
       <form method="post" class="actions"><select name="pedido_id" style="max-width:520px">{opts_p}</select><input type="hidden" name="accion" value="estado"><select name="estado" style="max-width:220px"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option><option>PAGADO</option></select><button>A estado</button></form><br>
-      <form method="post" class="actions"><select name="pedido_id" style="max-width:520px">{opts_p}</select><button name="accion" value="pagado">Marcar pagado</button><button name="accion" value="limpiar" class="btn-red">Limpiar pedido</button><a class="btn" href="{url_for('ticket', pedido_id=0)}">Imprimir ticket</a></form>
+      <form method="post" class="actions"><select name="pedido_id" style="max-width:520px">{opts_p}</select><button name="accion" value="pagado">Marcar pagado</button><button name="accion" value="limpiar" class="btn-red" onclick="return confirm('¿Eliminar pedido completo?')">Limpiar pedido</button><a class="btn" href="{url_for('ticket', pedido_id=0)}">Imprimir último ticket</a></form><br>
+      <form method="post" class="actions"><select name="pedido_id" style="max-width:380px">{opts_p}</select><select name="item_id" style="max-width:520px">{item_opts}</select><button name="accion" value="quitar_item" class="btn-orange">➖ Quitar item</button></form>
     </div>
     <div class="panel"><div class="box-title">Listado de pedidos</div><br><div class="table-wrap"><table><thead><tr><th>ID</th><th>Código</th><th>Fecha</th><th>Hora</th><th>Mesa</th><th>Cliente</th><th>Servicio</th><th>Estado</th><th>Total</th><th>Pagado</th></tr></thead><tbody>{trs}</tbody></table></div></div>
     <div class="panel"><div class="box-title">Detalle del pedido seleccionado</div><br><div class="table-wrap small"><table><thead><tr><th>Pedido ID</th><th>Código</th><th>Item</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{trd}</tbody></table></div></div>
@@ -911,19 +984,23 @@ def delivery():
 def indicadores():
     fi = request.args.get("fi", today())
     ff = request.args.get("ff", fi)
-    agrup = request.args.get("agrup", "DÍA")
     ventas = q_one("SELECT COALESCE(SUM(total),0) t, COUNT(*) c FROM ventas WHERE fecha BETWEEN ? AND ?", (fi, ff))
     pendientes = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha BETWEEN ? AND ? AND estado NOT IN ('PAGADO','ENTREGADO')", (fi, ff))["c"]
     stock_bajo = q_one("SELECT COUNT(*) c FROM productos WHERE activo=1 AND stock<=stock_min")["c"]
     ticket = (float(ventas["t"] or 0) / int(ventas["c"] or 1)) if int(ventas["c"] or 0) else 0
     rows = q_all("SELECT fecha periodo, COALESCE(SUM(total),0) ventas, COUNT(*) pedidos FROM ventas WHERE fecha BETWEEN ? AND ? GROUP BY fecha ORDER BY fecha", (fi, ff))
+    pagos = q_all("SELECT metodo_pago, COALESCE(SUM(total),0) total FROM ventas WHERE fecha BETWEEN ? AND ? GROUP BY metodo_pago ORDER BY total DESC", (fi, ff))
+    top = q_all("SELECT producto, SUM(cantidad) cant, SUM(total) total FROM venta_detalle d JOIN ventas v ON v.id=d.venta_id WHERE v.fecha BETWEEN ? AND ? GROUP BY producto ORDER BY cant DESC LIMIT 5", (fi, ff))
     maxv = max([float(r["ventas"] or 0) for r in rows] + [1])
-    bars = "".join(f'<div class="bar-wrap"><div class="bar" style="height:{max(20, int((float(r["ventas"] or 0)/maxv)*300))}px">{money(r["ventas"])}</div><small>{r["periodo"]}</small></div>' for r in rows) or '<div class="muted">Sin ventas.</div>'
+    bars = "".join(f'<div class="bar-wrap"><div class="bar" style="height:{max(28, int((float(r["ventas"] or 0)/maxv)*260))}px">{money(r["ventas"])}</div><small>{r["periodo"]}</small></div>' for r in rows) or '<div class="muted">Sin ventas en el periodo.</div>'
     trs = "".join(f'<tr><td>{r["periodo"]}</td><td>{money(r["ventas"])}</td><td>{r["pedidos"]}</td><td>{money(float(r["ventas"] or 0)/int(r["pedidos"] or 1))}</td></tr>' for r in rows) or '<tr><td colspan="4">Sin detalle.</td></tr>'
+    trp = "".join(f'<tr><td>{p["metodo_pago"]}</td><td>{money(p["total"])}</td></tr>' for p in pagos) or '<tr><td colspan="2">Sin pagos.</td></tr>'
+    trt = "".join(f'<tr><td>{t["producto"]}</td><td>{t["cant"]}</td><td>{money(t["total"])}</td></tr>' for t in top) or '<tr><td colspan="3">Sin productos vendidos.</td></tr>'
     html = f"""
-    <div class="panel"><div class="box-title">Filtros de indicadores</div><br><form method="get" class="actions"><label>Agrupar por:</label><select name="agrup" style="max-width:150px"><option>DÍA</option><option>MES</option></select><label>Fecha inicio:</label><input type="date" name="fi" value="{fi}" style="max-width:170px"><label>Fecha fin:</label><input type="date" name="ff" value="{ff}" style="max-width:170px"><label>Gráfica:</label><select style="max-width:180px"><option>VENTAS S/</option></select><button>Actualizar indicadores</button><a class="btn" href="{url_for('indicadores')}">Hoy</a></form></div>
-    <div class="kpis"><div class="kpi"><h3>Ventas netas</h3><b>{money(ventas['t'])}</b></div><div class="kpi"><h3>Pedidos pagados</h3><b>{ventas['c']}</b></div><div class="kpi"><h3>Ticket promedio</h3><b>{money(ticket)}</b></div><div class="kpi"><h3>Pedidos pendientes</h3><b>{pendientes}</b></div></div>
-    <div class="grid2"><div class="panel"><div class="box-title">Gráfica comparativa</div><div class="chart">{bars}</div></div><div class="panel"><div class="box-title">Detalle por periodo</div><br><div class="table-wrap"><table><thead><tr><th>Periodo</th><th>Ventas S/</th><th>Pedidos</th><th>Ticket promedio</th></tr></thead><tbody>{trs}</tbody></table></div></div></div>
+    <div class="panel"><div class="box-title">📈 Indicadores gerenciales simples</div><br><form method="get" class="actions"><label>Fecha inicio:</label><input type="date" name="fi" value="{fi}" style="max-width:170px"><label>Fecha fin:</label><input type="date" name="ff" value="{ff}" style="max-width:170px"><button>Actualizar indicadores</button><a class="btn" href="{url_for('indicadores')}">Hoy</a></form></div>
+    <div class="kpis"><div class="kpi"><h3>Ventas netas</h3><b>{money(ventas['t'])}</b></div><div class="kpi"><h3>Pedidos pagados</h3><b>{ventas['c']}</b></div><div class="kpi"><h3>Ticket promedio</h3><b>{money(ticket)}</b></div><div class="kpi"><h3>Pendientes / stock bajo</h3><b>{pendientes} / {stock_bajo}</b></div></div>
+    <div class="grid2"><div class="panel"><div class="box-title">Ventas por día</div><div class="chart-pro">{bars}</div></div><div class="panel"><div class="box-title">Lectura rápida</div><p>✅ Revisa picos de venta, método de pago más usado y platos más vendidos. Esto ayuda a comprar mejor, evitar quiebres de stock y medir desempeño diario.</p><div class="table-wrap small"><table><thead><tr><th>Método pago</th><th>Total</th></tr></thead><tbody>{trp}</tbody></table></div></div></div>
+    <div class="grid2"><div class="panel"><div class="box-title">Top productos vendidos</div><div class="table-wrap small"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Total</th></tr></thead><tbody>{trt}</tbody></table></div></div><div class="panel"><div class="box-title">Detalle por periodo</div><div class="table-wrap small"><table><thead><tr><th>Periodo</th><th>Ventas S/</th><th>Pedidos</th><th>Ticket promedio</th></tr></thead><tbody>{trs}</tbody></table></div></div></div>
     """
     return page(html, "indicadores")
 
@@ -938,18 +1015,16 @@ def reportes():
     ff = request.args.get("ff", fi)
     ventas = q_all("SELECT * FROM ventas WHERE fecha BETWEEN ? AND ? ORDER BY fecha,hora", (fi, ff))
     stock = q_all("SELECT * FROM productos WHERE activo=1 AND stock<=stock_min ORDER BY nombre")
-    lines = ["REPORTE RESTAURANTE AORIX", f"PERIODO: {fi} al {ff}", "", "VENTAS", "-"*70]
-    total = 0
-    for v in ventas:
-        total += float(v["total"] or 0)
-        lines.append(f"{v['fecha']} {v['hora']} | {v['cliente']:<25} | {v['metodo_pago']:<12} | {money(v['total'])}")
-    lines += ["-"*70, f"TOTAL VENTAS: {money(total)}", "", "STOCK BAJO", "-"*70]
-    for s in stock:
-        lines.append(f"{s['nombre']:<30} | Stock: {s['stock']} {s['unidad']} | Mínimo: {s['stock_min']}")
-    reporte = "\n".join(lines)
+    total = sum(float(v["total"] or 0) for v in ventas)
+    pedidos_pagados = len(ventas)
+    ticket_prom = total / pedidos_pagados if pedidos_pagados else 0
+    trs = "".join(f'<tr><td>{v["fecha"]}</td><td>{v["hora"]}</td><td>{v["cliente"] or "CLIENTE GENERAL"}</td><td>{v["servicio"]}</td><td>{v["metodo_pago"]}</td><td>{money(v["total"])}</td><td>{v["usuario"]}</td></tr>' for v in ventas) or '<tr><td colspan="7">Sin ventas en este periodo.</td></tr>'
+    trs_stock = "".join(f'<tr class="row-bad"><td>{s["nombre"]}</td><td>{s["categoria"]}</td><td>{s["stock"]} {s["unidad"]}</td><td>{s["stock_min"]}</td></tr>' for s in stock) or '<tr><td colspan="4">Sin stock bajo.</td></tr>'
     html = f"""
-    <div class="panel"><div class="box-title">Filtros</div><br><form method="get" class="actions"><label>Fecha inicio:</label><input type="date" name="fi" value="{fi}" style="max-width:170px"><label>Fecha fin:</label><input type="date" name="ff" value="{ff}" style="max-width:170px"><button>Generar</button><a class="btn" href="{url_for('export_excel',fi=fi,ff=ff)}">Exportar Excel</a><a class="btn" href="{url_for('export_csv',fi=fi,ff=ff)}">Exportar CSV</a></form></div>
-    <div class="panel"><div class="box-title">Reporte</div><textarea class="report-box" readonly>{reporte}</textarea></div>
+    <div class="panel"><div class="box-title">📄 Reportería ejecutiva</div><br><form method="get" class="actions"><label>Fecha inicio:</label><input type="date" name="fi" value="{fi}" style="max-width:170px"><label>Fecha fin:</label><input type="date" name="ff" value="{ff}" style="max-width:170px"><button>Generar</button><a class="btn btn-green" href="{url_for('export_excel',fi=fi,ff=ff)}">Exportar Excel</a><a class="btn" href="{url_for('export_csv',fi=fi,ff=ff)}">Exportar CSV</a></form></div>
+    <div class="report-card-grid"><div class="mini-report">Ventas<br><b>{money(total)}</b></div><div class="mini-report">Pedidos pagados<br><b>{pedidos_pagados}</b></div><div class="mini-report">Ticket promedio<br><b>{money(ticket_prom)}</b></div><div class="mini-report">Stock bajo<br><b>{len(stock)}</b></div></div>
+    <div class="panel"><div class="box-title">Ventas del periodo</div><br><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Pago</th><th>Total</th><th>Usuario</th></tr></thead><tbody>{trs}</tbody></table></div></div>
+    <div class="panel"><div class="box-title">Alertas de stock bajo</div><br><div class="table-wrap small"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th></tr></thead><tbody>{trs_stock}</tbody></table></div></div>
     """
     return page(html, "reportes")
 
