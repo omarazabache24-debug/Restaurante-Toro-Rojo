@@ -234,6 +234,16 @@ def init_db():
                 clave TEXT PRIMARY KEY,
                 valor TEXT DEFAULT ''
             );
+            CREATE TABLE IF NOT EXISTS integraciones(
+                clave TEXT PRIMARY KEY,
+                nombre TEXT,
+                descripcion TEXT DEFAULT '',
+                activo INTEGER DEFAULT 0,
+                valor1 TEXT DEFAULT '',
+                valor2 TEXT DEFAULT '',
+                valor3 TEXT DEFAULT '',
+                actualizado TEXT DEFAULT ''
+            );
             CREATE TABLE IF NOT EXISTS logs(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 fecha TEXT,
@@ -271,6 +281,22 @@ def init_db():
     }.items():
         if not q_one("SELECT clave FROM contexto WHERE clave=?", (k,)):
             q_exec("INSERT INTO contexto(clave,valor) VALUES(?,?)", (k, v))
+
+    integraciones_demo = [
+        ("whatsapp", "WhatsApp Business", "Recibe pedidos y comparte tickets/catálogo por WhatsApp.", 1, "+51 999 999 999", "Mensaje automático de pedido confirmado", ""),
+        ("catalogo", "Catálogo online", "Vitrina digital con enlace público para productos, combos y promociones.", 1, "restaurante-aorix", "AORIX RESTAURANTE", ""),
+        ("pagos", "Pagos y métodos", "Efectivo, Yape, Plin, tarjeta, transferencia y pagos mixtos.", 1, "YAPE, PLIN, TARJETA, EFECTIVO", "Comprobante obligatorio en pago digital", ""),
+        ("recibos", "Recibos / ticket", "Ticket de cocina, recibo para cliente y comprobante para caja.", 1, "58mm / 80mm", "Impresión local / PDF", ""),
+        ("delivery", "Delivery y mapas", "Direcciones, referencia, cliente frecuente y reparto por estado.", 1, "Google Maps", "Tiempo estimado y zona de reparto", ""),
+        ("redes", "Redes sociales", "Instagram, Facebook, TikTok y enlace para campañas.", 0, "@restaurante_aorix", "", ""),
+        ("pixel", "Facebook Pixel / Meta", "Seguimiento de campañas y pedidos del catálogo online.", 0, "", "", ""),
+        ("google", "Google Business / Shopping", "Visibilidad local, catálogo, ubicación y búsquedas del restaurante.", 0, "", "", ""),
+        ("api", "API / Webhooks", "Conexión futura con pasarela de pago, delivery externo o BI.", 0, "", "", ""),
+        ("backup", "Backup y exportaciones", "Copias CSV/Excel y respaldo operativo del negocio.", 1, "Exportación diaria", "", ""),
+    ]
+    for clave,nombre,desc,activo,v1,v2,v3 in integraciones_demo:
+        if not q_one("SELECT clave FROM integraciones WHERE clave=?", (clave,)):
+            q_exec("INSERT INTO integraciones(clave,nombre,descripcion,activo,valor1,valor2,valor3,actualizado) VALUES(?,?,?,?,?,?,?,?)", (clave,nombre,desc,activo,v1,v2,v3,now().strftime('%Y-%m-%d %H:%M:%S')))
 
     if not q_one("SELECT id FROM productos LIMIT 1"):
         demo_productos = [
@@ -451,6 +477,13 @@ th,td{border-color:#e6eaf1!important;padding:12px 10px!important;}
 }
 @media(max-width:430px){.nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}.content{padding:10px!important}.panel{padding:16px!important}.topbar h1{font-size:24px!important}.login-card{width:94vw!important;padding:26px 22px!important}}
 
+
+
+/* ===== KYTE INTEGRACIONES / CONFIG GENERAL ===== */
+.kyte-shell{background:#f6f7f9;border-radius:22px;padding:10px 12px 18px}
+.kyte-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin:8px 0 18px}.kyte-head h2{font-size:34px;margin:0;color:#374151}.kyte-help{display:flex;align-items:center;gap:12px;color:#374151;font-weight:850}.avatar-kyte{width:46px;height:46px;border-radius:50%;background:#4b5563;color:#fff;display:grid;place-items:center;font-weight:950}.trial-bar{background:#27b39a;color:#fff;font-weight:850;text-align:center;padding:12px;border-radius:0;margin:-18px -18px 18px}.trial-bar u{font-weight:950}.settings-tabs{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:22px}.settings-tabs a,.settings-tabs span{padding:8px 18px;border-radius:999px;background:#e5e7eb;color:#334155;font-weight:950}.settings-tabs .on{background:#2dd4bf;color:white}.config-hero{text-align:center;margin:18px 0 24px}.store-icon{font-size:74px;line-height:1}.config-hero h3{font-size:22px;margin:8px 0 4px;color:#334155}.config-hero p{margin:0;color:#64748b;font-weight:700}.integration-grid{display:grid;grid-template-columns:repeat(3,minmax(230px,1fr));gap:16px}.integration-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px;box-shadow:0 10px 24px rgba(15,35,55,.06);position:relative;overflow:hidden}.integration-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#2dd4bf}.integration-card.off:before{background:#cbd5e1}.integration-card .ico{font-size:32px;width:54px;height:54px;border-radius:16px;background:#ecfdf5;display:grid;place-items:center;margin-bottom:10px}.integration-card.off .ico{background:#f1f5f9}.integration-card h3{margin:0 0 7px;color:#111827;font-size:18px}.integration-card p{margin:0 0 13px;color:#64748b;line-height:1.38}.status-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 11px;font-weight:950;font-size:12px;background:#dcfce7;color:#166534}.integration-card.off .status-pill{background:#f1f5f9;color:#64748b}.integration-form{margin-top:14px;display:grid;gap:10px}.integration-form input,.integration-form textarea{border:1px solid #e5e7eb!important;background:#fbfdff!important;min-height:42px!important}.integration-actions{display:flex;gap:8px}.integration-actions button{width:auto!important}.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;border-top:1px solid #eef2f7;padding-top:12px}.toggle-row select{max-width:150px}.config-panel{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 8px 22px rgba(15,35,55,.05)}.config-panel h3{margin-top:0}.integrations-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.integrations-summary .mini-report{border:0;background:#fff}
+@media(max-width:900px){.trial-bar{display:none}.kyte-head{display:block}.kyte-head h2{font-size:27px}.settings-tabs{gap:8px;overflow:auto;flex-wrap:nowrap}.settings-tabs span,.settings-tabs a{min-width:max-content}.integration-grid,.integrations-summary{grid-template-columns:1fr}.config-hero{margin:8px 0 16px}.store-icon{font-size:52px}.integration-actions{display:grid}.integration-actions button{width:100%!important}.kyte-help{margin-top:10px}.kyte-shell{padding:8px;background:#151515}.config-panel,.integration-card{background:#202020!important;border-color:#3b3f4a!important;color:#f8fafc!important}.integration-card h3,.config-panel h3,.kyte-head h2,.config-hero h3{color:#f8fafc!important}.integration-card p,.config-hero p{color:#cbd5e1!important}.settings-tabs span,.settings-tabs a{background:#2d2d2f;color:#e5e7eb}.settings-tabs .on{background:#ff4d57;color:white}.integration-card:before{background:#ff4d57}.integration-card .ico{background:#2b1b20}.integration-form input,.integration-form textarea{background:#4a4a4d!important;color:white!important;border-color:#606169!important}.toggle-row{border-color:#3b3f4a}}
+
 </style>
 </head>
 <body>
@@ -473,6 +506,7 @@ th,td{border-color:#e6eaf1!important;padding:12px 10px!important;}
       <a class="{{'on' if active=='indicadores' else ''}}" href="{{url_for('indicadores')}}">📈 Indicadores</a>
       <a class="{{'on' if active=='reportes' else ''}}" href="{{url_for('reportes')}}">📄 Reportes</a>
       <a class="{{'on' if active=='admin' else ''}}" href="{{url_for('admin')}}">⚙️ Usuarios / Admin</a>
+      <a class="{{'on' if active=='integraciones' else ''}}" href="{{url_for('integraciones')}}">🔌 Integraciones</a>
       <a class="{{'on' if active=='log' else ''}}" href="{{url_for('logs')}}">🧾 Log</a>
       {% endif %}
       <a href="{{url_for('logout')}}">🚪 Salir</a>
@@ -526,6 +560,7 @@ def tabs():
         ("indicadores", "Indicadores", "indicadores"),
         ("reportes", "Reportes", "reportes"),
         ("admin", "Usuarios / Admin", "admin"),
+        ("integraciones", "Integraciones", "integraciones"),
         ("log", "Log", "logs"),
     ]
 
@@ -1161,6 +1196,95 @@ MEJORAS ACTIVAS:
 Base actual: {DB_PATH}</textarea></div>
     """
     return page(html, "admin")
+
+
+@app.route('/integraciones', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def integraciones():
+    if request.method == 'POST':
+        accion = request.form.get('accion', 'guardar')
+        if accion == 'guardar':
+            clave = clean(request.form.get('clave'))
+            activo = 1 if request.form.get('activo') == '1' else 0
+            valor1 = clean(request.form.get('valor1'))
+            valor2 = clean(request.form.get('valor2'))
+            valor3 = clean(request.form.get('valor3'))
+            q_exec('UPDATE integraciones SET activo=?, valor1=?, valor2=?, valor3=?, actualizado=? WHERE clave=?', (activo, valor1, valor2, valor3, now().strftime('%Y-%m-%d %H:%M:%S'), clave))
+            log_event('INTEGRACION ACTUALIZADA', clave)
+            flash('Integración actualizada correctamente.', 'ok')
+        elif accion == 'guardar_negocio':
+            for k in ['nombre_comercio', 'responsable', 'identificacion', 'whatsapp_negocio', 'correo_negocio', 'direccion_negocio', 'horario_negocio', 'catalogo_url']:
+                set_ctx(k, clean(request.form.get(k)))
+            flash('Configuración general guardada.', 'ok')
+        return redirect(url_for('integraciones'))
+
+    rows = q_all('SELECT * FROM integraciones ORDER BY activo DESC, nombre')
+    activos = sum(1 for r in rows if int(r['activo'] or 0) == 1)
+    pendientes = len(rows) - activos
+    cards = []
+    icons = {'whatsapp':'💬','catalogo':'🛒','pagos':'💳','recibos':'🧾','delivery':'🛵','redes':'📣','pixel':'🎯','google':'📍','api':'🔗','backup':'☁️'}
+    placeholders = {
+        'whatsapp': ('Número con código país', 'Mensaje automático', 'Link wa.me'),
+        'catalogo': ('URL catálogo', 'Nombre público', 'Color/tema'),
+        'pagos': ('Métodos activos', 'Regla de comprobante', 'Cuenta/Yape/Plin'),
+        'recibos': ('Formato impresora', 'Pie de ticket', 'Logo/RUC'),
+        'delivery': ('Mapa o zona', 'Tiempo estimado', 'Costo base'),
+        'redes': ('Instagram/Facebook/TikTok', 'Campaña', 'Enlace'),
+        'pixel': ('Pixel ID', 'Token/API', 'Evento principal'),
+        'google': ('Google Business/Maps', 'Ubicación', 'Categoría'),
+        'api': ('Endpoint', 'Token', 'Webhook'),
+        'backup': ('Frecuencia', 'Destino', 'Responsable'),
+    }
+    for r in rows:
+        key = r['clave']
+        ph = placeholders.get(key, ('Dato 1', 'Dato 2', 'Dato 3'))
+        cls = '' if int(r['activo'] or 0) == 1 else 'off'
+        estado = 'ACTIVO' if int(r['activo'] or 0) == 1 else 'PENDIENTE'
+        cards.append(f'''
+        <div class="integration-card {cls}">
+          <div class="ico">{icons.get(key,'🔌')}</div>
+          <h3>{r['nombre']}</h3>
+          <p>{r['descripcion']}</p>
+          <span class="status-pill">● {estado}</span>
+          <form method="post" class="integration-form">
+            <input type="hidden" name="accion" value="guardar">
+            <input type="hidden" name="clave" value="{key}">
+            <input name="valor1" value="{r['valor1'] or ''}" placeholder="{ph[0]}">
+            <input name="valor2" value="{r['valor2'] or ''}" placeholder="{ph[1]}">
+            <input name="valor3" value="{r['valor3'] or ''}" placeholder="{ph[2]}">
+            <div class="toggle-row"><b>Estado</b><select name="activo"><option value="1" {'selected' if int(r['activo'] or 0)==1 else ''}>Activo</option><option value="0" {'selected' if int(r['activo'] or 0)==0 else ''}>Pendiente</option></select></div>
+            <div class="integration-actions"><button class="btn-green">Guardar</button></div>
+          </form>
+        </div>''')
+    html = f'''
+    <div class="trial-bar">⚠️ Panel de integraciones estilo Kyte para AORIX Restaurante · <u>Configuración centralizada</u></div>
+    <div class="kyte-shell">
+      <div class="kyte-head"><h2>Configuraciones</h2><div class="kyte-help">↻ Ayuda <div class="avatar-kyte">AO</div><div>{session.get('user')}<br><small>{session.get('rol')}</small></div></div></div>
+      <div class="settings-tabs"><a href="{url_for('admin')}">GENERAL</a><span>PEDIDOS Y VENTAS</span><span>RECIBO</span><span>PAGOS</span><span>ENTREGA Y RETIRADA</span><span class="on">INTEGRACIONES</span></div>
+      <div class="config-hero"><div class="store-icon">🏪</div><h3>Centro de integraciones AORIX</h3><p>Conecta catálogo, WhatsApp, pagos, delivery, recibos, redes y reportes para una cadena de restaurantes o pizzerías.</p></div>
+      <div class="integrations-summary">
+        <div class="mini-report">Integraciones<b>{len(rows)}</b></div><div class="mini-report">Activas<b>{activos}</b></div><div class="mini-report">Pendientes<b>{pendientes}</b></div><div class="mini-report">Modo<b>Web/App</b></div>
+      </div>
+      <div class="config-panel"><h3>Información general del negocio</h3>
+        <form method="post" class="clean-grid-4">
+          <input type="hidden" name="accion" value="guardar_negocio">
+          <div><label>Nombre comercio</label><input name="nombre_comercio" value="{get_ctx('nombre_comercio','RESTAURANTE AORIX')}" placeholder="Nombre del comercio"></div>
+          <div><label>Responsable</label><input name="responsable" value="{get_ctx('responsable','')}" placeholder="Responsable o empresa"></div>
+          <div><label>Identificación/RUC</label><input name="identificacion" value="{get_ctx('identificacion','')}" placeholder="RUC / DNI / identificación"></div>
+          <div><label>WhatsApp</label><input name="whatsapp_negocio" value="{get_ctx('whatsapp_negocio','')}" placeholder="+51..."></div>
+          <div><label>Correo</label><input name="correo_negocio" value="{get_ctx('correo_negocio','')}" placeholder="correo@negocio.com"></div>
+          <div><label>Dirección</label><input name="direccion_negocio" value="{get_ctx('direccion_negocio','')}" placeholder="Dirección principal"></div>
+          <div><label>Horario</label><input name="horario_negocio" value="{get_ctx('horario_negocio','')}" placeholder="Lun-Dom 10am-11pm"></div>
+          <div><label>Link catálogo</label><input name="catalogo_url" value="{get_ctx('catalogo_url','')}" placeholder="restaurante-aorix.kyte.site"></div>
+          <button class="btn-green">Guardar configuración</button>
+        </form>
+      </div>
+      <div class="integration-grid">{''.join(cards)}</div>
+      <div class="config-panel" style="margin-top:16px"><h3>Recomendación para restaurante/pizzería</h3><div class="hint-card">Mantén activos WhatsApp, Catálogo online, Pagos, Recibos, Delivery y Backup. Deja Pixel, API y Google como preparación para campañas, pasarelas de pago o crecimiento por sucursales.</div></div>
+    </div>
+    '''
+    return page(html, 'integraciones')
 
 @app.route("/logs")
 @login_required
