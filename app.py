@@ -22,6 +22,7 @@ Usuarios iniciales:
 import csv
 import os
 import sqlite3
+import uuid
 from datetime import datetime
 from functools import wraps
 from io import BytesIO, StringIO
@@ -32,6 +33,7 @@ from flask import (
     send_file, session, url_for
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 
 try:
     from openpyxl import Workbook, load_workbook
@@ -48,14 +50,17 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PERSIST_DIR = os.getenv("PERSIST_DIR", "/data" if os.path.isdir("/data") else os.path.join(BASE_DIR, "data"))
 os.makedirs(PERSIST_DIR, exist_ok=True)
 DB_PATH = os.path.join(PERSIST_DIR, "restaurante_aorix_pro.db")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+CATALOG_DIR = os.path.join(STATIC_DIR, "catalogo")
+os.makedirs(CATALOG_DIR, exist_ok=True)
 APP_TZ = ZoneInfo(os.getenv("APP_TIMEZONE", "America/Lima"))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "aorix-restaurante-pro-2026")
 
-APP_TITLE = "RESTAURANTE AORIX"
-APP_SUBTITLE = "Sistema de Control y Gestión de Alimentos"
-BRAND = "AORIX SYSTEMS - Automatizamos tu empresa"
+APP_TITLE = "EL TORO RESTAURANT GRILL"
+APP_SUBTITLE = "Sistema de ventas, pedidos, inventario y catálogo digital"
+BRAND = "EL TORO - Restaurant Grill"
 
 # =========================
 # HELPERS DB
@@ -234,15 +239,16 @@ def init_db():
                 clave TEXT PRIMARY KEY,
                 valor TEXT DEFAULT ''
             );
-            CREATE TABLE IF NOT EXISTS integraciones(
-                clave TEXT PRIMARY KEY,
-                nombre TEXT,
+            CREATE TABLE IF NOT EXISTS catalogo_publico(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                titulo TEXT NOT NULL,
                 descripcion TEXT DEFAULT '',
-                activo INTEGER DEFAULT 0,
-                valor1 TEXT DEFAULT '',
-                valor2 TEXT DEFAULT '',
-                valor3 TEXT DEFAULT '',
-                actualizado TEXT DEFAULT ''
+                precio REAL DEFAULT 0,
+                categoria TEXT DEFAULT 'PLATOS',
+                imagen TEXT DEFAULT '',
+                destacado INTEGER DEFAULT 0,
+                activo INTEGER DEFAULT 1,
+                creado TEXT DEFAULT CURRENT_TIMESTAMP
             );
             CREATE TABLE IF NOT EXISTS logs(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -282,22 +288,6 @@ def init_db():
         if not q_one("SELECT clave FROM contexto WHERE clave=?", (k,)):
             q_exec("INSERT INTO contexto(clave,valor) VALUES(?,?)", (k, v))
 
-    integraciones_demo = [
-        ("whatsapp", "WhatsApp Business", "Recibe pedidos y comparte tickets/catálogo por WhatsApp.", 1, "+51 999 999 999", "Mensaje automático de pedido confirmado", ""),
-        ("catalogo", "Catálogo online", "Vitrina digital con enlace público para productos, combos y promociones.", 1, "restaurante-aorix", "AORIX RESTAURANTE", ""),
-        ("pagos", "Pagos y métodos", "Efectivo, Yape, Plin, tarjeta, transferencia y pagos mixtos.", 1, "YAPE, PLIN, TARJETA, EFECTIVO", "Comprobante obligatorio en pago digital", ""),
-        ("recibos", "Recibos / ticket", "Ticket de cocina, recibo para cliente y comprobante para caja.", 1, "58mm / 80mm", "Impresión local / PDF", ""),
-        ("delivery", "Delivery y mapas", "Direcciones, referencia, cliente frecuente y reparto por estado.", 1, "Google Maps", "Tiempo estimado y zona de reparto", ""),
-        ("redes", "Redes sociales", "Instagram, Facebook, TikTok y enlace para campañas.", 0, "@restaurante_aorix", "", ""),
-        ("pixel", "Facebook Pixel / Meta", "Seguimiento de campañas y pedidos del catálogo online.", 0, "", "", ""),
-        ("google", "Google Business / Shopping", "Visibilidad local, catálogo, ubicación y búsquedas del restaurante.", 0, "", "", ""),
-        ("api", "API / Webhooks", "Conexión futura con pasarela de pago, delivery externo o BI.", 0, "", "", ""),
-        ("backup", "Backup y exportaciones", "Copias CSV/Excel y respaldo operativo del negocio.", 1, "Exportación diaria", "", ""),
-    ]
-    for clave,nombre,desc,activo,v1,v2,v3 in integraciones_demo:
-        if not q_one("SELECT clave FROM integraciones WHERE clave=?", (clave,)):
-            q_exec("INSERT INTO integraciones(clave,nombre,descripcion,activo,valor1,valor2,valor3,actualizado) VALUES(?,?,?,?,?,?,?,?)", (clave,nombre,desc,activo,v1,v2,v3,now().strftime('%Y-%m-%d %H:%M:%S')))
-
     if not q_one("SELECT id FROM productos LIMIT 1"):
         demo_productos = [
             ("P001", "1/2 POLLO", "PLATOS", "VENTA", "PLATO", 35, 10, 40, 5),
@@ -312,6 +302,15 @@ def init_db():
                 "INSERT INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)",
                 p,
             )
+
+    if not q_one("SELECT id FROM catalogo_publico LIMIT 1"):
+        for titulo, descripcion, precio, categoria in [
+            ("PARRILLA FAMILIAR", "Especial de la casa para compartir", 69.90, "PARRILLAS"),
+            ("1/2 POLLO", "Pollo a la brasa con papas y ensalada", 35.00, "PLATOS"),
+            ("PIZZA AMERICANA", "Pizza familiar estilo El Toro", 42.00, "PIZZAS"),
+        ]:
+            q_exec("INSERT INTO catalogo_publico(titulo,descripcion,precio,categoria,imagen,destacado,activo) VALUES(?,?,?,?,?,?,1)", (titulo, descripcion, precio, categoria, "toro_logo.png", 1))
+
     if not q_one("SELECT id FROM insumos LIMIT 1"):
         for nombre, unidad, stock, stock_min, costo in [
             ("POLLO ENTERO", "UND", 20, 3, 20),
@@ -479,10 +478,11 @@ th,td{border-color:#e6eaf1!important;padding:12px 10px!important;}
 
 
 
-/* ===== KYTE INTEGRACIONES / CONFIG GENERAL ===== */
-.kyte-shell{background:#f6f7f9;border-radius:22px;padding:10px 12px 18px}
-.kyte-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin:8px 0 18px}.kyte-head h2{font-size:34px;margin:0;color:#374151}.kyte-help{display:flex;align-items:center;gap:12px;color:#374151;font-weight:850}.avatar-kyte{width:46px;height:46px;border-radius:50%;background:#4b5563;color:#fff;display:grid;place-items:center;font-weight:950}.trial-bar{background:#27b39a;color:#fff;font-weight:850;text-align:center;padding:12px;border-radius:0;margin:-18px -18px 18px}.trial-bar u{font-weight:950}.settings-tabs{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:22px}.settings-tabs a,.settings-tabs span{padding:8px 18px;border-radius:999px;background:#e5e7eb;color:#334155;font-weight:950}.settings-tabs .on{background:#2dd4bf;color:white}.config-hero{text-align:center;margin:18px 0 24px}.store-icon{font-size:74px;line-height:1}.config-hero h3{font-size:22px;margin:8px 0 4px;color:#334155}.config-hero p{margin:0;color:#64748b;font-weight:700}.integration-grid{display:grid;grid-template-columns:repeat(3,minmax(230px,1fr));gap:16px}.integration-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px;box-shadow:0 10px 24px rgba(15,35,55,.06);position:relative;overflow:hidden}.integration-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#2dd4bf}.integration-card.off:before{background:#cbd5e1}.integration-card .ico{font-size:32px;width:54px;height:54px;border-radius:16px;background:#ecfdf5;display:grid;place-items:center;margin-bottom:10px}.integration-card.off .ico{background:#f1f5f9}.integration-card h3{margin:0 0 7px;color:#111827;font-size:18px}.integration-card p{margin:0 0 13px;color:#64748b;line-height:1.38}.status-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:7px 11px;font-weight:950;font-size:12px;background:#dcfce7;color:#166534}.integration-card.off .status-pill{background:#f1f5f9;color:#64748b}.integration-form{margin-top:14px;display:grid;gap:10px}.integration-form input,.integration-form textarea{border:1px solid #e5e7eb!important;background:#fbfdff!important;min-height:42px!important}.integration-actions{display:flex;gap:8px}.integration-actions button{width:auto!important}.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;border-top:1px solid #eef2f7;padding-top:12px}.toggle-row select{max-width:150px}.config-panel{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;margin-bottom:16px;box-shadow:0 8px 22px rgba(15,35,55,.05)}.config-panel h3{margin-top:0}.integrations-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.integrations-summary .mini-report{border:0;background:#fff}
-@media(max-width:900px){.trial-bar{display:none}.kyte-head{display:block}.kyte-head h2{font-size:27px}.settings-tabs{gap:8px;overflow:auto;flex-wrap:nowrap}.settings-tabs span,.settings-tabs a{min-width:max-content}.integration-grid,.integrations-summary{grid-template-columns:1fr}.config-hero{margin:8px 0 16px}.store-icon{font-size:52px}.integration-actions{display:grid}.integration-actions button{width:100%!important}.kyte-help{margin-top:10px}.kyte-shell{padding:8px;background:#151515}.config-panel,.integration-card{background:#202020!important;border-color:#3b3f4a!important;color:#f8fafc!important}.integration-card h3,.config-panel h3,.kyte-head h2,.config-hero h3{color:#f8fafc!important}.integration-card p,.config-hero p{color:#cbd5e1!important}.settings-tabs span,.settings-tabs a{background:#2d2d2f;color:#e5e7eb}.settings-tabs .on{background:#ff4d57;color:white}.integration-card:before{background:#ff4d57}.integration-card .ico{background:#2b1b20}.integration-form input,.integration-form textarea{background:#4a4a4d!important;color:white!important;border-color:#606169!important}.toggle-row{border-color:#3b3f4a}}
+/* ===== EL TORO / KYTE FOOD V6 ===== */
+:root{--toro-red:#ff1744;--toro-red2:#ff5b4f;--toro-black:#07070c;--toro-card:#11131d;--toro-mint:#2dd4bf;}
+body{background:#f4f6f9!important;overflow-x:hidden!important}.topbar{background:linear-gradient(135deg,#06070d,#111827 55%,#38010a)!important;border-bottom:4px solid var(--toro-red)!important}.brand{background:linear-gradient(180deg,#07070c,#111827)!important}.brand .logo{display:flex!important;align-items:center;justify-content:center;gap:8px}.brand-logo-img{width:78px;height:78px;object-fit:contain;display:block;margin:0 auto 8px;filter:drop-shadow(0 8px 20px rgba(255,23,68,.28))}.nav a.on,.tabs a.on{background:linear-gradient(100deg,var(--toro-red),var(--toro-red2))!important;color:#fff!important;box-shadow:0 16px 35px rgba(255,23,68,.28)!important}.btn-success,.btn-green,.primary,button.primary{background:linear-gradient(100deg,var(--toro-red),var(--toro-red2))!important;color:#fff!important;border:0!important}.btn-warning,.btn-orange{background:linear-gradient(100deg,#ff9f1c,#ff5b00)!important;color:#fff!important;border:0!important}.btn-danger,.btn-red{background:linear-gradient(100deg,#b91c1c,#ff1744)!important;color:#fff!important;border:0!important}.panel{border:1px solid #e5e7eb!important;border-radius:26px!important;box-shadow:0 16px 45px rgba(15,23,42,.08)!important;background:#fff!important}.section-title{font-size:24px!important;font-weight:950!important;color:#07070c!important}.catalog-hero{border-radius:30px;background:linear-gradient(135deg,#07070c,#151827 60%,#43000c);color:#fff;padding:28px;display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:center;overflow:hidden;position:relative}.catalog-hero:after{content:"";position:absolute;right:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:rgba(255,23,68,.28)}.catalog-hero h2{font-size:36px;margin:0 0 8px}.catalog-phone{background:#0b0c14;border:1px solid rgba(255,255,255,.12);border-radius:30px;padding:18px;box-shadow:0 22px 60px rgba(0,0,0,.35)}.phone-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.phone-food{background:#171927;border-radius:18px;padding:10px}.phone-food img{width:100%;height:90px;object-fit:cover;border-radius:14px}.phone-food b{display:block;color:#fff;font-size:12px;margin-top:6px}.phone-food small{color:#ffccd3}.catalog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.catalog-card{background:#11131d;border-radius:24px;padding:12px;color:white;box-shadow:0 18px 45px rgba(0,0,0,.18);position:relative}.catalog-card img{width:100%;height:150px;object-fit:cover;border-radius:18px}.catalog-card h3{margin:10px 0 4px;font-size:18px}.catalog-card p{color:#cbd5e1;font-size:13px;min-height:38px}.price-pill{display:inline-block;background:linear-gradient(100deg,var(--toro-red),var(--toro-red2));padding:8px 12px;border-radius:999px;font-weight:950}.qr-box{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:center;background:#fff7f8;border:1px solid #fecdd3;border-radius:24px;padding:18px}.qr-img{width:180px;height:180px;border:10px solid white;border-radius:22px;box-shadow:0 12px 30px rgba(0,0,0,.12)}.upload-drop{border:2px dashed #fecdd3;background:#fff7f8;border-radius:24px;padding:18px}.analytics-hero{background:linear-gradient(135deg,#07070c,#141827)!important;color:white!important;border:0!important}.analytics-hero .section-title{color:white!important}.chart-pro{min-height:310px;border-radius:24px;background:linear-gradient(180deg,#fff,#fff7f8)!important;border:1px solid #fee2e2!important;padding:20px!important;display:flex;align-items:end;gap:18px;overflow:auto}.bar{background:linear-gradient(180deg,var(--toro-red2),var(--toro-red))!important;border:0!important;border-radius:16px 16px 4px 4px!important;color:#fff!important}.admin-panels{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.admin-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.admin-mini{border-radius:24px;background:linear-gradient(135deg,#111827,#07070c);color:white;padding:20px;min-height:120px}.admin-mini b{display:block;font-size:18px;margin-top:8px}.admin-mini small{color:#cbd5e1}.load-day-panel{margin-top:18px!important;background:#fff7ed!important;border-color:#fed7aa!important}.product-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.product-toolbar input{max-width:520px}.pedido-stack{display:grid;gap:18px}.pedido-card{border:1px solid #e5e7eb;border-radius:24px;background:#fff;padding:18px}.pedido-card h3{margin:0 0 14px}.pedido-grid{display:grid;grid-template-columns:minmax(280px,1fr) 220px auto;gap:14px;align-items:end}.pedido-grid-2{display:grid;grid-template-columns:minmax(280px,1fr) minmax(280px,1fr) auto;gap:14px;align-items:end}
+@media(max-width:1100px){.catalog-grid{grid-template-columns:repeat(2,1fr)}.catalog-hero,.admin-panels,.qr-box{grid-template-columns:1fr}.admin-mini-grid{grid-template-columns:1fr}.pedido-grid,.pedido-grid-2{grid-template-columns:1fr}}
+@media(max-width:900px){.catalog-grid{grid-template-columns:1fr}.catalog-hero h2{font-size:28px}.catalog-phone{display:none}.brand-logo-img{width:92px;height:92px}.side{background:#07070c!important}.content{background:#101016!important}.panel{background:#1f1f20!important;border-color:#333845!important;color:#f8fafc!important}.section-title{color:#f8fafc!important}.catalog-card{background:#11131d!important}.qr-box,.upload-drop,.load-day-panel{background:#1f1f20!important;border-color:#333845!important}.product-toolbar input{max-width:none}.table-wrap{overflow-x:auto!important}}
 
 </style>
 </head>
@@ -490,7 +490,7 @@ th,td{border-color:#e6eaf1!important;padding:12px 10px!important;}
 {% if session.get('user') %}
 <div class="app">
   <aside class="side">
-    <div class="brand"><div class="logo">AOR<span>IX</span></div><small>{{brand}}</small><br><small>{{session.get('user')}} - {{session.get('rol')}}</small></div>
+    <div class="brand"><img class="brand-logo-img" src="{{url_for('static', filename='toro_logo.png')}}" onerror="this.style.display='none'"><div class="logo">EL <span>TORO</span></div><small>Restaurant Grill</small><br><small>{{session.get('user')}} - {{session.get('rol')}}</small></div>
     <nav class="nav">
       {% if session.get('rol') == 'ADMIN' %}
       <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊 Panel principal</a>
@@ -500,13 +500,13 @@ th,td{border-color:#e6eaf1!important;padding:12px 10px!important;}
       <a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒 Cierre</a>
       {% if session.get('rol') == 'ADMIN' %}
       <a class="{{'on' if active=='inventario' else ''}}" href="{{url_for('inventario')}}">📦 Inventario</a>
+      <a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️ Catálogo / QR</a>
       <a class="{{'on' if active=='recetas' else ''}}" href="{{url_for('recetas')}}">🍽️ Recetas</a>
       <a class="{{'on' if active=='caja' else ''}}" href="{{url_for('caja')}}">💵 Caja</a>
       <a class="{{'on' if active=='delivery' else ''}}" href="{{url_for('delivery')}}">🛵 Delivery</a>
       <a class="{{'on' if active=='indicadores' else ''}}" href="{{url_for('indicadores')}}">📈 Indicadores</a>
       <a class="{{'on' if active=='reportes' else ''}}" href="{{url_for('reportes')}}">📄 Reportes</a>
       <a class="{{'on' if active=='admin' else ''}}" href="{{url_for('admin')}}">⚙️ Usuarios / Admin</a>
-      <a class="{{'on' if active=='integraciones' else ''}}" href="{{url_for('integraciones')}}">🔌 Integraciones</a>
       <a class="{{'on' if active=='log' else ''}}" href="{{url_for('logs')}}">🧾 Log</a>
       {% endif %}
       <a href="{{url_for('logout')}}">🚪 Salir</a>
@@ -554,13 +554,13 @@ def tabs():
         ("pedidos", "Pedidos", "pedidos"),
         ("cierre", "Cierre", "cierre"),
         ("inventario", "Inventario", "inventario"),
+        ("catalogo", "Catálogo / QR", "catalogo_admin"),
         ("recetas", "Recetas", "recetas"),
         ("caja", "Caja", "caja"),
         ("delivery", "Delivery", "delivery"),
         ("indicadores", "Indicadores", "indicadores"),
         ("reportes", "Reportes", "reportes"),
         ("admin", "Usuarios / Admin", "admin"),
-        ("integraciones", "Integraciones", "integraciones"),
         ("log", "Log", "logs"),
     ]
 
@@ -784,7 +784,7 @@ def ventas():
     opts_ped = "".join(f'<option value="{p["id"]}">{p["codigo"]} · {p["cliente"]} · {money(p["total"])} · {p["estado"]}</option>' for p in pedidos_pend)
     detalle = q_all("SELECT d.*,p.codigo FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 30")
     tr_det = "".join(f'<tr><td>{r["codigo"]}</td><td>{r["producto"]}</td><td>{r["cantidad"]}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>' for r in detalle) or '<tr><td colspan="5">Sin detalle.</td></tr>'
-    html = f'''<div class="panel"><div class="section-title">🧾 Nueva venta / pedido</div><div class="hint-card">Carga el Excel de inicio de día para actualizar productos, precios y stock. Luego registra pedidos por salón, recojo o delivery desde un solo formulario.</div><br><form method="post" enctype="multipart/form-data" class="actions" style="margin-bottom:16px"><input type="hidden" name="accion" value="importar_productos"><input type="file" name="archivo" accept=".xlsx,.csv" style="max-width:420px"><button class="btn-warning">📥 Cargar día / importar Excel productos</button><a class="btn" href="{url_for('plantilla_inventario')}">📄 Descargar plantilla</a></form><form method="get" class="actions" style="margin-bottom:16px"><input name="buscar" value="{buscar_prod}" placeholder="Buscar producto por nombre, código o categoría" style="max-width:520px"><button>🔎 Buscar producto</button><a class="btn" href="{url_for('ventas')}">Limpiar</a></form><form method="post"><input type="hidden" name="accion" value="guardar_pedido"><div class="clean-grid-4"><div><label>Mesa</label><select name="mesa"><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option><option>MESA 5</option><option>MESA 6</option></select></div><div><label>Tipo servicio</label><select name="servicio"><option>SALÓN</option><option>DELIVERY</option><option>RECOJO</option></select></div><div><label>Cliente</label><input name="cliente" placeholder="Cliente general"></div><div><label>Teléfono</label><input name="telefono" placeholder="Celular"></div><div><label>Dirección</label><input name="direccion" placeholder="Solo para delivery"></div><div><label>Referencia</label><input name="referencia" placeholder="Referencia"></div><div><label>Producto</label><select name="producto_id">{opts_prod}</select></div><div><label>Cantidad</label><input name="cantidad" type="number" step="0.01" value="1"></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div><div><label>Descuento</label><input name="descuento" type="number" step="0.01" value="0.00"></div></div><br><div class="actions"><button class="primary">Guardar pedido</button><button type="reset">Limpiar venta</button><a class="btn" href="{url_for('inventario')}">Nuevo producto</a><a class="btn" href="{url_for('pedidos')}">Ver pedidos</a></div></form></div><div class="service-note"><div class="panel"><div class="box-title">Cobro rápido</div><br><form method="post" class="actions"><input type="hidden" name="accion" value="cobrar_ticket"><select name="pedido_id" style="max-width:580px">{opts_ped}</select><select name="metodo_pago" style="max-width:220px"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select><button class="btn-success">Cobrar y ticket</button></form></div><div class="hint-card"><b>Delivery:</b> no se elimina porque sirve como base de clientes frecuentes y direcciones. El tipo servicio en Ventas solo marca la operación; el módulo Delivery funciona como CRM simple.</div></div><div class="panel"><div class="section-title">🍽️ Catálogo de productos</div><div class="table-wrap small"><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div><div class="panel"><div class="section-title">🧩 Últimos ítems registrados</div><div class="table-wrap small"><table><thead><tr><th>Pedido</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{tr_det}</tbody></table></div></div>'''
+    html = f'''<div class="panel"><div class="section-title">🧾 Nueva venta / pedido</div><div class="hint-card">Registra ventas por salón, recojo o delivery. La carga del día ahora está más abajo, después del catálogo, para no estorbar la venta diaria.</div><br><form method="get" class="product-toolbar"><input name="buscar" value="{buscar_prod}" placeholder="Buscar producto por nombre, código o categoría"><button>🔎 Buscar producto</button><a class="btn" href="{url_for('ventas')}">Limpiar</a></form><form method="post"><input type="hidden" name="accion" value="guardar_pedido"><div class="clean-grid-4"><div><label>Mesa</label><select name="mesa"><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option><option>MESA 5</option><option>MESA 6</option></select></div><div><label>Tipo servicio</label><select name="servicio"><option>SALÓN</option><option>DELIVERY</option><option>RECOJO</option></select></div><div><label>Cliente</label><input name="cliente" placeholder="Cliente general"></div><div><label>Teléfono</label><input name="telefono" placeholder="Celular"></div><div><label>Dirección</label><input name="direccion" placeholder="Solo para delivery"></div><div><label>Referencia</label><input name="referencia" placeholder="Referencia"></div><div><label>Producto</label><select name="producto_id">{opts_prod}</select></div><div><label>Cantidad</label><input name="cantidad" type="number" step="0.01" value="1"></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div><div><label>Descuento</label><input name="descuento" type="number" step="0.01" value="0.00"></div></div><br><div class="actions"><button class="primary">Guardar pedido</button><button type="reset">Limpiar venta</button><a class="btn" href="{url_for('inventario')}">Nuevo producto</a><a class="btn" href="{url_for('pedidos')}">Ver pedidos</a></div></form></div><div class="service-note"><div class="panel"><div class="box-title">Cobro rápido</div><br><form method="post" class="actions"><input type="hidden" name="accion" value="cobrar_ticket"><select name="pedido_id" style="max-width:580px">{opts_ped}</select><select name="metodo_pago" style="max-width:220px"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select><button class="btn-success">Cobrar y ticket</button></form></div><div class="hint-card"><b>Delivery:</b> no se elimina porque sirve como base de clientes frecuentes y direcciones. El tipo servicio en Ventas solo marca la operación; el módulo Delivery funciona como CRM simple.</div></div><div class="panel"><div class="section-title">🍽️ Catálogo de productos</div><div class="table-wrap small"><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div><div class="panel load-day-panel"><div class="section-title">📥 Carga de inicio de día</div><div class="hint-card">Importa Excel/CSV para actualizar productos, precios y stock antes de iniciar ventas. Esta sección queda abajo para mantener limpia la pantalla de venta.</div><br><form method="post" enctype="multipart/form-data" class="actions"><input type="hidden" name="accion" value="importar_productos"><input type="file" name="archivo" accept=".xlsx,.csv" style="max-width:420px"><button class="btn-warning">📥 Cargar día / importar Excel productos</button><a class="btn" href="{url_for('plantilla_inventario')}">📄 Descargar plantilla</a></form></div><div class="panel"><div class="section-title">🧩 Últimos ítems registrados</div><div class="table-wrap small"><table><thead><tr><th>Pedido</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{tr_det}</tbody></table></div></div>'''
     return page(html, "ventas")
 
 @app.route("/pedidos", methods=["GET", "POST"])
@@ -1017,6 +1017,118 @@ def delivery():
     """
     return page(html, "delivery")
 
+
+# =========================
+# CATÁLOGO ONLINE / IMÁGENES / QR
+# =========================
+def catalog_public_url():
+    try:
+        return url_for("menu_publico", _external=True)
+    except Exception:
+        return "/menu"
+
+def save_catalog_image(file_storage):
+    if not file_storage or not getattr(file_storage, "filename", ""):
+        return ""
+    filename = secure_filename(file_storage.filename)
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in [".png", ".jpg", ".jpeg", ".webp", ".gif"]:
+        raise ValueError("Formato no permitido. Usa PNG, JPG, JPEG, WEBP o GIF.")
+    new_name = f"{uuid.uuid4().hex}{ext}"
+    path = os.path.join(CATALOG_DIR, new_name)
+    file_storage.save(path)
+    return f"catalogo/{new_name}"
+
+def qr_svg_data(text):
+    try:
+        import qrcode
+        import qrcode.image.svg
+        factory = qrcode.image.svg.SvgImage
+        img = qrcode.make(text, image_factory=factory, box_size=10)
+        bio = BytesIO()
+        img.save(bio)
+        import base64
+        return "data:image/svg+xml;base64," + base64.b64encode(bio.getvalue()).decode("ascii")
+    except Exception:
+        return ""
+
+@app.route("/catalogo", methods=["GET", "POST"])
+@login_required
+@admin_required
+def catalogo_admin():
+    if request.method == "POST":
+        accion = request.form.get("accion")
+        if accion == "config":
+            set_ctx("negocio_nombre", up(request.form.get("negocio_nombre")) or "EL TORO RESTAURANT GRILL")
+            set_ctx("catalogo_slug", clean(request.form.get("catalogo_slug")) or "el-toro-restaurant-grill")
+            flash("Datos del catálogo actualizados.", "ok")
+        elif accion == "crear_item":
+            try:
+                imagen = save_catalog_image(request.files.get("imagen"))
+                q_exec("INSERT INTO catalogo_publico(titulo,descripcion,precio,categoria,imagen,destacado,activo) VALUES(?,?,?,?,?,?,1)", (
+                    up(request.form.get("titulo")),
+                    clean(request.form.get("descripcion")),
+                    float(request.form.get("precio") or 0),
+                    up(request.form.get("categoria") or "PLATOS"),
+                    imagen,
+                    1 if request.form.get("destacado") else 0,
+                ))
+                flash("Producto con imagen agregado al catálogo.", "ok")
+            except Exception as ex:
+                flash(str(ex), "error")
+        elif accion == "desactivar_item":
+            q_exec("UPDATE catalogo_publico SET activo=0 WHERE id=?", (int(request.form.get("id") or 0),))
+            flash("Imagen/producto retirado del catálogo.", "ok")
+        return redirect(url_for("catalogo_admin"))
+
+    negocio = get_ctx("negocio_nombre", "EL TORO RESTAURANT GRILL")
+    slug = get_ctx("catalogo_slug", "el-toro-restaurant-grill")
+    url = catalog_public_url()
+    qr = qr_svg_data(url)
+    items = q_all("SELECT * FROM catalogo_publico WHERE activo=1 ORDER BY destacado DESC,id DESC")
+
+    cards = ""
+    for i in items:
+        img = url_for("static", filename=(i["imagen"] or "toro_logo.png"))
+        cards += f"""<div class='catalog-card'><img src='{img}'><h3>{i['titulo']}</h3><p>{i['descripcion'] or i['categoria']}</p><span class='price-pill'>{money(i['precio'])}</span><form method='post' style='margin-top:10px'><input type='hidden' name='accion' value='desactivar_item'><input type='hidden' name='id' value='{i['id']}'><button class='btn-danger' onclick=\"return confirm('¿Retirar del catálogo?')\">Retirar</button></form></div>"""
+    if not cards:
+        cards = "<div class='hint-card'>Aún no tienes imágenes. Carga tus platos, pizzas, combos o bebidas para publicarlos.</div>"
+
+    phone_items = ""
+    for i in items[:4]:
+        img = url_for("static", filename=(i["imagen"] or "toro_logo.png"))
+        phone_items += f"""<div class='phone-food'><img src='{img}'><b>{i['titulo']}</b><small>{money(i['precio'])}</small></div>"""
+    if not phone_items:
+        phone_items = f"""<div class='phone-food'><img src='{url_for('static', filename='toro_logo.png')}'><b>Sube tu plato</b><small>Desde S/ 0.00</small></div>"""
+    qr_html = f"<img class='qr-img' src='{qr}'>" if qr else "<div class='qr-img' style='display:grid;place-items:center'>QR</div>"
+
+    html = f"""
+    <div class="catalog-hero">
+      <div><h2>Catálogo online con imágenes y QR</h2><p>Publica platos, pizzas, combos y promociones con estilo tipo app. Tus clientes pueden abrir el link o escanear el QR.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div>
+      <div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div>
+    </div><br>
+    <div class="grid2">
+      <div class="panel upload-drop"><div class="section-title">Cargar imagen de producto</div><form method="post" enctype="multipart/form-data" class="clean-grid"><input type="hidden" name="accion" value="crear_item"><div><label>Nombre del plato</label><input name="titulo" required placeholder="Ej. Parrilla familiar / Pizza americana"></div><div><label>Categoría</label><select name="categoria"><option>PLATOS</option><option>PIZZAS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>COMBOS</option><option>POSTRES</option></select></div><div><label>Precio</label><input name="precio" type="number" step="0.01" value="0.00"></div><div><label>Imagen</label><input name="imagen" type="file" accept="image/*" required></div><div style="grid-column:1/-1"><label>Descripción</label><textarea name="descripcion" placeholder="Ingredientes, tamaño, promoción, etc."></textarea></div><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="destacado" style="width:auto"> Destacar</label><button class="btn-success">Agregar al catálogo</button></form></div>
+      <div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Agrega este link en WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div><hr><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}"></div><button class="btn-warning">Guardar configuración</button></form></div>
+    </div><br>
+    <div class="panel"><div class="section-title">Productos publicados</div><div class="catalog-grid">{cards}</div></div>
+    """
+    return page(html, "catalogo")
+
+@app.route("/menu")
+def menu_publico():
+    negocio = get_ctx("negocio_nombre", "EL TORO RESTAURANT GRILL")
+    items = q_all("SELECT * FROM catalogo_publico WHERE activo=1 ORDER BY destacado DESC,id DESC")
+    css = BASE_HTML.split("<style>")[1].split("</style>")[0]
+    cards = ""
+    for i in items:
+        img = url_for("static", filename=(i["imagen"] or "toro_logo.png"))
+        cards += f"""<div class='catalog-card'><img src='{img}'><h3>{i['titulo']}</h3><p>{i['descripcion'] or i['categoria']}</p><span class='price-pill'>{money(i['precio'])}</span></div>"""
+    if not cards:
+        cards = "<div class='hint-card'>Catálogo en preparación.</div>"
+    logo = url_for('static', filename='toro_logo.png')
+    return f"""<!doctype html><html lang='es'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>{negocio}</title><style>{css}</style></head><body style='background:#101016;color:white'><div style='max-width:1100px;margin:auto;padding:24px'><div class='catalog-hero'><div><img src='{logo}' style='width:120px'><h2>{negocio}</h2><p>Menú digital · Platos · Pizzas · Parrillas · Promociones</p></div></div><br><div class='catalog-grid'>{cards}</div></div></body></html>"""
+
 # =========================
 # INDICADORES
 # =========================
@@ -1038,7 +1150,7 @@ def indicadores():
         trs = "".join(f'<tr><td>{r["periodo"]}</td><td>{money(r["ventas"])}</td><td>{r["pedidos"]}</td><td>{money(float(r["ventas"] or 0)/int(r["pedidos"] or 1))}</td></tr>' for r in rows) or '<tr><td colspan="4">Sin detalle.</td></tr>'
         trp = "".join(f'<tr><td>{p["metodo_pago"]}</td><td>{money(p["total"])}</td></tr>' for p in pagos) or '<tr><td colspan="2">Sin pagos.</td></tr>'
         trt = "".join(f'<tr><td>{t["producto"]}</td><td>{t["cant"]}</td><td>{money(t["total"])}</td></tr>' for t in top) or '<tr><td colspan="3">Sin productos vendidos.</td></tr>'
-        html = f'''<div class="panel"><div class="section-title">📈 Indicadores para cadena de restaurantes y pizzerías</div><form method="get" class="clean-grid"><div><label>Fecha inicio</label><input type="date" name="fi" value="{fi}"></div><div><label>Fecha fin</label><input type="date" name="ff" value="{ff}"></div><div class="actions"><button class="btn-success">Actualizar</button><a class="btn" href="{url_for('indicadores')}">Hoy</a></div></form></div><div class="analytics-grid"><div class="analytics-card"><span>Ventas netas</span><b>{money(ventas['t'])}</b><small>Ingreso del periodo</small></div><div class="analytics-card"><span>Pedidos pagados</span><b>{ventas['c']}</b><small>Transacciones cobradas</small></div><div class="analytics-card"><span>Ticket promedio</span><b>{money(ticket)}</b><small>Venta promedio por pedido</small></div><div class="analytics-card"><span>Pendientes / stock bajo</span><b>{pendientes} / {stock_bajo}</b><small>Operación y abastecimiento</small></div></div><div class="grid2"><div class="panel"><div class="section-title">📊 Ventas por día</div><div class="chart-pro">{bars}</div></div><div class="panel"><div class="section-title">💳 Ventas por método de pago</div><div class="table-wrap small"><table><thead><tr><th>Método</th><th>Total</th></tr></thead><tbody>{trp}</tbody></table></div><br><div class="hint-card">Mide ticket promedio, top productos, ventas por día y pagos para controlar rentabilidad, stock y velocidad de atención.</div></div></div><div class="grid2"><div class="panel"><div class="section-title">🏆 Top productos vendidos</div><div class="table-wrap small"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Total</th></tr></thead><tbody>{trt}</tbody></table></div></div><div class="panel"><div class="section-title">📅 Detalle por periodo</div><div class="table-wrap small"><table><thead><tr><th>Periodo</th><th>Ventas S/</th><th>Pedidos</th><th>Ticket promedio</th></tr></thead><tbody>{trs}</tbody></table></div></div></div>'''
+        html = f'''<div class="panel analytics-hero"><div class="section-title">📈 Indicadores para cadena de restaurantes y pizzerías</div><form method="get" class="clean-grid"><div><label>Fecha inicio</label><input type="date" name="fi" value="{fi}"></div><div><label>Fecha fin</label><input type="date" name="ff" value="{ff}"></div><div class="actions"><button class="btn-success">Actualizar</button><a class="btn" href="{url_for('indicadores')}">Hoy</a></div></form></div><div class="analytics-grid"><div class="analytics-card"><span>Ventas netas</span><b>{money(ventas['t'])}</b><small>Ingreso del periodo</small></div><div class="analytics-card"><span>Pedidos pagados</span><b>{ventas['c']}</b><small>Transacciones cobradas</small></div><div class="analytics-card"><span>Ticket promedio</span><b>{money(ticket)}</b><small>Venta promedio por pedido</small></div><div class="analytics-card"><span>Pendientes / stock bajo</span><b>{pendientes} / {stock_bajo}</b><small>Operación y abastecimiento</small></div></div><div class="grid2"><div class="panel"><div class="section-title">📊 Ventas por día</div><div class="chart-pro">{bars}</div></div><div class="panel"><div class="section-title">💳 Ventas por método de pago</div><div class="table-wrap small"><table><thead><tr><th>Método</th><th>Total</th></tr></thead><tbody>{trp}</tbody></table></div><br><div class="hint-card">Mide ticket promedio, top productos, ventas por día y pagos para controlar rentabilidad, stock y velocidad de atención.</div></div></div><div class="grid2"><div class="panel"><div class="section-title">🏆 Top productos vendidos</div><div class="table-wrap small"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Total</th></tr></thead><tbody>{trt}</tbody></table></div></div><div class="panel"><div class="section-title">📅 Detalle por periodo</div><div class="table-wrap small"><table><thead><tr><th>Periodo</th><th>Ventas S/</th><th>Pedidos</th><th>Ticket promedio</th></tr></thead><tbody>{trs}</tbody></table></div></div></div>'''
         return page(html, "indicadores")
     except Exception as ex:
         log_event("ERROR INDICADORES", str(ex))
@@ -1196,95 +1308,6 @@ MEJORAS ACTIVAS:
 Base actual: {DB_PATH}</textarea></div>
     """
     return page(html, "admin")
-
-
-@app.route('/integraciones', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def integraciones():
-    if request.method == 'POST':
-        accion = request.form.get('accion', 'guardar')
-        if accion == 'guardar':
-            clave = clean(request.form.get('clave'))
-            activo = 1 if request.form.get('activo') == '1' else 0
-            valor1 = clean(request.form.get('valor1'))
-            valor2 = clean(request.form.get('valor2'))
-            valor3 = clean(request.form.get('valor3'))
-            q_exec('UPDATE integraciones SET activo=?, valor1=?, valor2=?, valor3=?, actualizado=? WHERE clave=?', (activo, valor1, valor2, valor3, now().strftime('%Y-%m-%d %H:%M:%S'), clave))
-            log_event('INTEGRACION ACTUALIZADA', clave)
-            flash('Integración actualizada correctamente.', 'ok')
-        elif accion == 'guardar_negocio':
-            for k in ['nombre_comercio', 'responsable', 'identificacion', 'whatsapp_negocio', 'correo_negocio', 'direccion_negocio', 'horario_negocio', 'catalogo_url']:
-                set_ctx(k, clean(request.form.get(k)))
-            flash('Configuración general guardada.', 'ok')
-        return redirect(url_for('integraciones'))
-
-    rows = q_all('SELECT * FROM integraciones ORDER BY activo DESC, nombre')
-    activos = sum(1 for r in rows if int(r['activo'] or 0) == 1)
-    pendientes = len(rows) - activos
-    cards = []
-    icons = {'whatsapp':'💬','catalogo':'🛒','pagos':'💳','recibos':'🧾','delivery':'🛵','redes':'📣','pixel':'🎯','google':'📍','api':'🔗','backup':'☁️'}
-    placeholders = {
-        'whatsapp': ('Número con código país', 'Mensaje automático', 'Link wa.me'),
-        'catalogo': ('URL catálogo', 'Nombre público', 'Color/tema'),
-        'pagos': ('Métodos activos', 'Regla de comprobante', 'Cuenta/Yape/Plin'),
-        'recibos': ('Formato impresora', 'Pie de ticket', 'Logo/RUC'),
-        'delivery': ('Mapa o zona', 'Tiempo estimado', 'Costo base'),
-        'redes': ('Instagram/Facebook/TikTok', 'Campaña', 'Enlace'),
-        'pixel': ('Pixel ID', 'Token/API', 'Evento principal'),
-        'google': ('Google Business/Maps', 'Ubicación', 'Categoría'),
-        'api': ('Endpoint', 'Token', 'Webhook'),
-        'backup': ('Frecuencia', 'Destino', 'Responsable'),
-    }
-    for r in rows:
-        key = r['clave']
-        ph = placeholders.get(key, ('Dato 1', 'Dato 2', 'Dato 3'))
-        cls = '' if int(r['activo'] or 0) == 1 else 'off'
-        estado = 'ACTIVO' if int(r['activo'] or 0) == 1 else 'PENDIENTE'
-        cards.append(f'''
-        <div class="integration-card {cls}">
-          <div class="ico">{icons.get(key,'🔌')}</div>
-          <h3>{r['nombre']}</h3>
-          <p>{r['descripcion']}</p>
-          <span class="status-pill">● {estado}</span>
-          <form method="post" class="integration-form">
-            <input type="hidden" name="accion" value="guardar">
-            <input type="hidden" name="clave" value="{key}">
-            <input name="valor1" value="{r['valor1'] or ''}" placeholder="{ph[0]}">
-            <input name="valor2" value="{r['valor2'] or ''}" placeholder="{ph[1]}">
-            <input name="valor3" value="{r['valor3'] or ''}" placeholder="{ph[2]}">
-            <div class="toggle-row"><b>Estado</b><select name="activo"><option value="1" {'selected' if int(r['activo'] or 0)==1 else ''}>Activo</option><option value="0" {'selected' if int(r['activo'] or 0)==0 else ''}>Pendiente</option></select></div>
-            <div class="integration-actions"><button class="btn-green">Guardar</button></div>
-          </form>
-        </div>''')
-    html = f'''
-    <div class="trial-bar">⚠️ Panel de integraciones estilo Kyte para AORIX Restaurante · <u>Configuración centralizada</u></div>
-    <div class="kyte-shell">
-      <div class="kyte-head"><h2>Configuraciones</h2><div class="kyte-help">↻ Ayuda <div class="avatar-kyte">AO</div><div>{session.get('user')}<br><small>{session.get('rol')}</small></div></div></div>
-      <div class="settings-tabs"><a href="{url_for('admin')}">GENERAL</a><span>PEDIDOS Y VENTAS</span><span>RECIBO</span><span>PAGOS</span><span>ENTREGA Y RETIRADA</span><span class="on">INTEGRACIONES</span></div>
-      <div class="config-hero"><div class="store-icon">🏪</div><h3>Centro de integraciones AORIX</h3><p>Conecta catálogo, WhatsApp, pagos, delivery, recibos, redes y reportes para una cadena de restaurantes o pizzerías.</p></div>
-      <div class="integrations-summary">
-        <div class="mini-report">Integraciones<b>{len(rows)}</b></div><div class="mini-report">Activas<b>{activos}</b></div><div class="mini-report">Pendientes<b>{pendientes}</b></div><div class="mini-report">Modo<b>Web/App</b></div>
-      </div>
-      <div class="config-panel"><h3>Información general del negocio</h3>
-        <form method="post" class="clean-grid-4">
-          <input type="hidden" name="accion" value="guardar_negocio">
-          <div><label>Nombre comercio</label><input name="nombre_comercio" value="{get_ctx('nombre_comercio','RESTAURANTE AORIX')}" placeholder="Nombre del comercio"></div>
-          <div><label>Responsable</label><input name="responsable" value="{get_ctx('responsable','')}" placeholder="Responsable o empresa"></div>
-          <div><label>Identificación/RUC</label><input name="identificacion" value="{get_ctx('identificacion','')}" placeholder="RUC / DNI / identificación"></div>
-          <div><label>WhatsApp</label><input name="whatsapp_negocio" value="{get_ctx('whatsapp_negocio','')}" placeholder="+51..."></div>
-          <div><label>Correo</label><input name="correo_negocio" value="{get_ctx('correo_negocio','')}" placeholder="correo@negocio.com"></div>
-          <div><label>Dirección</label><input name="direccion_negocio" value="{get_ctx('direccion_negocio','')}" placeholder="Dirección principal"></div>
-          <div><label>Horario</label><input name="horario_negocio" value="{get_ctx('horario_negocio','')}" placeholder="Lun-Dom 10am-11pm"></div>
-          <div><label>Link catálogo</label><input name="catalogo_url" value="{get_ctx('catalogo_url','')}" placeholder="restaurante-aorix.kyte.site"></div>
-          <button class="btn-green">Guardar configuración</button>
-        </form>
-      </div>
-      <div class="integration-grid">{''.join(cards)}</div>
-      <div class="config-panel" style="margin-top:16px"><h3>Recomendación para restaurante/pizzería</h3><div class="hint-card">Mantén activos WhatsApp, Catálogo online, Pagos, Recibos, Delivery y Backup. Deja Pixel, API y Google como preparación para campañas, pasarelas de pago o crecimiento por sucursales.</div></div>
-    </div>
-    '''
-    return page(html, 'integraciones')
 
 @app.route("/logs")
 @login_required
