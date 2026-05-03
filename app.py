@@ -36,6 +36,13 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 try:
+    import qrcode
+    QRCODE_OK = True
+except Exception:
+    qrcode = None
+    QRCODE_OK = False
+
+try:
     from openpyxl import Workbook, load_workbook
     OPENPYXL = True
 except Exception:
@@ -127,7 +134,8 @@ def init_db():
                 nombre TEXT DEFAULT '',
                 clave_hash TEXT NOT NULL,
                 rol TEXT DEFAULT 'CAJA',
-                activo INTEGER DEFAULT 1
+                activo INTEGER DEFAULT 1,
+                sucursal_id INTEGER DEFAULT 1
             );
             CREATE TABLE IF NOT EXISTS sucursales(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -261,21 +269,28 @@ def init_db():
             """
         )
         c.commit()
+    try:
+        cols = [r[1] for r in q_all("PRAGMA table_info(usuarios)")]
+        if "sucursal_id" not in cols:
+            q_exec("ALTER TABLE usuarios ADD COLUMN sucursal_id INTEGER DEFAULT 1")
+    except Exception:
+        pass
 
     defaults = [("Sucursal Principal",), ("Delivery",)]
     for (nombre,) in defaults:
         if not q_one("SELECT id FROM sucursales WHERE nombre=?", (nombre,)):
             q_exec("INSERT INTO sucursales(nombre,activo) VALUES(?,1)", (nombre,))
 
-    for usuario, nombre, clave, rol in [
-        ("admin", "Administrador", "admin123", "ADMIN"),
-        ("caja", "Caja", "caja123", "CAJA"),
-        ("mozo", "Mozo", "mozo123", "MESERO"),
+    for usuario, nombre, clave, rol, sucursal_id in [
+        ("admin", "Administrador", "admin123", "ADMIN", 1),
+        ("vendedor1", "Vendedor 1", "vendedor123", "VENDEDOR", 1),
+        ("vendedor2", "Vendedor 2", "vendedor123", "VENDEDOR", 1),
+        ("vendedor3", "Vendedor 3", "vendedor123", "VENDEDOR", 2),
     ]:
         if not q_one("SELECT id FROM usuarios WHERE usuario=?", (usuario,)):
             q_exec(
-                "INSERT INTO usuarios(usuario,nombre,clave_hash,rol,activo) VALUES(?,?,?,?,1)",
-                (usuario, nombre, generate_password_hash(clave), rol),
+                "INSERT INTO usuarios(usuario,nombre,clave_hash,rol,activo,sucursal_id) VALUES(?,?,?,?,1,?)",
+                (usuario, nombre, generate_password_hash(clave), rol, sucursal_id),
             )
 
     for k, v in {
@@ -669,8 +684,7 @@ def login():
     html = """
     <div class="login-page">
       <form class="login-card" method="post">
-        <img class="login-logo-img" src="/static/toro_logo.png" onerror="this.style.display='none'">
-        <div class="logo">EL <span>TORO</span></div>
+        <img class="login-logo-img" src="/static/toro_logo.png" alt="El Toro Restaurant Grill">
         <h2>Restaurant Grill</h2>
         <p style="color:#ffd1d8;font-weight:800">Restaurante · Pizzería · Parrillas · Delivery · Caja</p>
         <label>Usuario</label><input name="usuario" placeholder="Ingrese su usuario" autofocus>
@@ -773,6 +787,9 @@ def ventas():
     if request.method == "POST":
         accion = request.form.get("accion", "guardar_pedido")
         if accion == "importar_productos" and "archivo" in request.files:
+            if not is_admin():
+                flash("Carga de inicio de día restringida: solo administrador.", "error")
+                return redirect(url_for("ventas"))
             count = importar_productos(request.files["archivo"])
             flash(f"Carga inicio día completada: {count} productos actualizados.", "ok")
             return redirect(url_for("ventas"))
@@ -795,7 +812,10 @@ def ventas():
             return redirect(url_for("ventas"))
         if accion == "cobrar_ticket":
             pedido_id = int(request.form.get("pedido_id") or 0)
-            vid = crear_venta_desde_pedido(pedido_id, request.form.get("metodo_pago", "EFECTIVO"))
+            metodo = request.form.get("metodo_pago", "EFECTIVO")
+            vid = crear_venta_desde_pedido(pedido_id, metodo)
+            if vid and metodo in ("YAPE", "PLIN", "TRANSFERENCIA"):
+                return redirect(url_for("pago_qr", pedido_id=pedido_id, metodo=metodo))
             flash("Pedido cobrado y ticket generado." if vid else "No se pudo cobrar: verifica que el pedido exista y no esté pagado.", "ok" if vid else "error")
             return redirect(url_for("ventas"))
     buscar_prod = clean(request.args.get("buscar", ""))
@@ -864,6 +884,25 @@ def ticket(pedido_id):
     lines += ["-" * 32, f"TOTAL: {money(p['total'])}"]
     bio = BytesIO("\n".join(lines).encode("utf-8"))
     return send_file(bio, as_attachment=True, download_name=f"ticket_{p['codigo']}.txt", mimetype="text/plain")
+
+
+@app.route('/pago_qr/<int:pedido_id>/<metodo>')
+@login_required
+def pago_qr(pedido_id, metodo):
+    p = q_one('SELECT * FROM pedidos WHERE id=?', (pedido_id,))
+    if not p:
+        flash('Pedido no encontrado.', 'error')
+        return redirect(url_for('ventas'))
+    data = f"EL TORO RESTAURANT GRILL|PEDIDO:{p['codigo']}|METODO:{metodo}|MONTO:{float(p['total'] or 0):.2f}|CLIENTE:{p['cliente']}"
+    if QRCODE_OK:
+        bio = BytesIO()
+        img = qrcode.make(data)
+        img.save(bio, format='PNG')
+        qr_src = 'data:image/png;base64,' + base64.b64encode(bio.getvalue()).decode('ascii')
+    else:
+        qr_src = url_for('static', filename='toro_logo.png')
+    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div><p class="hint-card">Muestra este QR al cliente para lectura de pago. Contiene pedido, método y monto. Para conciliación automática real se puede conectar luego con API bancaria/Yape Empresa/Plin.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><div class="actions" style="justify-content:center"><a class="btn-primary" href="{url_for('ticket', pedido_id=pedido_id)}">Imprimir ticket</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
+    return page(html, 'ventas')
 
 # =========================
 # INVENTARIO
@@ -1283,10 +1322,13 @@ def admin():
             usuario = clean(request.form.get("usuario"))
             clave = clean(request.form.get("clave"))
             nombre = up(request.form.get("nombre"))
-            rol = request.form.get("rol", "MESERO")
+            rol = request.form.get("rol", "VENDEDOR")
+            sucursal_id = int(request.form.get("sucursal_id") or 1)
+            if rol not in ("ADMIN", "VENDEDOR"):
+                rol = "VENDEDOR"
             if usuario and clave:
-                q_exec("INSERT OR REPLACE INTO usuarios(usuario,nombre,clave_hash,rol,activo) VALUES(?,?,?,?,1)", (usuario, nombre, generate_password_hash(clave), rol))
-                flash("Usuario guardado.", "ok")
+                q_exec("INSERT OR REPLACE INTO usuarios(usuario,nombre,clave_hash,rol,activo,sucursal_id) VALUES(?,?,?,?,1,?)", (usuario, nombre, generate_password_hash(clave), rol, sucursal_id))
+                flash("Usuario guardado y enlazado a sucursal.", "ok")
         elif accion == "desactivar_usuario":
             usuario = clean(request.form.get("usuario"))
             if usuario and usuario != session.get("user"):
@@ -1298,11 +1340,12 @@ def admin():
             flash("Demo sembrada / verificada.", "ok")
         return redirect(url_for("admin"))
     sucursales = q_all("SELECT * FROM sucursales ORDER BY nombre")
-    usuarios = q_all("SELECT usuario,nombre,rol,activo FROM usuarios ORDER BY usuario")
+    usuarios = q_all("SELECT u.usuario,u.nombre,u.rol,u.activo,COALESCE(s.nombre,'Sucursal Principal') sucursal FROM usuarios u LEFT JOIN sucursales s ON s.id=u.sucursal_id ORDER BY u.usuario")
+    suc_opts = ''.join(f'<option value="{s["id"]}">{s["nombre"]}</option>' for s in sucursales)
     tr_s = "".join(f'<tr><td>{s["id"]}</td><td>{s["nombre"]}</td><td>{s["activo"]}</td></tr>' for s in sucursales)
     tr_u = "".join(f'<tr><td>{u["usuario"]}</td><td>{u["nombre"]}</td><td>{u["rol"]}</td><td>{u["activo"]}</td><td>{"" if u["usuario"]==session.get("user") else f"<form method=\"post\" style=\"margin:0\"><input type=\"hidden\" name=\"accion\" value=\"desactivar_usuario\"><input type=\"hidden\" name=\"usuario\" value=\"{u["usuario"]}\"><button class=\"btn-red\" onclick=\"return confirm(\'¿Desactivar usuario?\')\">Desactivar</button></form>"}</td></tr>' for u in usuarios)
     html = f"""
-    <div class="role-note">✅ Administración PRO: crea usuarios, controla roles, administra sucursales y prepara la operación para cadena de restaurantes.</div>
+    <div class="role-note">✅ Administración multi-sucursal: crea sucursales, enlaza vendedores a cada local y reserva la carga del día para ADMIN.</div>
     <div class="admin-super-grid">
       <div class="panel"><div class="section-title">👤 Crear / actualizar usuario</div>
         <form method="post" class="admin-form-grid">
@@ -1310,7 +1353,8 @@ def admin():
           <div><label>Usuario</label><input name="usuario" required placeholder="ej: vendedor1"></div>
           <div><label>Nombre</label><input name="nombre" placeholder="Nombre completo"></div>
           <div><label>Clave</label><input name="clave" type="password" required placeholder="Clave"></div>
-          <div><label>Rol</label><select name="rol"><option>OPERADOR</option><option>MESERO</option><option>CAJA</option><option>COCINA</option><option>ADMIN</option></select></div>
+          <div><label>Rol</label><select name="rol"><option>VENDEDOR</option><option>ADMIN</option></select></div>
+          <div><label>Sucursal asignada</label><select name="sucursal_id">{suc_opts}</select></div>
           <button class="primary" style="grid-column:1/-1">Guardar usuario</button>
         </form>
       </div>
@@ -1320,13 +1364,13 @@ def admin():
       </div>
     </div>
     <div class="food-card-grid">
-      <div class="food-card"><div class="thumb">🔐</div><b>Roles claros</b><small>Admin controla todo; operadores trabajan ventas/pedidos/cierre.</small></div>
+      <div class="food-card"><div class="thumb">🔐</div><b>Roles claros</b><small>Admin controla todo; vendedores trabajan ventas/pedidos/cierre.</small></div>
       <div class="food-card"><div class="thumb">🏪</div><b>Sucursales</b><small>Base para reportes por local y turnos.</small></div>
       <div class="food-card"><div class="thumb">📱</div><b>Celular</b><small>Botones grandes y navegación tipo app.</small></div>
     </div><br>
     <div class="admin-super-grid">
       <div class="panel"><div class="section-title">🏬 Sucursales creadas</div><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Activo</th></tr></thead><tbody>{tr_s}</tbody></table></div></div>
-      <div class="panel admin-users-panel"><div class="section-title">👥 Usuarios creados</div><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Activo</th><th>Acción</th></tr></thead><tbody>{tr_u}</tbody></table></div></div>
+      <div class="panel admin-users-panel"><div class="section-title">👥 Usuarios creados</div><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Sucursal</th><th>Activo</th><th>Acción</th></tr></thead><tbody>{tr_u}</tbody></table></div></div>
     </div>
     <div class="panel"><div class="section-title">📌 Resumen funcional</div><textarea class="report-box" readonly>NEGOCIO EL TORO - NIVEL DIOS UI/UX
 
