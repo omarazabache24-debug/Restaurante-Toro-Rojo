@@ -1,0 +1,1 @@
+Mejoras finales: pedidos con productos visibles, agregar items al mismo pedido, estado pagado solo por botón, catálogo con selección de producto para cargar imagen, inventario individual/masiva, cierre vendedor simplificado, datos por sucursal y UI móvil ajustada.

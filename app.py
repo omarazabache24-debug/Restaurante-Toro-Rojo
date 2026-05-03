@@ -291,6 +291,10 @@ def init_db():
             q_exec("ALTER TABLE usuarios ADD COLUMN sucursal_id INTEGER DEFAULT 1")
         if "clave_plain" not in cols:
             q_exec("ALTER TABLE usuarios ADD COLUMN clave_plain TEXT DEFAULT ''")
+        for _tbl in ("pedidos","ventas","caja"):
+            _cols=[rr[1] for rr in q_all(f"PRAGMA table_info({_tbl})")]
+            if "sucursal_id" not in _cols:
+                q_exec(f"ALTER TABLE {_tbl} ADD COLUMN sucursal_id INTEGER DEFAULT 1")
     except Exception:
         pass
 
@@ -570,11 +574,16 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
 .side{position:fixed!important;top:0!important;left:0!important;bottom:0!important;height:100vh!important;overflow-y:auto!important}.main{margin-left:250px!important}.pedido-prod-text{display:block;max-width:340px;white-space:normal;line-height:1.25;font-size:13px}.clean-grid,.clean-grid-4,.pedido-actions,.pedido-actions-2{display:grid;gap:16px;align-items:end}.clean-grid{grid-template-columns:2fr 2fr 1fr auto}.clean-grid-4{grid-template-columns:repeat(4,minmax(190px,1fr))}.product-toolbar{position:sticky;top:86px;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-radius:22px;padding:14px;margin-bottom:18px;box-shadow:0 12px 35px rgba(15,23,42,.08);display:grid;grid-template-columns:minmax(260px,1fr) 220px 140px;gap:12px}.catalog-hero .btn-success,.qr-box .btn-success{white-space:normal!important;line-height:1.15!important;overflow:visible!important;text-align:center!important}.catalog-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))!important;gap:18px!important}.catalog-card{overflow:hidden!important}.catalog-card img{width:100%!important;height:160px!important;object-fit:cover!important}.price-pill{display:inline-flex!important;align-items:center;justify-content:center;min-height:36px;white-space:nowrap}.login-page{min-height:100dvh!important;padding:18px!important;align-items:center!important}.login-card{margin:auto!important;max-width:520px!important}.mobile-bottom a.on{background:linear-gradient(135deg,#ff002b,#ff5a45)!important;border-radius:16px!important;box-shadow:0 8px 22px rgba(255,0,43,.35)!important}
 @media(max-width:900px){.main{margin-left:0!important}.side{display:none!important}.content{padding:10px 10px 92px!important}.topbar{position:sticky!important;top:0!important;z-index:80!important}.topbar h1{font-size:21px!important;line-height:1.05!important}.topbar p{font-size:12px!important}input,select,textarea{background:#fff!important;color:#0f172a!important;border-radius:18px!important;min-height:54px!important;font-size:16px!important}label{font-size:16px!important;color:#fff!important}.panel{background:#11131d!important;color:#fff!important;border:1px solid #2b2f3d!important;border-radius:24px!important;overflow:hidden!important}.section-title{font-size:26px!important;line-height:1.12!important}.clean-grid,.clean-grid-4,.pedido-actions,.pedido-actions-2,.product-toolbar{grid-template-columns:1fr!important;position:relative!important;top:auto!important}.pos-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}.pos-product{font-size:14px!important;min-height:128px!important}.table-wrap{overflow:auto!important;-webkit-overflow-scrolling:touch!important;border-radius:18px!important}.table-wrap table{min-width:760px!important;font-size:14px!important}th,td{white-space:nowrap!important;padding:12px!important}.pedido-prod-text{max-width:260px!important;white-space:normal!important;color:#fff!important}.grid2{grid-template-columns:1fr!important}.qr-box{grid-template-columns:1fr!important;text-align:center!important}.catalog-grid{grid-template-columns:1fr!important}.catalog-card img{height:220px!important}.login-card{width:min(420px,94vw)!important;text-align:center!important}.login-logo-img{width:160px!important;height:160px!important;margin:auto!important}}
 
+
+/* ===== FIX FINAL OPERATIVO EL TORO ===== */
+.topbar{position:sticky!important;top:0!important;z-index:120!important}.side{position:fixed!important;top:0!important;left:0!important;height:100vh!important;overflow:auto!important}.main{margin-left:250px!important}.tabs{position:relative!important;top:auto!important}.admin-mode .tabs{display:none!important}.content{background:radial-gradient(circle at 90% 0%,rgba(255,0,34,.12),transparent 30%),linear-gradient(180deg,#eef2f7,#f8fafc)!important}.panel{overflow:hidden}.btn-danger,.btn-success,.btn-primary,.primary,button.primary{background:linear-gradient(135deg,#ff002b,#ff5a3d)!important;color:#fff!important}.btn-warning{background:linear-gradient(135deg,#ff7a00,#ffb000)!important;color:#fff!important}.pedido-resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}.pedido-card{border:1px solid #fee2e2;border-radius:18px;padding:14px;background:linear-gradient(180deg,#fff,#fff7f7)}.pedido-card b{font-size:18px}.detalle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.item-chip{border:1px solid #e2e8f0;border-radius:16px;padding:12px;background:#fff;box-shadow:0 8px 18px rgba(15,23,42,.06)}.item-chip b{display:block;font-size:16px}.catalog-pick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}.catalog-pick{border:1px solid #ffb4bd;border-radius:16px;padding:12px;background:#fff6f7;cursor:pointer;font-weight:900}.catalog-pick:hover{background:#ffe5e8}.inventory-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.inventory-tab{padding:12px 16px;border-radius:16px;background:#f1f5f9;font-weight:950}.inventory-tab.active{background:linear-gradient(135deg,#ff002b,#ff5a3d);color:white}.admin-menu-note{padding:12px;border-radius:14px;background:#fff1f2;color:#7f1d1d;font-weight:900}.user-cierre-simple .kpi:nth-child(1),.user-cierre-simple .kpi:nth-child(4){display:none!important}.catalog-admin-only{display:block}.seller-mode .catalog-admin-only{display:none!important}.seller-mode .admin-only{display:none!important}.mobile-active-title{display:none}
+@media(max-width:900px){.side{display:none!important}.main{margin-left:0!important}.topbar{position:sticky!important;top:0!important}.mobile-active-title{display:block!important;background:#11131d;color:#fff;border:1px solid #2b2f3d;border-radius:18px;padding:12px 14px;margin-bottom:12px;font-weight:950;text-align:center}.content{padding-bottom:86px!important}.panel{max-width:100%!important}.clean-grid,.pedido-actions,.pedido-actions-2,.clean-grid-4{display:grid!important;grid-template-columns:1fr!important}.pedido-resumen,.detalle-grid{grid-template-columns:1fr!important}.table-wrap{border-radius:20px!important;overflow:auto!important}.table-wrap table{min-width:620px!important}.login-page{min-height:100dvh!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:14px!important}.login-card{margin:0 auto!important;transform:none!important}.login-logo-img{display:block!important;margin:0 auto 12px!important}.catalog-hero{grid-template-columns:1fr!important}.catalog-phone{max-width:100%!important}.mobile-bottom a.on{background:linear-gradient(135deg,#ff002b,#ff5a3d)!important;color:#fff!important}}
+
 </style>
 </head>
 <body>
 {% if session.get('user') %}
-<div class="app {{'admin-mode' if session.get('rol') == 'ADMIN' else 'user-mode'}}">
+<div class="app {{'admin-mode' if session.get('rol') == 'ADMIN' else 'user-mode seller-mode'}}">
   <aside class="side">
     <div class="brand"><img class="brand-logo-img" src="{{url_for('static', filename='toro_logo.png')}}" onerror="this.style.display='none'"><div class="logo">EL <span>TORO</span></div><small>Restaurant Grill</small><br><small>{{session.get('user')}} - {{session.get('rol')}}</small></div>
     <nav class="nav">
@@ -707,19 +716,19 @@ def crear_venta_desde_pedido(pedido_id, metodo_pago="EFECTIVO"):
     if p["pagado"] == "SI":
         return None
     vid = q_exec(
-        "INSERT INTO ventas(fecha,hora,pedido_id,cliente,servicio,metodo_pago,subtotal,descuento,total,usuario,estado) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-        (today(), hour(), pedido_id, p["cliente"], p["servicio"], metodo_pago, p["subtotal"], p["descuento"], p["total"], session.get("user", ""), "PAGADO"),
+        "INSERT INTO ventas(fecha,hora,pedido_id,cliente,servicio,metodo_pago,subtotal,descuento,total,usuario,estado,sucursal_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+        (today(), hour(), pedido_id, p["cliente"], p["servicio"], metodo_pago, p["subtotal"], p["descuento"], p["total"], session.get("user", ""), "PAGADO", session.get("sucursal_id",1)),
     )
     for d in q_all("SELECT * FROM pedido_detalle WHERE pedido_id=?", (pedido_id,)):
         q_exec(
             "INSERT INTO venta_detalle(venta_id,producto_id,producto,cantidad,precio,total) VALUES(?,?,?,?,?,?)",
             (vid, d["producto_id"], d["producto"], d["cantidad"], d["precio"], d["total"]),
         )
-        descontar_producto(d["producto_id"], d["cantidad"])
+        # Stock ya se descuenta al crear/agregar el pedido; no duplicar descuento al cobrar.
     q_exec("UPDATE pedidos SET pagado='SI', estado='PAGADO' WHERE id=?", (pedido_id,))
     q_exec(
-        "INSERT INTO caja(fecha,hora,tipo,concepto,monto,usuario,venta_id) VALUES(?,?,?,?,?,?,?)",
-        (today(), hour(), "INGRESO", f"VENTA PEDIDO {p['codigo']}", p["total"], session.get("user", ""), vid),
+        "INSERT INTO caja(fecha,hora,tipo,concepto,monto,usuario,venta_id,sucursal_id) VALUES(?,?,?,?,?,?,?,?)",
+        (today(), hour(), "INGRESO", f"VENTA PEDIDO {p['codigo']}", p["total"], session.get("user", ""), vid, session.get("sucursal_id",1)),
     )
     log_event("VENTA", f"Pedido cobrado {p['codigo']}")
     return vid
@@ -739,6 +748,7 @@ def login():
             session["user"] = r["usuario"]
             session["nombre"] = r["nombre"]
             session["rol"] = r["rol"]
+            session["sucursal_id"] = r["sucursal_id"] if "sucursal_id" in r.keys() else 1
             log_event("LOGIN", "Ingreso correcto")
             return redirect(url_for(safe_home()))
         flash("Usuario o clave incorrectos.", "error")
@@ -798,45 +808,41 @@ def dashboard():
 @login_required
 def cierre():
     f = get_ctx("dia_abierto", today())
+    sucid = session.get("sucursal_id", 1)
     if request.method == "POST":
         accion = request.form.get("accion")
         if accion == "cerrar":
-            set_ctx("dia_cerrado", f)
-            log_event("CIERRE", f"Día cerrado {f}")
-            flash("Día cerrado correctamente. Ya puedes revisar el resumen y exportar reportes.", "ok")
+            set_ctx(f"dia_cerrado_{sucid}_{f}", "1")
+            log_event("CIERRE", f"Día cerrado {f} - sucursal {sucid}")
+            flash("Día cerrado correctamente. La información queda guardada en línea para el administrador.", "ok")
         elif accion == "reabrir" and is_admin():
-            set_ctx("dia_cerrado", "")
+            set_ctx(f"dia_cerrado_{sucid}_{f}", "")
             log_event("REABRIR", f"Día reabierto {f}")
             flash("Día reabierto correctamente.", "ok")
         return redirect(url_for("cierre"))
-    cerrado = get_ctx("dia_cerrado", "") == f
+    cerrado = get_ctx(f"dia_cerrado_{sucid}_{f}", "") == "1"
+    pedidos = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND COALESCE(sucursal_id,1)=?", (f, sucid))["c"]
+    pendientes = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND COALESCE(sucursal_id,1)=? AND estado NOT IN ('PAGADO','ENTREGADO')", (f, sucid))["c"]
+    if not is_admin():
+        html = f"""
+        <div class="mobile-active-title">🔒 Cierre</div>
+        <div class="panel user-cierre-simple"><div class="section-title">🔒 Cierre del día del vendedor</div>
+          <div class="role-note">Solo verás pedidos del día y pendientes. Al cerrar, la información queda disponible para el administrador.</div>
+          <div class="kpis"><div class="kpi"><h3>Pedidos del día</h3><b>{pedidos}</b></div><div class="kpi"><h3>Pedidos pendientes</h3><b class="red">{pendientes}</b></div></div><br>
+          <form method="post" class="actions"><button name="accion" value="cerrar" class="btn-danger">🔒 Cerrar día</button><a class="btn" href="{url_for('pedidos')}">Ver pedidos</a></form>
+        </div>"""
+        return page(html, "cierre")
     ventas_hoy = q_one("SELECT COALESCE(SUM(total),0) t, COUNT(*) c FROM ventas WHERE fecha=?", (f,))
-    pedidos = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=?", (f,))["c"]
-    pendientes = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND estado NOT IN ('PAGADO','ENTREGADO')", (f,))["c"]
     caja_ing = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='INGRESO'", (f,))["t"]
     caja_egr = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='EGRESO'", (f,))["t"]
     estado = "CERRADO" if cerrado else "ABIERTO"
     cls = "off" if cerrado else "ok"
-    admin_btn = f'<button name="accion" value="reabrir" class="btn-orange">🔓 Reabrir día</button>' if is_admin() else ''
     html = f"""
-    <div class="panel">
-      <div class="box-title">🔒 Cierre del día</div><br>
+    <div class="panel"><div class="section-title">🔒 Cierre administrativo</div>
       <div class="role-note">Estado actual: <span class="badge {cls}">{estado}</span> · Fecha: <b>{f}</b></div>
-      <div class="kpis">
-        <div class="kpi"><h3>Ventas del día</h3><b>{money(ventas_hoy['t'])}</b></div>
-        <div class="kpi"><h3>Pedidos</h3><b>{pedidos}</b></div>
-        <div class="kpi"><h3>Pendientes</h3><b class="red">{pendientes}</b></div>
-        <div class="kpi"><h3>Caja neta</h3><b>{money(float(caja_ing or 0)-float(caja_egr or 0))}</b></div>
-      </div><br>
-      <form method="post" class="actions">
-        <button name="accion" value="cerrar" class="btn-red">🔒 Cerrar día</button>
-        {admin_btn}
-        <a class="btn" href="{url_for('reportes',fi=f,ff=f)}">📄 Ver reporte del día</a>
-        <a class="btn" href="{url_for('export_excel',fi=f,ff=f)}">📊 Exportar Excel</a>
-      </form>
-    </div>
-    <div class="panel"><div class="box-title">Recomendación operativa</div><p>Antes de cerrar, verifica pedidos pendientes, caja y stock bajo. El cierre es lógico: no borra datos y el administrador puede reabrir el día.</p></div>
-    """
+      <div class="kpis"><div class="kpi"><h3>Ventas del día</h3><b>{money(ventas_hoy['t'])}</b></div><div class="kpi"><h3>Pedidos</h3><b>{pedidos}</b></div><div class="kpi"><h3>Pendientes</h3><b class="red">{pendientes}</b></div><div class="kpi"><h3>Caja neta</h3><b>{money(float(caja_ing or 0)-float(caja_egr or 0))}</b></div></div><br>
+      <form method="post" class="actions"><button name="accion" value="cerrar" class="btn-danger">🔒 Cerrar día</button><button name="accion" value="reabrir" class="btn-warning">🔓 Reabrir día</button><a class="btn" href="{url_for('reportes',fi=f,ff=f)}">📄 Ver reporte del día</a><a class="btn" href="{url_for('export_excel',fi=f,ff=f)}">📊 Exportar Excel</a></form>
+    </div>"""
     return page(html, "cierre")
 
 # =========================
@@ -879,7 +885,7 @@ def ventas():
             direccion = up(request.form.get("direccion"))
             referencia = up(request.form.get("referencia"))
             asegurar_cliente(cliente, telefono, direccion, referencia)
-            pedido_id = q_exec("INSERT INTO pedidos(codigo,fecha,hora,mesa,cliente,telefono,direccion,referencia,servicio,metodo_pago,subtotal,descuento,total,estado,pagado,usuario,observacion) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (codigo, today(), hour(), request.form.get("mesa", ""), cliente, telefono, direccion, referencia, request.form.get("servicio", "SALÓN"), request.form.get("metodo_pago", "EFECTIVO"), subtotal, descuento, total, "PENDIENTE", "NO", session.get("user"), ""))
+            pedido_id = q_exec("INSERT INTO pedidos(codigo,fecha,hora,mesa,cliente,telefono,direccion,referencia,servicio,metodo_pago,subtotal,descuento,total,estado,pagado,usuario,observacion,sucursal_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (codigo, today(), hour(), request.form.get("mesa", ""), cliente, telefono, direccion, referencia, request.form.get("servicio", "SALÓN"), request.form.get("metodo_pago", "EFECTIVO"), subtotal, descuento, total, "PENDIENTE", "NO", session.get("user"), "", session.get("sucursal_id",1)))
             q_exec("INSERT INTO pedido_detalle(pedido_id,producto_id,producto,cantidad,precio,total) VALUES(?,?,?,?,?,?)", (pedido_id, producto_id, prod["nombre"], cantidad, precio, total))
             descontar_producto(producto_id, cantidad)
             log_event("PEDIDO", f"Creado {codigo} - {prod['nombre']}")
@@ -935,8 +941,12 @@ def pedidos():
             flash("Selecciona un pedido.", "error")
             return redirect(url_for("pedidos"))
         if accion == "estado":
-            q_exec("UPDATE pedidos SET estado=? WHERE id=?", (request.form.get("estado", "PENDIENTE"), pedido_id))
-            flash("Estado actualizado.", "ok")
+            nuevo = request.form.get("estado", "PENDIENTE")
+            if nuevo == "PAGADO":
+                flash("Para pagar usa el botón Marcar pagado; así se registra caja y venta.", "error")
+            else:
+                q_exec("UPDATE pedidos SET estado=? WHERE id=?", (nuevo, pedido_id))
+                flash("Estado actualizado.", "ok")
         elif accion == "pagado":
             crear_venta_desde_pedido(pedido_id, request.form.get("metodo_pago", "EFECTIVO"))
             flash("Pedido marcado como pagado.", "ok")
@@ -952,15 +962,33 @@ def pedidos():
             q_exec("DELETE FROM pedidos WHERE id=?", (pedido_id,))
             flash("Pedido eliminado.", "ok")
         return redirect(url_for("pedidos"))
+
     estado = request.args.get("estado", "TODOS")
-    rows = q_all("SELECT p.*, COALESCE((SELECT GROUP_CONCAT(producto || ' x' || CAST(cantidad AS INT), ' + ') FROM pedido_detalle d WHERE d.pedido_id=p.id),'') productos FROM pedidos p ORDER BY p.id DESC LIMIT 200") if estado == "TODOS" else q_all("SELECT p.*, COALESCE((SELECT GROUP_CONCAT(producto || ' x' || CAST(cantidad AS INT), ' + ') FROM pedido_detalle d WHERE d.pedido_id=p.id),'') productos FROM pedidos p WHERE p.estado=? ORDER BY p.id DESC", (estado,))
+    sucid = session.get("sucursal_id", 1)
+    base_sql = "SELECT p.*, COALESCE((SELECT GROUP_CONCAT(producto || ' x' || CAST(cantidad AS INT), ' + ') FROM pedido_detalle d WHERE d.pedido_id=p.id),'') productos FROM pedidos p"
+    if is_admin():
+        rows = q_all(base_sql + " ORDER BY p.id DESC LIMIT 200") if estado == "TODOS" else q_all(base_sql + " WHERE p.estado=? ORDER BY p.id DESC LIMIT 200", (estado,))
+    else:
+        rows = q_all(base_sql + " WHERE COALESCE(p.sucursal_id,1)=? ORDER BY p.id DESC LIMIT 200", (sucid,)) if estado == "TODOS" else q_all(base_sql + " WHERE COALESCE(p.sucursal_id,1)=? AND p.estado=? ORDER BY p.id DESC LIMIT 200", (sucid, estado))
     opts_p = '<option value="">Selecciona pedido</option>' + "".join(f'<option value="{r["id"]}">{r["codigo"]} · {r["cliente"] or "CLIENTE GENERAL"} · {r["productos"]} · {r["estado"]} · {money(r["total"])}</option>' for r in rows)
     selected_first = rows[0]["id"] if rows else 0
-    detalles = q_all("SELECT d.*,p.codigo FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 120")
-    item_opts = '<option value="">Selecciona item a quitar</option>' + "".join(f'<option value="{r["id"]}">#{r["id"]} · {r["codigo"]} · {r["producto"]} · Cant. {r["cantidad"]}</option>' for r in detalles)
+    detalles = q_all("SELECT d.*,p.codigo,p.cliente FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 120")
+    item_opts = '<option value="">Selecciona item a quitar</option>' + "".join(f'<option value="{r["id"]}">#{r["id"]} · {r["codigo"]} · {r["producto"]} · Cant. {int(float(r["cantidad"] or 0))}</option>' for r in detalles)
+    total_abierto = sum(float(r["total"] or 0) for r in rows if r["pagado"] == "NO")
+    pendientes = sum(1 for r in rows if r["estado"] not in ("PAGADO","ENTREGADO"))
+    resumen_cards = f"<div class='pedido-resumen'><div class='pedido-card'><b>{len(rows)}</b><br>Pedidos encontrados</div><div class='pedido-card'><b>{pendientes}</b><br>Pendientes de cocina</div><div class='pedido-card'><b>{money(total_abierto)}</b><br>Importe abierto</div></div>"
     trs = "".join(f'<tr><td>{r["id"]}</td><td>{r["codigo"]}</td><td>{r["fecha"]}</td><td>{r["hora"]}</td><td>{r["mesa"]}</td><td>{r["cliente"]}</td><td><b class="pedido-prod-text">{r["productos"] or "Sin ítems"}</b></td><td>{r["servicio"]}</td><td><span class="badge warn">{r["estado"]}</span></td><td>{money(r["total"])}</td><td>{r["pagado"]}</td></tr>' for r in rows) or '<tr><td colspan="11">Sin pedidos.</td></tr>'
-    trd = "".join(f'<tr><td>{r["pedido_id"]}</td><td>{r["codigo"]}</td><td>{r["id"]}</td><td>{r["producto"]}</td><td>{r["cantidad"]}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>' for r in detalles) or '<tr><td colspan="7">Sin detalle.</td></tr>'
-    html = f'''<div class="panel"><div class="section-title">🚚 Control de pedidos / cocina</div><form method="get" class="clean-grid"><div><label>Filtrar por estado</label><select name="estado"><option>TODOS</option><option>PENDIENTE</option><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option><option>PAGADO</option></select></div><button>Refrescar</button><a class="btn" href="{url_for('ventas')}">Nuevo pedido</a></form><br><form method="post" class="pedido-actions"><div><label>Pedido</label><select name="pedido_id">{opts_p}</select></div><div><label>Cambiar a estado</label><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option><option>PAGADO</option></select></div><button name="accion" value="estado" class="btn-success">Actualizar estado</button></form><br><form method="post" class="pedido-actions"><div><label>Pedido para cobrar o limpiar</label><select name="pedido_id">{opts_p}</select></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">Marcar pagado</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('ticket', pedido_id=selected_first)}">Imprimir ticket</a></div></form><br><form method="post" class="pedido-actions-2"><div><label>Pedido</label><select name="pedido_id">{opts_p}</select></div><div><label>Ítem del pedido</label><select name="item_id">{item_opts}</select></div><button name="accion" value="quitar_item" class="btn-warning">➖ Quitar ítem</button></form><div class="sku-help">Se ordenó la pestaña: cada bloque tiene una función clara y se retiraron campos vacíos.</div></div><div class="panel"><div class="section-title">📋 Listado de pedidos</div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Código</th><th>Fecha</th><th>Hora</th><th>Mesa</th><th>Cliente</th><th>Productos</th><th>Servicio</th><th>Estado</th><th>Total</th><th>Pagado</th></tr></thead><tbody>{trs}</tbody></table></div></div><div class="panel"><div class="section-title">🧾 Detalle de ítems</div><div class="table-wrap small"><table><thead><tr><th>Pedido ID</th><th>Código</th><th>Item</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{trd}</tbody></table></div></div>'''
+    chips = "".join(f'<div class="item-chip"><b>{r["producto"]}</b><span>{r["codigo"]} · {r["cliente"]}</span><br>Cant. {int(float(r["cantidad"] or 0))} · {money(r["precio"])} · <b>{money(r["total"])}</b></div>' for r in detalles) or '<div class="hint-card">Sin detalle de ítems.</div>'
+    html = f'''
+    <div class="mobile-active-title">🚚 Pedidos</div>
+    <div class="panel"><div class="section-title">🚚 Control de pedidos / cocina</div>{resumen_cards}
+      <form method="get" class="clean-grid"><div><label>Filtrar por estado</label><select name="estado"><option>TODOS</option><option>PENDIENTE</option><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button>Refrescar</button><a class="btn" href="{url_for('ventas')}">Nuevo pedido</a></form><br>
+      <form method="post" class="pedido-actions"><div><label>Pedido</label><select name="pedido_id">{opts_p}</select></div><div><label>Cambiar a estado</label><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button name="accion" value="estado" class="btn-success">Actualizar estado</button></form><br>
+      <form method="post" class="pedido-actions"><div><label>Pedido para cobrar o limpiar</label><select name="pedido_id">{opts_p}</select></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">Marcar pagado</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('ticket', pedido_id=selected_first)}">Imprimir ticket</a></div></form><br>
+      <form method="post" class="pedido-actions-2"><div><label>Pedido</label><select name="pedido_id">{opts_p}</select></div><div><label>Ítem del pedido</label><select name="item_id">{item_opts}</select></div><button name="accion" value="quitar_item" class="btn-warning">➖ Quitar ítem</button></form>
+    </div>
+    <div class="panel"><div class="section-title">📋 Listado de pedidos</div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Código</th><th>Fecha</th><th>Hora</th><th>Mesa</th><th>Cliente</th><th>Productos</th><th>Servicio</th><th>Estado</th><th>Total</th><th>Pagado</th></tr></thead><tbody>{trs}</tbody></table></div></div>
+    <div class="panel"><div class="section-title">🧾 Detalle de ítems por pedido</div><div class="detalle-grid">{chips}</div></div>'''
     return page(html, "pedidos")
 
 @app.route("/ticket/<int:pedido_id>")
@@ -1012,50 +1040,37 @@ def inventario():
                 return redirect(url_for("inventario"))
             codigo = clean(request.form.get("codigo")) or "P" + now().strftime("%H%M%S")
             existe = q_one("SELECT id FROM productos WHERE nombre=?", (nombre,))
-            data = (codigo, nombre, up(request.form.get("categoria") or "PLATOS"), request.form.get("tipo", "VENTA"), up(request.form.get("unidad") or "PLATO"), float(request.form.get("precio") or 0), float(request.form.get("costo") or 0), float(request.form.get("stock") or 0), float(request.form.get("stock_min") or 0))
+            data = (codigo, nombre, up(request.form.get("categoria") or "PLATOS"), request.form.get("tipo", "VENTA"), up(request.form.get("unidad") or "PLATO"), int(float(request.form.get("precio") or 0)), int(float(request.form.get("costo") or 0)), int(float(request.form.get("stock") or 0)), int(float(request.form.get("stock_min") or 0)))
             if existe:
                 q_exec("UPDATE productos SET codigo=?,categoria=?,tipo=?,unidad=?,precio=?,costo=?,stock=?,stock_min=?,activo=1 WHERE nombre=?", data[:1]+data[2:]+(nombre,))
             else:
                 q_exec("INSERT INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)", data)
-            flash("Producto guardado.", "ok")
+            flash("Producto individual guardado.", "ok")
         elif accion == "stock_in":
             pid = int(request.form.get("producto_id"))
-            q_exec("UPDATE productos SET stock=stock+? WHERE id=?", (float(request.form.get("cantidad") or 0), pid))
+            q_exec("UPDATE productos SET stock=CAST(COALESCE(stock,0) AS INTEGER)+? WHERE id=?", (int(float(request.form.get("cantidad") or 0)), pid))
             flash("Entrada de stock registrada.", "ok")
         elif accion == "stock_out":
             pid = int(request.form.get("producto_id"))
-            q_exec("UPDATE productos SET stock=stock-? WHERE id=?", (float(request.form.get("cantidad") or 0), pid))
+            q_exec("UPDATE productos SET stock=CAST(COALESCE(stock,0) AS INTEGER)-? WHERE id=?", (int(float(request.form.get("cantidad") or 0)), pid))
             flash("Salida de stock registrada.", "ok")
         elif accion == "importar" and "archivo" in request.files:
-            file = request.files["archivo"]
-            count = importar_productos(file)
-            flash(f"Importación completada: {count} productos.", "ok")
+            count = importar_productos(request.files["archivo"])
+            flash(f"Carga masiva completada: {count} productos.", "ok")
         return redirect(url_for("inventario"))
 
     productos = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY CASE WHEN stock<=stock_min THEN 0 ELSE 1 END,nombre")
     opts_prod = select_options(productos)
-    trp = "".join(f'<tr class="{"row-bad" if float(p["stock"] or 0)<=float(p["stock_min"] or 0) else ""}"><td>{p["id"]}</td><td>{p["nombre"]}</td><td>{p["categoria"]}</td><td>{p["tipo"]}</td><td>{p["unidad"]}</td><td>{money(p["precio"])}</td><td>{money(p["costo"])}</td><td>{p["stock"]}</td><td>{p["stock_min"]}</td><td>{"SIN STOCK" if float(p["stock"] or 0)<=0 else "OK"}</td></tr>' for p in productos)
+    trp = "".join(f'<tr class="{"row-bad" if float(p["stock"] or 0)<=float(p["stock_min"] or 0) else ""}"><td>{p["id"]}</td><td>{p["codigo"]}</td><td>{p["nombre"]}</td><td>{p["categoria"]}</td><td>{p["tipo"]}</td><td>{p["unidad"]}</td><td>{money(p["precio"])}</td><td>{money(p["costo"])}</td><td>{int(float(p["stock"] or 0))}</td><td>{int(float(p["stock_min"] or 0))}</td><td>{"SIN STOCK" if float(p["stock"] or 0)<=0 else "OK"}</td></tr>' for p in productos)
     stock_bajo = q_one("SELECT COUNT(*) c FROM productos WHERE activo=1 AND stock<=stock_min")["c"]
-    html = f"""
-    <div class="panel"><div class="section-title">📦 Productos e inventario</div><div class="hint-card"><b>Código/SKU:</b> puede usar letras y números. Recomendado para cadena de restaurantes: PIZ-MUZ-01, BEB-COCA-500, PL-001. Evita espacios y símbolos raros.</div><br>
-      <form method="post"><input type="hidden" name="accion" value="producto">
-        <div class="inventory-sku-row">
-          <div><label>Código/SKU</label><input list="sku_sugeridos" name="codigo" placeholder="Ej. PIZ-MUZ-01" pattern="[A-Za-z0-9-]+"><datalist id="sku_sugeridos"><option value="PIZ-MUZ-01"><option value="PIZ-AME-01"><option value="PARR-POL-01"><option value="BEB-COCA-500"><option value="PL-001"><option value="INS-QUESO-01"></datalist><div class="sku-help">Usa letras+números: PIZ-MUZ-01, BEB-COCA-500.</div></div>
-          <div><label>Nombre producto</label><input name="nombre" placeholder="Nombre producto"></div>
-          <div><label>Categoría</label><select name="categoria"><option>PIZZAS</option><option>PLATOS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>ADICIONALES</option><option>INSUMOS</option></select></div>
-          <div><label>Tipo</label><select name="tipo"><option>VENTA</option><option>INSUMO</option></select></div>
-          <div><label>Unidad</label><select name="unidad"><option>PLATO</option><option>UND</option><option>KG</option><option>PORCION</option></select></div>
-        </div><br>
-        <div class="inventory-num-row">
-          <div><label>Precio venta</label><input name="precio" type="number" step="1" min="0" placeholder="35"></div><div><label>Costo</label><input name="costo" type="number" step="1" min="0" placeholder="18"></div><div><label>Stock</label><input name="stock" type="number" step="1" min="0" placeholder="40"></div><div><label>Stock mínimo</label><input name="stock_min" type="number" step="1" min="0" placeholder="5"></div><button class="primary">Guardar producto</button>
-        </div>
-      </form><br>
-      <form method="post" class="actions"><input type="hidden" name="accion" value="stock_in"><select name="producto_id" style="max-width:380px">{opts_prod}</select><input name="cantidad" type="number" step="1" placeholder="Cantidad" style="max-width:160px"><button>Entrada stock</button></form><br>
-      <form method="post" class="actions"><input type="hidden" name="accion" value="stock_out"><select name="producto_id" style="max-width:380px">{opts_prod}</select><input name="cantidad" type="number" step="1" placeholder="Cantidad" style="max-width:160px"><button>Salida stock</button><a class="btn" href="{url_for('plantilla_inventario')}">Descargar plantilla</a><a class="btn" href="{url_for('export_inventario')}">Exportar inventario</a><b style="color:#c2410c">Alertas: {stock_bajo} con stock bajo</b></form><br>
-      <form method="post" enctype="multipart/form-data" class="actions"><input type="hidden" name="accion" value="importar"><input type="file" name="archivo" accept=".xlsx,.csv" style="max-width:340px"><button class="btn-orange">Importar Excel</button></form>
-    </div>
-    <div class="panel"><div class="section-title">📋 Stock y productos</div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Producto</th><th>Categoría</th><th>Tipo</th><th>Unidad</th><th>Precio</th><th>Costo</th><th>Stock</th><th>Mínimo</th><th>Estado</th></tr></thead><tbody>{trp}</tbody></table></div></div>
-    """
+    html = f'''
+    <div class="mobile-active-title">📦 Inventario</div>
+    <div class="panel"><div class="section-title">📦 Inventario: carga individual / masiva</div><div class="inventory-tabs"><div class="inventory-tab active">Individual</div><div class="inventory-tab">Masiva Excel/CSV</div><div class="inventory-tab">Stock</div></div><div class="hint-card"><b>SKU:</b> letras y números. Ejemplos: PIZ-MUZ-01, BEB-COCA-500, PL-001. Todo precio y stock trabaja con números enteros.</div></div>
+    <div class="panel"><div class="section-title">➕ Producto individual</div><form method="post"><input type="hidden" name="accion" value="producto"><div class="inventory-sku-row"><div><label>Código/SKU</label><input list="sku_sugeridos" name="codigo" placeholder="Ej. PIZ-MUZ-01" pattern="[A-Za-z0-9-]+"><datalist id="sku_sugeridos"><option value="PIZ-MUZ-01"><option value="PIZ-AME-01"><option value="PARR-POL-01"><option value="BEB-COCA-500"><option value="PL-001"></datalist></div><div><label>Nombre producto</label><input name="nombre" placeholder="Nombre producto"></div><div><label>Categoría</label><select name="categoria"><option>PIZZAS</option><option>PLATOS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>ADICIONALES</option><option>INSUMOS</option></select></div><div><label>Tipo</label><select name="tipo"><option>VENTA</option><option>INSUMO</option></select></div><div><label>Unidad</label><select name="unidad"><option>PLATO</option><option>UND</option><option>KG</option><option>PORCION</option></select></div></div><br><div class="inventory-num-row"><div><label>Precio venta</label><input name="precio" type="number" step="1" min="0"></div><div><label>Costo</label><input name="costo" type="number" step="1" min="0"></div><div><label>Stock</label><input name="stock" type="number" step="1" min="0"></div><div><label>Stock mínimo</label><input name="stock_min" type="number" step="1" min="0"></div><button class="primary">Guardar producto</button></div></form></div>
+    <div class="panel"><div class="section-title">📥 Carga masiva / inicio de día</div><form method="post" enctype="multipart/form-data" class="actions"><input type="hidden" name="accion" value="importar"><input type="file" name="archivo" accept=".xlsx,.csv" style="max-width:340px"><button class="btn-warning">Importar Excel/CSV</button><a class="btn" href="{url_for('plantilla_inventario')}">Descargar plantilla</a><a class="btn" href="{url_for('export_inventario')}">Exportar inventario</a></form></div>
+    <div class="panel"><div class="section-title">🔁 Movimientos de stock</div><form method="post" class="actions"><input type="hidden" name="accion" value="stock_in"><select name="producto_id" style="max-width:380px">{opts_prod}</select><input name="cantidad" type="number" step="1" placeholder="Cantidad" style="max-width:160px"><button>Entrada stock</button></form><br><form method="post" class="actions"><input type="hidden" name="accion" value="stock_out"><select name="producto_id" style="max-width:380px">{opts_prod}</select><input name="cantidad" type="number" step="1" placeholder="Cantidad" style="max-width:160px"><button class="btn-danger">Salida stock</button><b style="color:#c2410c">Alertas: {stock_bajo} con stock bajo</b></form></div>
+    <div class="panel"><div class="section-title">📋 Stock y productos</div><div class="table-wrap"><table><thead><tr><th>ID</th><th>SKU</th><th>Producto</th><th>Categoría</th><th>Tipo</th><th>Unidad</th><th>Precio</th><th>Costo</th><th>Stock</th><th>Mínimo</th><th>Estado</th></tr></thead><tbody>{trp}</tbody></table></div></div>
+    '''
     return page(html, "inventario")
 
 def importar_productos(file_storage):
@@ -1173,7 +1188,6 @@ def delivery():
     rows = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY id DESC")
     trs = "".join(f'<tr><td>{r["id"]}</td><td>{r["nombre"]}</td><td>{r["telefono"]}</td><td>{r["direccion"]}</td><td>{r["referencia"]}</td><td>{r["notas"]}</td></tr>' for r in rows) or '<tr><td colspan="6">Sin clientes.</td></tr>'
     html = f"""
-    <div class="delivery-advice">🛵 Delivery no debe retirarse: úsalo como CRM de clientes frecuentes, teléfonos, direcciones y referencias. En Ventas solo eliges el tipo de servicio; aquí administras la base de clientes.</div><br>
     <div class="panel"><div class="section-title">🛵 Clientes delivery / frecuentes</div><form method="post" class="clean-grid">
       <div><label>Nombre</label><input name="nombre" placeholder="Cliente"></div><div><label>Teléfono</label><input name="telefono" placeholder="Celular"></div><div><label>Dirección</label><input name="direccion" placeholder="Dirección"></div><div><label>Referencia</label><input name="referencia" placeholder="Referencia"></div><div><label>Notas</label><input name="notas" placeholder="Ej. portón negro, paga Yape"></div><button class="btn-success">Guardar cliente</button><a class="btn" href="{url_for('ventas')}">Cargar en venta</a><a class="btn" href="{url_for('delivery')}">Refrescar</a></form></div>
     <div class="panel"><div class="section-title">📒 Base de clientes frecuentes</div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Referencia</th><th>Notas</th></tr></thead><tbody>{trs}</tbody></table></div></div>
@@ -1219,7 +1233,7 @@ def qr_svg_data(text):
 @login_required
 def catalogo_admin():
     if request.method == "POST" and not is_admin():
-        flash("Solo el administrador puede cargar imágenes o cambiar configuración. Los vendedores pueden ver y compartir el catálogo.", "error")
+        flash("Solo el administrador puede cargar imágenes o cambiar configuración. Los vendedores pueden abrir y compartir el catálogo.", "error")
         return redirect(url_for("catalogo_admin"))
     if request.method == "POST":
         accion = request.form.get("accion")
@@ -1233,7 +1247,7 @@ def catalogo_admin():
                 q_exec("INSERT INTO catalogo_publico(titulo,descripcion,precio,categoria,imagen,destacado,activo) VALUES(?,?,?,?,?,?,1)", (
                     up(request.form.get("titulo")),
                     clean(request.form.get("descripcion")),
-                    float(request.form.get("precio") or 0),
+                    int(float(request.form.get("precio") or 0)),
                     up(request.form.get("categoria") or "PLATOS"),
                     imagen,
                     1 if request.form.get("destacado") else 0,
@@ -1251,11 +1265,22 @@ def catalogo_admin():
     url = catalog_public_url()
     qr = qr_svg_data(url)
     items = q_all("SELECT * FROM catalogo_publico WHERE activo=1 ORDER BY destacado DESC,id DESC")
+    productos = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY categoria,nombre")
+
+    pickers = ""
+    for p in productos[:60]:
+        pn = str(p['nombre']).replace("'", "").replace('"','')
+        pc = str(p['categoria']).replace("'", "").replace('"','')
+        pp = int(float(p['precio'] or 0))
+        pickers += f"<button type='button' class='catalog-pick' onclick=\"pickCatalog('{pn}','{pc}','{pp}')\">{p['nombre']}<br><small>{money(p['precio'])}</small></button>"
 
     cards = ""
     for i in items:
         img = url_for("static", filename=(i["imagen"] or "toro_logo.png"))
-        cards += f"""<div class='catalog-card'><img src='{img}'><h3>{i['titulo']}</h3><p>{i['descripcion'] or i['categoria']}</p><span class='price-pill'>{money(i['precio'])}</span><form method='post' style='margin-top:10px'><input type='hidden' name='accion' value='desactivar_item'><input type='hidden' name='id' value='{i['id']}'><button class='btn-danger' onclick=\"return confirm('¿Retirar del catálogo?')\">Retirar</button></form></div>"""
+        admin_form = ""
+        if is_admin():
+            admin_form = f"<form method='post' style='margin-top:10px'><input type='hidden' name='accion' value='desactivar_item'><input type='hidden' name='id' value='{i['id']}'><button class='btn-danger' onclick=\"return confirm('¿Retirar del catálogo?')\">Retirar</button></form>"
+        cards += f"""<div class='catalog-card'><img src='{img}'><h3>{i['titulo']}</h3><p>{i['descripcion'] or i['categoria']}</p><span class='price-pill'>{money(i['precio'])}</span>{admin_form}</div>"""
     if not cards:
         cards = "<div class='hint-card'>Aún no tienes imágenes. Carga tus platos, pizzas, combos o bebidas para publicarlos.</div>"
 
@@ -1267,16 +1292,30 @@ def catalogo_admin():
         phone_items = f"""<div class='phone-food'><img src='{url_for('static', filename='toro_logo.png')}'><b>Sube tu plato</b><small>Desde S/ 0.00</small></div>"""
     qr_html = f"<img class='qr-img' src='{qr}'>" if qr else "<div class='qr-img' style='display:grid;place-items:center'>QR</div>"
 
+    if is_admin():
+        admin_block = f"""
+        <div class="panel upload-drop"><div class="section-title">Cargar imagen de producto</div>
+          <div class="hint-card">Haz clic en pizza, pollo, bebida o plato para cargar datos automáticamente; luego selecciona la imagen.</div>
+          <div class="catalog-pick-grid">{pickers}</div>
+          <form method="post" enctype="multipart/form-data" class="clean-grid"><input type="hidden" name="accion" value="crear_item">
+            <div><label>Nombre del plato</label><input id="cat_titulo" name="titulo" required placeholder="Ej. Parrilla familiar / Pizza americana"></div>
+            <div><label>Categoría</label><select id="cat_categoria" name="categoria"><option>PLATOS</option><option>PIZZAS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>COMBOS</option><option>POSTRES</option></select></div>
+            <div><label>Precio</label><input id="cat_precio" name="precio" type="number" step="1" value="0"></div>
+            <div><label>Imagen</label><input name="imagen" type="file" accept="image/*" required></div>
+            <div style="grid-column:1/-1"><label>Descripción</label><textarea name="descripcion" placeholder="Ingredientes, tamaño, promoción, etc."></textarea></div>
+            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="destacado" style="width:auto"> Destacar</label><button class="btn-success">Agregar al catálogo</button>
+          </form></div>
+        <div class="panel"><div class="section-title">Configuración</div><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}"></div><button class="btn-warning">Guardar configuración</button></form></div>
+        """
+    else:
+        admin_block = """<div class="panel"><div class="section-title">Catálogo para vendedor</div><div class="role-note">Puedes abrir, copiar y compartir el catálogo. La carga de imágenes y configuración la maneja el administrador.</div></div>"""
+
     html = f"""
-    <div class="catalog-hero">
-      <div><h2>Catálogo online con imágenes y QR</h2><p>Publica platos, pizzas, combos y promociones con estilo tipo app. Tus clientes pueden abrir el link o escanear el QR.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div>
-      <div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div>
-    </div><br>
-    <div class="grid2">
-      <div class="panel upload-drop"><div class="section-title">Cargar imagen de producto</div><form method="post" enctype="multipart/form-data" class="clean-grid"><input type="hidden" name="accion" value="crear_item"><div><label>Nombre del plato</label><input name="titulo" required placeholder="Ej. Parrilla familiar / Pizza americana"></div><div><label>Categoría</label><select name="categoria"><option>PLATOS</option><option>PIZZAS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>COMBOS</option><option>POSTRES</option></select></div><div><label>Precio</label><input name="precio" type="number" step="1" value="0.00"></div><div><label>Imagen</label><input name="imagen" type="file" accept="image/*" required></div><div style="grid-column:1/-1"><label>Descripción</label><textarea name="descripcion" placeholder="Ingredientes, tamaño, promoción, etc."></textarea></div><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="destacado" style="width:auto"> Destacar</label><button class="btn-success">Agregar al catálogo</button></form></div>
-      <div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Agrega este link en WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div><hr><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}"></div><button class="btn-warning">Guardar configuración del catálogo</button></form></div>
-    </div><br>
+    <div class="mobile-active-title">🖼️ Catálogo</div>
+    <div class="catalog-hero"><div><h2>Catálogo online con imágenes y QR</h2><p>Publica platos, pizzas, combos y promociones. En app los vendedores solo comparten; el administrador carga imágenes y configura.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div><div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div></div><br>
+    <div class="grid2"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div></div>{admin_block}</div><br>
     <div class="panel"><div class="section-title">Productos publicados</div><div class="catalog-grid">{cards}</div></div>
+    <script>function pickCatalog(n,c,p){{document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c;document.getElementById('cat_precio').value=p;window.scrollTo({{top:document.getElementById('cat_titulo').getBoundingClientRect().top+window.scrollY-120,behavior:'smooth'}});}}</script>
     """
     return page(html, "catalogo")
 
