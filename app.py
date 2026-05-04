@@ -921,6 +921,152 @@ body{
 @media(max-width:900px){.side{position:sticky!important;top:0!important;display:block!important;padding:8px!important;}.side .brand.brand-el-toro.next-level-brand{display:none!important}.nav{display:flex!important;}.nav a{font-size:12px!important;min-height:42px!important;padding:9px 11px!important}.content{padding:10px 10px 86px!important;background:transparent!important}.tabs{top:54px!important}.catalog-admin-clean{grid-template-columns:1fr!important}.catalog-tool-row{grid-template-columns:1fr!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.mobile-bottom.admin-mobile{display:flex!important;overflow-x:auto!important}.mobile-bottom.seller-mobile{display:flex!important}}
 @media(max-width:520px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.catalog-card img{height:82px!important}.catalog-pick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.el-toro-web-header{margin-top:8px!important}}
 
+
+
+/* ============================================================
+   CORRECCIÓN FINAL SOLICITADA:
+   - En PC / web: vuelve el panel lateral como estaba antes.
+   - En celular: solo las pestañas/menu se muestran horizontal.
+   ============================================================ */
+@media (min-width: 901px){
+  .app{
+    display:grid!important;
+    grid-template-columns:230px minmax(0,1fr)!important;
+    min-height:100vh!important;
+  }
+  .side{
+    position:sticky!important;
+    top:0!important;
+    height:100vh!important;
+    width:230px!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    display:block!important;
+    padding:0!important;
+    border-right:1px solid rgba(255,255,255,.10)!important;
+    border-bottom:0!important;
+    background:linear-gradient(180deg,#12000b,#240014 55%,#0a0207)!important;
+  }
+  .side .brand.brand-el-toro.next-level-brand{
+    display:grid!important;
+    min-height:190px!important;
+    padding:16px 12px!important;
+    place-items:center!important;
+    align-content:center!important;
+  }
+  .side .brand-hero-card{
+    width:100%!important;
+    min-height:150px!important;
+    display:grid!important;
+    place-items:center!important;
+    text-align:center!important;
+  }
+  .side .brand-logo-img{
+    width:82px!important;
+    height:82px!important;
+    object-fit:contain!important;
+    margin:auto!important;
+  }
+  .side .brand-hero-title{
+    display:block!important;
+    font-size:22px!important;
+    line-height:1.05!important;
+    color:#fff!important;
+    margin-top:8px!important;
+  }
+  .side .brand-hero-sub{
+    display:block!important;
+    font-size:11px!important;
+    color:#f8dfe8!important;
+    margin-top:6px!important;
+  }
+  .side .brand-user-card{
+    display:grid!important;
+    gap:4px!important;
+    margin:10px 0 0!important;
+    padding:9px 10px!important;
+    border-radius:18px!important;
+    text-align:center!important;
+    white-space:normal!important;
+  }
+  .nav{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:10px!important;
+    margin:0!important;
+    padding:12px 10px 22px!important;
+    overflow:visible!important;
+  }
+  .nav a{
+    width:100%!important;
+    flex:0 0 auto!important;
+    justify-content:flex-start!important;
+    text-align:left!important;
+    min-height:52px!important;
+    padding:13px 15px!important;
+    border-radius:18px!important;
+    font-size:15px!important;
+    white-space:normal!important;
+    background:rgba(255,255,255,.055)!important;
+  }
+  .nav a.on{
+    background:linear-gradient(135deg,#b00017,#ff4b3e)!important;
+    box-shadow:0 12px 26px rgba(255,23,68,.25)!important;
+  }
+  .mobile-bottom{display:none!important;}
+}
+
+@media (max-width: 900px){
+  .app{display:block!important;min-height:100vh!important;}
+  .side{
+    display:block!important;
+    position:sticky!important;
+    top:0!important;
+    z-index:500!important;
+    height:auto!important;
+    width:100%!important;
+    overflow:visible!important;
+    padding:6px 6px 8px!important;
+    background:linear-gradient(180deg,#15000d,#060006)!important;
+    border-bottom:1px solid rgba(255,255,255,.10)!important;
+  }
+  .side .brand.brand-el-toro.next-level-brand{display:none!important;}
+  .nav{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    gap:8px!important;
+    padding:4px!important;
+    margin:0!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    scroll-snap-type:x proximity!important;
+  }
+  .nav a{
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:82px!important;
+    min-height:48px!important;
+    padding:8px 12px!important;
+    justify-content:center!important;
+    text-align:center!important;
+    border-radius:16px!important;
+    font-size:12px!important;
+    line-height:1.12!important;
+    white-space:nowrap!important;
+    scroll-snap-align:start!important;
+  }
+  .nav a.on{
+    background:linear-gradient(135deg,#ff1744,#ff6a3d)!important;
+    box-shadow:0 10px 22px rgba(255,23,68,.26)!important;
+  }
+  .topbar{display:none!important;}
+  .content{padding-top:10px!important;}
+  .mobile-bottom{display:none!important;}
+}
+
 </style>
 </head>
 <body>
