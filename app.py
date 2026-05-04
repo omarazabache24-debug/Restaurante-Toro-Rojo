@@ -586,6 +586,12 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
 .detalle-table-simple table{min-width:760px}.catalog-hero{margin-bottom:10px!important}.catalog-admin-clean{margin-top:0!important}.admin-users-panel .table-wrap table{min-width:1050px}.btn-delete{background:linear-gradient(135deg,#b00012,#ff002b)!important;color:white!important}.btn-mini{padding:8px 10px!important;font-size:12px!important}.mobile-bottom.admin-mobile{overflow-x:auto;justify-content:flex-start!important;gap:8px!important;padding:8px!important}.mobile-bottom.admin-mobile a{min-width:78px!important;flex:0 0 auto!important}.mobile-bottom a.on{box-shadow:0 0 18px rgba(255,0,43,.45)!important}
 @media(max-width:900px){.filter-sticky{position:relative;top:auto}.catalog-filter-actions{grid-template-columns:1fr!important}.category-bar{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.category-bar a{white-space:nowrap}.catalog-hero{padding:20px!important}.catalog-hero h2{font-size:28px!important}.catalog-phone{display:none!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}.catalog-card{min-height:auto!important}.catalog-card .price-badge,.catalog-card b,.catalog-card small{font-size:14px!important}.mobile-bottom{position:fixed;left:0;right:0;bottom:0;z-index:500;background:#050505;border-top:1px solid #222;display:flex!important;align-items:center}.mobile-bottom.seller-mobile{justify-content:space-around}.mobile-bottom a{font-size:11px!important;line-height:1.15;color:white;background:#181818;border-radius:14px;padding:9px 8px;text-align:center}.content{padding-bottom:92px!important}}
 
+
+
+/* ===== MEJORAS SOLICITADAS: CATÁLOGO COMPACTO + BOTONES USUARIO + NO VOLVER ARRIBA ===== */
+.catalog-hero{padding:22px!important;min-height:0!important;align-items:center!important;gap:18px!important}.catalog-hero h2{margin:0 0 6px!important;font-size:34px!important}.catalog-hero p{margin:0 0 14px!important}.catalog-phone{transform:scale(.92);transform-origin:center right}.catalog-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important;gap:16px!important}.catalog-card{padding:14px!important;min-height:0!important}.catalog-card img{height:150px!important;object-fit:cover!important;border-radius:18px!important}.catalog-card h3{font-size:18px!important;margin:10px 0 6px!important}.catalog-card p{min-height:38px!important;margin:0 0 10px!important}.qr-box{gap:16px!important}.upload-drop{padding:16px!important}.catalog-pick-grid{max-height:220px;overflow:auto;padding-right:4px}.admin-action-stack{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}.admin-action-stack form{margin:0!important}.btn-delete,.btn-danger{background:linear-gradient(135deg,#b00012,#ff002b)!important;color:#fff!important}.btn-disable{background:#fff1f2!important;color:#991b1b!important;border:1px solid #fecaca!important}.btn-restore{background:#ecfdf5!important;color:#166534!important;border:1px solid #bbf7d0!important}.keep-position-note{font-size:12px;color:#64748b;margin-top:8px;font-weight:800}.same-place-anchor{scroll-margin-top:110px}
+@media(max-width:900px){.catalog-hero{padding:16px!important}.catalog-hero h2{font-size:24px!important}.catalog-grid{grid-template-columns:1fr!important}.catalog-card img{height:130px!important}.admin-action-stack{display:grid;grid-template-columns:1fr;gap:8px}.catalog-pick-grid{max-height:180px}.qr-box{grid-template-columns:1fr!important}.admin-users-panel .table-wrap table{min-width:980px!important}}
+
 </style>
 </head>
 <body>
@@ -635,7 +641,19 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
 {% else %}
 {{content|safe}}
 {% endif %}
-<script>function togglePass(id){const el=document.getElementById('pass_'+id); if(!el) return; el.type = el.type === 'password' ? 'text' : 'password';}</script>
+<script>
+function togglePass(id){const el=document.getElementById('pass_'+id); if(!el) return; el.type = el.type === 'password' ? 'text' : 'password';}
+(function(){
+  const key = 'aorix_scroll_' + window.location.pathname;
+  const save = () => { try { sessionStorage.setItem(key, String(window.scrollY || document.documentElement.scrollTop || 0)); } catch(e){} };
+  window.addEventListener('beforeunload', save);
+  document.addEventListener('submit', function(){ save(); }, true);
+  document.addEventListener('click', function(e){ const a = e.target.closest('a,button'); if(a) save(); }, true);
+  window.addEventListener('load', function(){
+    try { const y = parseInt(sessionStorage.getItem(key) || '0', 10); if (y > 0) setTimeout(function(){ window.scrollTo({top:y, behavior:'instant'}); }, 40); } catch(e){}
+  });
+})();
+</script>
 </body>
 </html>
 '''
@@ -1341,9 +1359,9 @@ def catalogo_admin():
 
     html = f"""
     <div class="mobile-active-title">🖼️ Catálogo</div>
-    <div class="catalog-hero"><div><h2>Catálogo online con imágenes y QR</h2><p>Publica platos, pizzas, combos y promociones. En app los vendedores solo comparten; el administrador carga imágenes y configura.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div><div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div></div><br>
-    <div class="grid2"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div></div>{admin_block}</div><br>
-    <div class="panel"><div class="section-title">Productos publicados</div><div class="catalog-grid">{cards}</div></div>
+    <div class="catalog-hero same-place-anchor" id="catalogo-top"><div><h2>Catálogo online con imágenes y QR</h2><p>Vista más compacta: comparte QR, publica imágenes y administra productos sin espacios grandes.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div><div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div></div><br>
+    <div class="grid2 catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div></div>{admin_block}</div><br>
+    <div class="panel same-place-anchor" id="productos-catalogo"><div class="section-title">Productos publicados</div><div class="keep-position-note">Al retirar o agregar productos, la pantalla conserva la misma posición.</div><div class="catalog-grid">{cards}</div></div>
     <script>function pickCatalog(n,c,p){{document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c;document.getElementById('cat_precio').value=p;window.scrollTo({{top:document.getElementById('cat_titulo').getBoundingClientRect().top+window.scrollY-120,behavior:'smooth'}});}}</script>
     """
     return page(html, "catalogo")
@@ -1497,6 +1515,12 @@ def admin():
                 q_exec("UPDATE usuarios SET activo=0 WHERE usuario=?", (usuario,))
                 log_event("USUARIO DESACTIVADO", usuario)
                 flash("Usuario desactivado correctamente.", "ok")
+        elif accion == "activar_usuario":
+            usuario = clean(request.form.get("usuario"))
+            if usuario and usuario != session.get("user"):
+                q_exec("UPDATE usuarios SET activo=1 WHERE usuario=?", (usuario,))
+                log_event("USUARIO REACTIVADO", usuario)
+                flash("Usuario reactivado correctamente.", "ok")
         elif accion == "eliminar_usuario":
             usuario = clean(request.form.get("usuario"))
             if usuario and usuario != session.get("user"):
@@ -1514,7 +1538,16 @@ def admin():
     tr_u = ""
     for u in usuarios:
         clave_visible = u["clave_plain"] or ""
-        accion = "" if u["usuario"] == session.get("user") else ("<form method='post' style='margin:0'><input type='hidden' name='accion' value='desactivar_usuario'><input type='hidden' name='usuario' value='" + str(u['usuario']) + "'><button class='btn-red' onclick=\"return confirm('¿Desactivar usuario?')\">Desactivar</button></form>")
+        if u["usuario"] == session.get("user"):
+            accion = "<span class='badge warn'>Usuario actual</span>"
+        else:
+            usuario_safe = str(u['usuario']).replace("'", "&#39;")
+            if int(u['activo'] or 0) == 1:
+                estado_btn = f"""<form method='post'><input type='hidden' name='accion' value='desactivar_usuario'><input type='hidden' name='usuario' value='{usuario_safe}'><button class='btn-disable btn-mini' onclick="return confirm('¿Desactivar este usuario? Podrás conservar su historial.')">Desactivar</button></form>"""
+            else:
+                estado_btn = f"""<form method='post'><input type='hidden' name='accion' value='activar_usuario'><input type='hidden' name='usuario' value='{usuario_safe}'><button class='btn-restore btn-mini' onclick="return confirm('¿Reactivar este usuario?')">Reactivar</button></form>"""
+            borrar_btn = f"""<form method='post'><input type='hidden' name='accion' value='eliminar_usuario'><input type='hidden' name='usuario' value='{usuario_safe}'><button class='btn-delete btn-mini' onclick="return confirm('¿Eliminar definitivamente este usuario? Esta acción no se puede deshacer.')">Eliminar</button></form>"""
+            accion = "<div class='admin-action-stack'>" + estado_btn + borrar_btn + "</div>"
         tr_u += f"""
         <tr>
           <td>{u['usuario']}</td><td>{u['nombre']}</td><td>{u['rol']}</td><td>{u['sucursal']}</td>
@@ -1547,7 +1580,7 @@ def admin():
     </div><br>
     <div class="admin-table-grid">
       <div class="panel"><div class="section-title">🏬 Sucursales creadas</div><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Activo</th></tr></thead><tbody>{tr_s}</tbody></table></div></div>
-      <div class="panel admin-users-panel"><div class="section-title">👥 Usuarios creados</div><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Sucursal</th><th>Clave</th><th>Activo</th><th>Acción</th></tr></thead><tbody>{tr_u}</tbody></table></div></div>
+      <div class="panel admin-users-panel same-place-anchor" id="usuarios-admin"><div class="section-title">👥 Usuarios creados</div><div class="keep-position-note">Ahora puedes desactivar, reactivar o eliminar usuarios sin perder tu posición en pantalla.</div><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Sucursal</th><th>Clave</th><th>Activo</th><th>Acciones</th></tr></thead><tbody>{tr_u}</tbody></table></div></div>
     </div>
     <div class="panel"><div class="section-title">📌 Resumen funcional</div><textarea class="report-box" readonly>NEGOCIO EL TORO - NIVEL DIOS UI/UX
 
