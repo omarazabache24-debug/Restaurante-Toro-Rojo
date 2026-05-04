@@ -2686,3 +2686,61 @@ def err500(e):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
+
+# =========================
+# AJUSTE FINAL BRAND SIDEBAR
+# Logo del toro arriba de Restaurant Grill + bloque más grande
+# =========================
+try:
+    STYLE += """
+/* === AJUSTE SOLICITADO: TORO ARRIBA DE RESTAURANT GRILL === */
+@media(min-width:901px){
+  .side .brand.brand-el-toro.next-level-brand,
+  .side .brand{
+    padding:16px 12px 12px!important;
+    background:linear-gradient(180deg,#16000a,#240414)!important;
+  }
+  .side .brand-hero-card{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    justify-items:center!important;
+    align-items:center!important;
+    gap:8px!important;
+    padding:14px 12px 12px!important;
+    border-radius:22px!important;
+    min-height:132px!important;
+    text-align:center!important;
+    background:radial-gradient(circle at 50% 8%,rgba(255,35,71,.22),transparent 48%),rgba(255,255,255,.065)!important;
+    overflow:visible!important;
+  }
+  .side .brand-logo-img{
+    flex:none!important;
+    width:76px!important;
+    height:76px!important;
+    padding:5px!important;
+    margin:0 auto!important;
+    border-radius:16px!important;
+    background:#000!important;
+    box-shadow:0 12px 34px rgba(255,23,68,.32)!important;
+  }
+  .side .brand-hero-title{
+    display:block!important;
+    width:100%!important;
+    text-align:center!important;
+    font-size:24px!important;
+    line-height:1.05!important;
+    white-space:normal!important;
+    letter-spacing:-.6px!important;
+  }
+  .side .brand-user-card{
+    margin:10px auto 0!important;
+    width:82%!important;
+    padding:10px 12px!important;
+    border-radius:18px!important;
+  }
+  .side .brand-user-card span{font-size:14px!important;}
+  .side .brand-user-card small{font-size:12px!important;}
+}
+"""
+except NameError:
+    pass
