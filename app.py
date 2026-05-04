@@ -23,7 +23,7 @@ import csv
 import os
 import sqlite3
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from io import BytesIO, StringIO
 from zoneinfo import ZoneInfo
@@ -60,7 +60,11 @@ DB_PATH = os.path.join(PERSIST_DIR, "restaurante_aorix_pro.db")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 CATALOG_DIR = os.path.join(STATIC_DIR, "catalogo")
 os.makedirs(CATALOG_DIR, exist_ok=True)
-APP_TZ = ZoneInfo(os.getenv("APP_TIMEZONE", "America/Lima"))
+try:
+    APP_TZ = ZoneInfo(os.getenv("APP_TIMEZONE", "America/Lima"))
+except Exception:
+    # Fallback Render/servidores sin tzdata: Perú = UTC-05:00
+    APP_TZ = timezone(timedelta(hours=-5), name="America/Lima")
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "aorix-restaurante-pro-2026")
@@ -100,7 +104,14 @@ def next_work_date(fecha):
         return (now().date() + timedelta(days=1)).isoformat()
 
 def hour():
+    # Hora oficial de trabajo en Perú, formato 24 horas.
     return now().strftime("%H:%M:%S")
+
+def hour_short():
+    return now().strftime("%H:%M")
+
+def now_display():
+    return now().strftime("%d/%m/%Y %H:%M:%S")
 
 def money(v):
     try:
@@ -304,10 +315,16 @@ def init_db():
     except Exception:
         pass
 
-    defaults = [("Sucursal Principal",), ("Delivery",)]
+    defaults = [("Sucursal Principal",)]
     for (nombre,) in defaults:
         if not q_one("SELECT id FROM sucursales WHERE nombre=?", (nombre,)):
             q_exec("INSERT INTO sucursales(nombre,activo) VALUES(?,1)", (nombre,))
+    # MODO ACTUAL: trabajar solo con Sucursal Principal.
+    # Se conservan las tablas para escalar luego, pero se ocultan/desactivan otras sucursales.
+    principal = q_one("SELECT id FROM sucursales WHERE nombre='Sucursal Principal'")
+    principal_id = principal["id"] if principal else 1
+    q_exec("UPDATE sucursales SET activo=CASE WHEN id=? THEN 1 ELSE 0 END", (principal_id,))
+    q_exec("UPDATE usuarios SET sucursal_id=? WHERE COALESCE(sucursal_id,0)<>?", (principal_id, principal_id))
 
     for usuario, nombre, clave, rol, sucursal_id in [
         ("admin", "Administrador", "admin123", "ADMIN", 1),
@@ -779,17 +796,55 @@ body{
   .tabs-shell-sub{font-size:17px!important;}
 }
 
+
+
+/* ===== SIGUIENTE NIVEL UI - PANEL PREMIUM + HORA PERÚ + SUCURSAL PRINCIPAL ===== */
+.side{
+  width:280px!important;background:radial-gradient(circle at 40% 0%,rgba(255,0,55,.28),transparent 34%),linear-gradient(180deg,#08070d 0%,#190816 46%,#2a0811 100%)!important;
+  border-right:1px solid rgba(255,255,255,.08)!important;box-shadow:18px 0 55px rgba(15,23,42,.26)!important;padding:14px 12px!important;
+}
+.app{grid-template-columns:280px minmax(0,1fr)!important;}
+.next-level-brand{border:0!important;padding:0 0 12px!important;}
+.brand-hero-card{
+  border-radius:28px;padding:16px 14px 18px;text-align:center;
+  background:radial-gradient(circle at 50% 20%,rgba(255,0,55,.42),transparent 42%),linear-gradient(160deg,#180915,#08070d 68%)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 18px 55px rgba(255,0,55,.16)!important;
+}
+.brand-hero-card .brand-logo-img{width:138px!important;height:138px!important;object-fit:contain!important;background:#000!important;border-radius:14px!important;padding:8px!important;margin:0 auto 14px!important;box-shadow:0 18px 55px rgba(255,0,55,.28)!important;}
+.brand-hero-title{font-size:28px!important;line-height:1!important;color:#fff!important;font-weight:950!important;letter-spacing:-.8px;text-shadow:0 3px 22px rgba(255,255,255,.22)!important;}
+.brand-hero-sub{margin-top:10px;color:#f8fafc!important;font-weight:900!important;font-size:13px!important;line-height:1.35!important;}
+.brand-user-card{margin-top:12px;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.08)!important;color:white!important;border:1px solid rgba(255,255,255,.08)!important;display:grid;gap:5px;font-weight:900;}
+.brand-user-card small{color:#ffd7de!important;font-weight:950!important;}
+.nav{display:flex!important;flex-direction:column!important;gap:10px!important;margin-top:8px!important;}
+.nav a{border:0!important;border-radius:20px!important;min-height:56px!important;padding:14px 18px!important;background:rgba(255,255,255,.045)!important;color:#fff!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.035)!important;transition:.18s ease!important;}
+.nav a:hover{transform:translateX(4px)!important;background:rgba(255,255,255,.09)!important;color:#fff!important;}
+.nav a.on{background:linear-gradient(135deg,#ff1744,#ff6a3d)!important;color:#fff!important;box-shadow:0 16px 35px rgba(255,23,68,.28)!important;}
+.el-toro-web-header{border-radius:28px!important;margin:0 0 18px!important;background:linear-gradient(135deg,#07070d 0%,#160916 60%,#260811 100%)!important;border:1px solid rgba(255,255,255,.08)!important;border-bottom:5px solid #ff0037!important;}
+.el-toro-web-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+.clock-pill{background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.12)!important;}
+.panel{border-radius:24px!important;background:rgba(255,255,255,.94)!important;border:1px solid rgba(255,255,255,.90)!important;}
+.locked-sucursal-card{padding:18px;border-radius:20px;background:linear-gradient(135deg,#fff7ed,#fff1f2)!important;border:1px solid #fed7aa!important;color:#7c2d12!important;font-weight:900;}
+.main-context{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important;align-items:end!important;}
+@media(max-width:1080px){.app{display:block!important}.side{display:none!important}.main-context{grid-template-columns:1fr 1fr!important}.el-toro-web-status{display:none!important}}
+@media(max-width:640px){.main-context{grid-template-columns:1fr!important}.el-toro-web-title{font-size:18px!important}.el-toro-web-logo{width:52px!important;height:52px!important}}
+
 </style>
 </head>
 <body>
 {% if session.get('user') %}
 <div class="app {{'admin-mode' if session.get('rol') == 'ADMIN' else 'user-mode seller-mode'}}">
   <aside class="side">
-    <div class="brand brand-el-toro">
-      <img class="brand-logo-img" src="/static/toro_logo.png" alt="EL TORO Restaurant Grill">
-      <div class="brand-title">EL <span>TORO</span></div>
-      <small>Restaurant Grill</small>
-      <div class="brand-user">{{session.get('user','')}} · {{session.get('rol','')}}</div>
+    <div class="brand brand-el-toro next-level-brand">
+      <div class="brand-hero-card">
+        <img class="brand-logo-img" src="/static/toro_logo.png" alt="EL TORO Restaurant Grill">
+        <div class="brand-hero-title">Restaurant Grill</div>
+        <div class="brand-hero-sub">Restaurante · Pizzería · Parrillas · Delivery · Caja</div>
+      </div>
+      <div class="brand-user-card">
+        <span>👤 {{session.get('user','')}} · {{session.get('rol','')}}</span>
+        <small>🏬 Sucursal Principal</small>
+        <small>🕒 {{hour_short}}</small>
+      </div>
     </div>
     <nav class="nav">
       {% if session.get('rol') == 'ADMIN' %}
@@ -824,7 +879,10 @@ body{
             <p class="el-toro-web-subtitle">{{subtitle}}</p>
           </div>
         </div>
-        <div class="el-toro-web-pill">🔥 Restaurant · Grill</div>
+        <div class="el-toro-web-status">
+          <span class="el-toro-web-pill">🏬 {{current_sucursal}}</span>
+          <span class="el-toro-web-pill clock-pill">🕒 {{now_display}}</span>
+        </div>
       </section>
       {% if tabs %}
       <section class="tabs-shell-header">
@@ -925,6 +983,10 @@ def page(content, active="dashboard"):
         brand=BRAND,
         tabs=tabs(),
         money=money,
+        now_display=now_display(),
+        hour_short=hour_short(),
+        current_date=today(),
+        current_sucursal="Sucursal Principal",
     )
 
 def select_options(rows, value_key="id", text_key="nombre", selected=None):
@@ -1058,11 +1120,11 @@ def dashboard():
     pedidos_act = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND estado NOT IN ('ENTREGADO','PAGADO')", (f,))["c"]
     mesas = q_one("SELECT COUNT(DISTINCT mesa) c FROM pedidos WHERE fecha=? AND mesa<>'' AND estado NOT IN ('ENTREGADO','PAGADO')", (f,))["c"]
     stock_bajo = q_one("SELECT COUNT(*) c FROM productos WHERE activo=1 AND stock<=stock_min")["c"]
-    sucursales = q_all("SELECT * FROM sucursales WHERE activo=1 ORDER BY nombre")
-    opts_suc = select_options(sucursales, "nombre", "nombre", get_ctx("sucursal"))
+    sucursales = q_all("SELECT * FROM sucursales WHERE activo=1 AND nombre='Sucursal Principal' ORDER BY nombre")
+    opts_suc = '<option value="Sucursal Principal" selected>Sucursal Principal</option>'
     html = f'''
     <form method="post" class="panel"><div class="section-title">🏪 Contexto de operación</div>
-      <div class="main-context"><div><label>Sucursal</label><select name="sucursal">{opts_suc}</select></div><div><label>Fecha de trabajo</label><input type="date" name="fecha" value="{f}"></div><div><label>Turno</label><select name="turno"><option>MAÑANA</option><option>TARDE</option><option>NOCHE</option></select></div></div><br>
+      <div class="main-context"><div><label>Sucursal</label><input name="sucursal" value="Sucursal Principal" readonly></div><div><label>Fecha de trabajo</label><input type="date" name="fecha" value="{f}"></div><div><label>Turno</label><select name="turno"><option>MAÑANA</option><option>TARDE</option><option>NOCHE</option></select></div><div><label>Hora Perú</label><input value="{now_display()}" readonly></div></div><br>
       <div class="actions"><button class="btn-primary">Guardar contexto</button><a class="btn" href="{url_for('dashboard')}">Recargar panel</a><a class="btn btn-success" href="{url_for('ventas')}">Ir a ventas</a></div>
       <div class="sku-help">Usuario y rol se controlan internamente por login, por eso ya no se muestran en el panel.</div>
     </form>
@@ -1970,9 +2032,9 @@ def admin():
             init_db()
             flash("Demo sembrada / verificada.", "ok")
         return redirect(url_for("admin"))
-    sucursales = q_all("SELECT * FROM sucursales ORDER BY nombre")
+    sucursales = q_all("SELECT * FROM sucursales WHERE nombre='Sucursal Principal' ORDER BY nombre")
     usuarios = q_all("SELECT u.id,u.usuario,u.nombre,u.rol,u.activo,u.clave_plain,COALESCE(s.nombre,'Sucursal Principal') sucursal FROM usuarios u LEFT JOIN sucursales s ON s.id=u.sucursal_id ORDER BY u.usuario")
-    suc_opts = ''.join(f'<option value="{s["id"]}">{s["nombre"]}</option>' for s in sucursales)
+    suc_opts = ''.join(f'<option value="{s["id"]}" selected>{s["nombre"]}</option>' for s in sucursales)
     tr_s = "".join(f'<tr><td>{s["id"]}</td><td>{s["nombre"]}</td><td>{s["activo"]}</td></tr>' for s in sucursales)
     tr_u = ""
     for u in usuarios:
@@ -1994,7 +2056,7 @@ def admin():
           <td>{'ACTIVO' if int(u['activo'] or 0)==1 else 'INACTIVO'}</td><td>{accion}</td>
         </tr>"""
     html = f"""
-    <div class="role-note">✅ Administración multi-sucursal: crea sucursales, enlaza vendedores a cada local y reserva la carga del día para ADMIN.</div>
+    <div class="role-note">✅ Modo actual: Sucursal Principal fija. Usuarios, ventas, pedidos, caja y cierres trabajan sobre esta sede.</div>
     <div class="admin-super-grid">
       <div class="panel"><div class="section-title">👤 Crear / actualizar usuario</div>
         <form method="post" class="admin-form-grid">
@@ -2007,18 +2069,18 @@ def admin():
           <button class="primary" style="grid-column:1/-1">Guardar usuario</button>
         </form>
       </div>
-      <div class="panel"><div class="section-title">🏬 Sucursales / locales</div>
-        <form method="post" class="admin-form-grid"><input type="hidden" name="accion" value="sucursal"><div><label>Nueva sucursal</label><input name="nombre" placeholder="Ej. El Toro Centro"></div><button class="btn-green">Registrar sucursal</button><button name="accion" value="sembrar" class="btn-orange">Sembrar demo</button></form>
-        <br><div class="hint-card">Pensado para cadena: sucursales, usuarios por rol, turnos, caja y reportes por local.</div>
+      <div class="panel"><div class="section-title">🏬 Sucursal principal</div>
+        <div class="locked-sucursal-card">🔒 Por ahora el sistema queda fijo en <b>Sucursal Principal</b>. La estructura multi-sucursal se conserva para activar locales después.</div>
+        <br><form method="post" class="actions"><button name="accion" value="sembrar" class="btn-orange">Sembrar demo</button></form>
       </div>
     </div>
     <div class="food-card-grid">
       <div class="food-card"><div class="thumb">🔐</div><b>Roles claros</b><small>Admin controla todo; vendedores trabajan ventas/pedidos/cierre.</small></div>
-      <div class="food-card"><div class="thumb">🏪</div><b>Sucursales</b><small>Base para reportes por local y turnos.</small></div>
+      <div class="food-card"><div class="thumb">🏪</div><b>Sucursal Principal</b><small>Operación fija y ordenada para esta etapa.</small></div>
       <div class="food-card"><div class="thumb">📱</div><b>Celular</b><small>Botones grandes y navegación tipo app.</small></div>
     </div><br>
     <div class="admin-table-grid">
-      <div class="panel"><div class="section-title">🏬 Sucursales creadas</div><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Activo</th></tr></thead><tbody>{tr_s}</tbody></table></div></div>
+      <div class="panel"><div class="section-title">🏬 Sucursal activa</div><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Activo</th></tr></thead><tbody>{tr_s}</tbody></table></div></div>
       <div class="panel admin-users-panel same-place-anchor" id="usuarios-admin"><div class="section-title">👥 Usuarios creados</div><div class="keep-position-note">Ahora puedes desactivar, reactivar o eliminar usuarios sin perder tu posición en pantalla.</div><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Sucursal</th><th>Clave</th><th>Activo</th><th>Acciones</th></tr></thead><tbody>{tr_u}</tbody></table></div></div>
     </div>
     <div class="panel"><div class="section-title">📌 Resumen funcional</div><textarea class="report-box" readonly>NEGOCIO EL TORO - NIVEL DIOS UI/UX
