@@ -1067,6 +1067,45 @@ body{
   .mobile-bottom{display:none!important;}
 }
 
+
+
+/* ===== CORRECCIÓN FINAL: PANEL FIJO, CELULAR HORIZONTAL, CATÁLOGO FULL ===== */
+@media (min-width:1201px){
+  .app{display:block!important;min-height:100vh!important;}
+  .side{position:fixed!important;left:0!important;top:0!important;bottom:0!important;width:285px!important;height:100vh!important;overflow-y:auto!important;overflow-x:hidden!important;z-index:999!important;background:linear-gradient(180deg,#16000a,#2a0617,#12000a)!important;box-shadow:18px 0 40px rgba(15,23,42,.18)!important;}
+  .main{margin-left:285px!important;min-width:0!important;width:calc(100% - 285px)!important;}
+  .brand{display:block!important;position:sticky!important;top:0!important;z-index:5!important;background:linear-gradient(180deg,#16000a,#260414)!important;}
+  .nav{display:flex!important;flex-direction:column!important;gap:8px!important;padding:12px 10px 20px!important;}
+  .nav a{width:auto!important;display:flex!important;justify-content:flex-start!important;text-align:left!important;white-space:normal!important;}
+}
+@media (max-width:1200px){
+  body{overflow-x:hidden!important;}
+  .app{display:block!important;min-height:100vh!important;}
+  .side{position:sticky!important;top:0!important;z-index:999!important;height:auto!important;width:100%!important;overflow:visible!important;background:linear-gradient(180deg,#16000a,#260414)!important;border-right:0!important;box-shadow:0 10px 28px rgba(0,0,0,.18)!important;}
+  .brand{display:flex!important;align-items:center!important;gap:10px!important;justify-content:flex-start!important;padding:10px 12px!important;min-height:54px!important;border-bottom:1px solid rgba(255,255,255,.08)!important;}
+  .brand .logo{font-size:24px!important;line-height:1!important;letter-spacing:0!important;}
+  .brand small{font-size:12px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+  .nav{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:8px!important;padding:8px 8px 10px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:thin!important;}
+  .nav a{flex:0 0 auto!important;min-width:112px!important;width:auto!important;min-height:48px!important;margin:0!important;border-radius:16px!important;justify-content:center!important;text-align:center!important;white-space:nowrap!important;padding:10px 12px!important;font-size:13px!important;background:#1c0712!important;color:#fff!important;}
+  .nav a.on,.nav a:hover{background:linear-gradient(100deg,#ff1744,#ff5a3c)!important;color:#fff!important;}
+  .main{margin-left:0!important;width:100%!important;min-width:0!important;}
+  .topbar{display:none!important;}
+  .content{padding:12px!important;max-width:100%!important;margin:0!important;background:#eef3f7!important;color:#061426!important;}
+  .panel{background:#fff!important;color:#071827!important;border-radius:22px!important;border:1px solid #e6edf5!important;box-shadow:0 14px 34px rgba(15,23,42,.08)!important;}
+  .section-title,.box-title,label{color:#071827!important;}
+  input,select,textarea{background:#fff!important;color:#071827!important;border:1px solid #d4e0ee!important;border-radius:18px!important;}
+}
+@media (max-width:700px){
+  .nav a{min-width:92px!important;font-size:12px!important;padding:9px 10px!important;}
+  .brand small{display:none!important;}
+  .clean-grid,.clean-grid-4,.grid,.grid2,.grid5{grid-template-columns:1fr!important;}
+}
+.catalog-config-panel{width:100%!important;grid-column:1/-1!important;display:block!important;}
+.catalog-config-panel form.clean-grid{display:grid!important;grid-template-columns:minmax(260px,1.4fr) minmax(220px,1fr) minmax(220px,.7fr)!important;gap:18px!important;align-items:end!important;width:100%!important;}
+.catalog-config-panel input{width:100%!important;min-width:0!important;}
+.catalog-config-panel button{width:100%!important;min-height:58px!important;}
+@media(max-width:900px){.catalog-config-panel form.clean-grid{grid-template-columns:1fr!important;}}
+.venta-product-select option{color:#071827!important;background:#fff!important;}
 </style>
 </head>
 <body>
@@ -1191,13 +1230,13 @@ function togglePass(id){const el=document.getElementById('pass_'+id); if(!el) re
       function filtrar(){
         const cat=(sel.value||'').toUpperCase();
         target.innerHTML='';
-        if(!cat){
-          const opt=document.createElement('option'); opt.value=''; opt.text='Primero selecciona una categoría'; opt.dataset.cat=''; target.appendChild(opt);
-          target.disabled=true; return;
-        }
         target.disabled=false;
-        const start=document.createElement('option'); start.value=''; start.text='Selecciona producto'; start.dataset.cat=''; target.appendChild(start);
-        original.forEach(function(o){ if(o.value && o.cat===cat){ const opt=document.createElement('option'); opt.value=o.value; opt.text=o.text; opt.dataset.cat=o.cat; target.appendChild(opt); } });
+        const start=document.createElement('option'); start.value=''; start.text=cat ? 'Selecciona producto' : 'Selecciona producto'; start.dataset.cat=''; target.appendChild(start);
+        original.forEach(function(o){
+          if(o.value && (!cat || o.cat===cat)){
+            const opt=document.createElement('option'); opt.value=o.value; opt.text=o.text; opt.dataset.cat=o.cat; target.appendChild(opt);
+          }
+        });
       }
       sel.addEventListener('change',filtrar);
       filtrar();
@@ -1526,12 +1565,12 @@ def ventas():
         params.append(cat_filtro)
     productos = q_all("SELECT * FROM productos WHERE " + " AND ".join(where) + " ORDER BY categoria, CASE WHEN stock>0 THEN 0 ELSE 1 END, nombre", tuple(params))
     categorias = q_all("SELECT DISTINCT categoria FROM productos WHERE activo=1 AND COALESCE(categoria,'')<>'' ORDER BY categoria")
-    opts_prod = '<option value="" data-cat="">Primero selecciona una categoría</option>' + "".join(f'<option value="{p["id"]}" data-cat="{str(p["categoria"] or "").upper()}">{p["codigo"] or p["id"]} · {p["nombre"]} · {money(p["precio"])} · Stock {int(float(p["stock"] or 0))}</option>' for p in productos)
+    opts_prod = '<option value="" data-cat="">Selecciona producto</option>' + "".join(f'<option value="{p["id"]}" data-cat="{str(p["categoria"] or "").upper()}">{p["codigo"] or p["id"]} · {p["nombre"]} · {money(p["precio"])} · Stock {int(float(p["stock"] or 0))}</option>' for p in productos)
     tr_prod = "".join(f'<tr class="{"row-ok" if float(r["stock"] or 0)>0 else "row-bad"}"><td>{r["codigo"]}</td><td><b>{r["nombre"]}</b></td><td>{r["categoria"]}</td><td>{money(r["precio"])}</td><td>{int(float(r["stock"] or 0))}</td><td>{"DISPONIBLE" if float(r["stock"] or 0)>0 else "SIN STOCK"}</td></tr>' for r in productos[:150]) or '<tr><td colspan="6">Sin productos.</td></tr>'
     pedidos_pend = q_all("SELECT p.*, COALESCE((SELECT GROUP_CONCAT(producto || ' x' || CAST(cantidad AS INT), ' + ') FROM pedido_detalle d WHERE d.pedido_id=p.id),'') productos FROM pedidos p WHERE p.pagado='NO' ORDER BY p.id DESC LIMIT 80")
     opts_ped = '<option value="">Selecciona pedido abierto</option>' + "".join(f'<option value="{p["id"]}">{p["codigo"]} · {p["cliente"]} · {p["productos"]} · {money(p["total"])} · {p["estado"]}</option>' for p in pedidos_pend)
     cat_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}" {"selected" if cat_filtro==c["categoria"] else ""}>{c["categoria"]}</option>' for c in categorias)
-    cat_venta_opts = '<option value="">Selecciona categoría</option>' + ''.join(f'<option value="{c["categoria"]}">{c["categoria"]}</option>' for c in categorias)
+    cat_venta_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}">{c["categoria"]}</option>' for c in categorias)
     cat_links = '<div class="category-bar"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('ventas') + '#catalogo-productos">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("ventas", categoria=c["categoria"], disponible="1" if solo_disp else "")}#catalogo-productos">{c["categoria"]}</a>' for c in categorias) + '</div>'
     clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY nombre LIMIT 250")
     cliente_options = "".join(f'<option value="{c["nombre"]}">{c["telefono"]} {c["direccion"]}</option>' for c in clientes)
@@ -2169,7 +2208,7 @@ def catalogo_admin():
             <div style="grid-column:1/-1"><label>Descripción</label><textarea id="cat_descripcion" name="descripcion" placeholder="Ingredientes, tamaño, promoción, etc."></textarea></div>
             <label style="display:flex;gap:8px;align-items:center"><input id="cat_destacado" type="checkbox" name="destacado" style="width:auto"> Destacar</label><button id="cat_submit" class="btn-success">Agregar al catálogo</button><button type="button" class="btn-warning" onclick="resetCatalogForm()">Nuevo / limpiar</button>
           </form></div>
-        <div class="panel catalog-config-panel"><div class="section-title">⚙️ Configuración del catálogo</div><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}" placeholder="EL TORO RESTAURANT GRILL"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}" placeholder="el-toro"></div><button class="btn-warning">Guardar configuración</button></form><div class="keep-position-note">Este dato controla el nombre y link público del catálogo.</div></div>
+        <div class="panel catalog-config-panel"><div class="section-title">⚙️ Configuración del catálogo</div><form method="post" class="clean-grid catalog-config-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}" placeholder="EL TORO RESTAURANT GRILL"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}" placeholder="el-toro"></div><button class="btn-warning">Guardar configuración</button></form><div class="keep-position-note">Este dato controla el nombre y link público del catálogo.</div></div>
         """
     else:
         admin_block = """<div class="panel"><div class="section-title">Catálogo para vendedor</div><div class="role-note">Puedes abrir, copiar y compartir el catálogo. La carga de imágenes y configuración la maneja el administrador.</div></div>"""
