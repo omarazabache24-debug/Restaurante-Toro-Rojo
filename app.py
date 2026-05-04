@@ -30,7 +30,7 @@ from zoneinfo import ZoneInfo
 
 from flask import (
     Flask, flash, redirect, render_template_string, request,
-    send_file, session, url_for
+    send_file, session, url_for, jsonify
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -312,6 +312,28 @@ def init_db():
             _cols=[rr[1] for rr in q_all(f"PRAGMA table_info({_tbl})")]
             if "sucursal_id" not in _cols:
                 q_exec(f"ALTER TABLE {_tbl} ADD COLUMN sucursal_id INTEGER DEFAULT 1")
+    except Exception:
+        pass
+
+    # =========================
+    # MIGRACIÓN CRM CLIENTES PRO
+    # =========================
+    try:
+        _cols = [rr[1] for rr in q_all("PRAGMA table_info(clientes)")]
+        for _col, _ddl in {
+            "codigo_cliente": "ALTER TABLE clientes ADD COLUMN codigo_cliente TEXT DEFAULT ''",
+            "apellido": "ALTER TABLE clientes ADD COLUMN apellido TEXT DEFAULT ''",
+            "visitas": "ALTER TABLE clientes ADD COLUMN visitas INTEGER DEFAULT 0",
+            "es_frecuente": "ALTER TABLE clientes ADD COLUMN es_frecuente INTEGER DEFAULT 0",
+            "origen_ultimo": "ALTER TABLE clientes ADD COLUMN origen_ultimo TEXT DEFAULT ''",
+            "ultima_visita": "ALTER TABLE clientes ADD COLUMN ultima_visita TEXT DEFAULT ''",
+            "clave_cliente": "ALTER TABLE clientes ADD COLUMN clave_cliente TEXT DEFAULT ''",
+        }.items():
+            if _col not in _cols:
+                q_exec(_ddl)
+        # Completar códigos vacíos sin romper bases existentes.
+        for _r in q_all("SELECT id FROM clientes WHERE codigo_cliente IS NULL OR codigo_cliente='' ORDER BY id"):
+            q_exec("UPDATE clientes SET codigo_cliente=? WHERE id=?", (f"CLI-{int(_r['id']):06d}", _r['id']))
     except Exception:
         pass
 
@@ -1583,18 +1605,86 @@ def descontar_producto(producto_id, cantidad):
     q_exec("UPDATE productos SET stock=COALESCE(stock,0)-? WHERE id=?", (float(cantidad or 0), producto_id))
     descontar_receta(producto_id, cantidad)
 
-def asegurar_cliente(nombre, telefono='', direccion='', referencia=''):
-    nombre = up(nombre or 'CLIENTE GENERAL')
+def clave_cliente_inteligente(nombre, telefono='', direccion=''):
+    """Clave robusta: teléfono si existe; si no, nombre + dirección."""
+    tel = clean(telefono)
+    nom = up(nombre or 'CLIENTE GENERAL')
+    dire = up(direccion or '')
+    if tel:
+        return 'TEL:' + tel
+    base = (nom + '|' + dire).strip('|')
+    return 'NOMDIR:' + base if base else ''
+
+def separar_nombre_apellido(nombre):
+    partes = up(nombre).split()
+    if len(partes) <= 1:
+        return up(nombre), ''
+    return partes[0], ' '.join(partes[1:])
+
+def codigo_cliente_nuevo(cliente_id):
+    return f"CLI-{int(cliente_id):06d}"
+
+def asegurar_cliente(nombre, telefono='', direccion='', referencia='', notas='', origen='VENTAS'):
+    """Centraliza clientes desde POS, Ventas y Delivery.
+    - Teléfono no obligatorio.
+    - Si no hay teléfono, detecta por nombre + dirección.
+    - A partir de 3 visitas lo marca como frecuente.
+    """
+    nombre_full = up(nombre or 'CLIENTE GENERAL')
     telefono = clean(telefono)
     direccion = up(direccion)
     referencia = up(referencia)
-    if not nombre or nombre == 'CLIENTE GENERAL':
-        return
-    r = q_one("SELECT id FROM clientes WHERE UPPER(nombre)=UPPER(?) OR (telefono<>'' AND telefono=?) LIMIT 1", (nombre, telefono))
+    notas = up(notas)
+    origen = up(origen or 'VENTAS')
+    if not nombre_full or nombre_full == 'CLIENTE GENERAL':
+        return None
+    clave = clave_cliente_inteligente(nombre_full, telefono, direccion)
+    nom, ape = separar_nombre_apellido(nombre_full)
+    r = None
+    if telefono:
+        r = q_one("SELECT * FROM clientes WHERE activo=1 AND telefono<>'' AND telefono=? LIMIT 1", (telefono,))
+    if not r and clave:
+        r = q_one("SELECT * FROM clientes WHERE activo=1 AND clave_cliente=? LIMIT 1", (clave,))
+    if not r and direccion:
+        r = q_one("SELECT * FROM clientes WHERE activo=1 AND UPPER(nombre)=UPPER(?) AND UPPER(direccion)=UPPER(?) LIMIT 1", (nombre_full, direccion))
+    if not r:
+        r = q_one("SELECT * FROM clientes WHERE activo=1 AND UPPER(nombre)=UPPER(?) AND (telefono='' OR telefono IS NULL) LIMIT 1", (nombre_full,))
     if r:
-        q_exec("UPDATE clientes SET telefono=COALESCE(NULLIF(?,''),telefono), direccion=COALESCE(NULLIF(?,''),direccion), referencia=COALESCE(NULLIF(?,''),referencia) WHERE id=?", (telefono, direccion, referencia, r['id']))
-    else:
-        q_exec("INSERT INTO clientes(nombre,telefono,direccion,referencia,activo) VALUES(?,?,?,?,1)", (nombre, telefono, direccion, referencia))
+        visitas = int(r['visitas'] or 0) + 1 if 'visitas' in r.keys() else 1
+        frecuente = 1 if visitas >= 3 else 0
+        q_exec("""
+            UPDATE clientes
+               SET nombre=COALESCE(NULLIF(?,''),nombre),
+                   apellido=COALESCE(NULLIF(?,''),apellido),
+                   telefono=COALESCE(NULLIF(?,''),telefono),
+                   direccion=COALESCE(NULLIF(?,''),direccion),
+                   referencia=COALESCE(NULLIF(?,''),referencia),
+                   notas=COALESCE(NULLIF(?,''),notas),
+                   visitas=?, es_frecuente=?, origen_ultimo=?, ultima_visita=?, clave_cliente=COALESCE(NULLIF(?,''),clave_cliente)
+             WHERE id=?
+        """, (nombre_full, ape, telefono, direccion, referencia, notas, visitas, frecuente, origen, today()+' '+hour(), clave, r['id']))
+        return r['id']
+    new_id = q_exec("""
+        INSERT INTO clientes(nombre,apellido,telefono,direccion,referencia,notas,activo,visitas,es_frecuente,origen_ultimo,ultima_visita,clave_cliente)
+        VALUES(?,?,?,?,?,?,1,1,0,?,?,?)
+    """, (nombre_full, ape, telefono, direccion, referencia, notas, origen, today()+' '+hour(), clave))
+    q_exec("UPDATE clientes SET codigo_cliente=? WHERE id=?", (codigo_cliente_nuevo(new_id), new_id))
+    return new_id
+
+def cliente_to_dict(r):
+    return {
+        'id': r['id'],
+        'codigo_cliente': r['codigo_cliente'] if 'codigo_cliente' in r.keys() else f"CLI-{int(r['id']):06d}",
+        'nombre': r['nombre'] or '',
+        'apellido': r['apellido'] if 'apellido' in r.keys() else '',
+        'telefono': r['telefono'] or '',
+        'direccion': r['direccion'] or '',
+        'referencia': r['referencia'] or '',
+        'notas': r['notas'] or '',
+        'visitas': int(r['visitas'] or 0) if 'visitas' in r.keys() else 0,
+        'es_frecuente': int(r['es_frecuente'] or 0) if 'es_frecuente' in r.keys() else 0,
+        'origen_ultimo': r['origen_ultimo'] if 'origen_ultimo' in r.keys() else '',
+    }
 
 def agregar_item_a_pedido(pedido_id, producto_id, cantidad=1):
     prod = q_one("SELECT * FROM productos WHERE id=? AND activo=1", (producto_id,))
@@ -1807,7 +1897,7 @@ def ventas():
             telefono = clean(request.form.get("telefono"))
             direccion = up(request.form.get("direccion"))
             referencia = up(request.form.get("referencia"))
-            asegurar_cliente(cliente, telefono, direccion, referencia)
+            asegurar_cliente(cliente, telefono, direccion, referencia, origen='VENTAS')
             pedido_id = q_exec("INSERT INTO pedidos(codigo,fecha,hora,mesa,cliente,telefono,direccion,referencia,servicio,metodo_pago,subtotal,descuento,total,estado,pagado,usuario,observacion,sucursal_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (codigo, today(), hour(), request.form.get("mesa", ""), cliente, telefono, direccion, referencia, request.form.get("servicio", "SALÓN"), request.form.get("metodo_pago", "EFECTIVO"), subtotal, descuento, total, "PENDIENTE", "NO", session.get("user"), "", session.get("sucursal_id",1)))
             q_exec("INSERT INTO pedido_detalle(pedido_id,producto_id,producto,cantidad,precio,total) VALUES(?,?,?,?,?,?)", (pedido_id, producto_id, prod["nombre"], cantidad, precio, total))
             descontar_producto(producto_id, cantidad)
@@ -1851,8 +1941,8 @@ def ventas():
     cat_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}" {"selected" if cat_filtro==c["categoria"] else ""}>{c["categoria"]}</option>' for c in categorias)
     cat_venta_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}">{c["categoria"]}</option>' for c in categorias)
     cat_links = '<div class="category-bar"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('ventas') + '#catalogo-productos">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("ventas", categoria=c["categoria"], disponible="1" if solo_disp else "")}#catalogo-productos">{c["categoria"]}</a>' for c in categorias) + '</div>'
-    clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY nombre LIMIT 250")
-    cliente_options = "".join(f'<option value="{c["nombre"]}">{c["telefono"]} {c["direccion"]}</option>' for c in clientes)
+    clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY es_frecuente DESC, visitas DESC, nombre LIMIT 300")
+    cliente_options = "".join(f'<option value="{c["nombre"]}">⭐ {c["visitas"] if "visitas" in c.keys() else 0} · {c["telefono"] or "SIN CEL"} · {c["direccion"]}</option>' for c in clientes)
     detalle = q_all("SELECT d.*,p.codigo FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 40")
     tr_det = "".join(f'<tr><td>{r["codigo"]}</td><td><b>{r["producto"]}</b></td><td>{int(float(r["cantidad"] or 0))}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>' for r in detalle) or '<tr><td colspan="5">Sin detalle.</td></tr>'
     pos_cards = ""
@@ -1866,6 +1956,40 @@ def ventas():
     html = f"""
     <div class='panel'><div class='section-title'>➕ Agregar producto a pedido inicial</div><div class='hint-card'>Busca el pedido abierto del cliente y agrega gaseosa, pollo, pizza u otro producto. El importe sube en el mismo pedido y el detalle queda disgregado por ítem.</div><form method='post' class='clean-grid'><input type='hidden' name='accion' value='agregar_a_pedido'><div><label>Pedido inicial / cliente</label><select name='pedido_existente_id' required>{opts_ped}</select></div><div><label>Categoría</label><select class='venta-cat-filter' data-target='producto_add'>{cat_venta_opts}</select></div><div><label>Producto a agregar</label><select id='producto_add' name='producto_id' class='venta-product-select' required>{opts_prod}</select></div><div><label>Cantidad</label><input name='cantidad' type='number' min='1' step='1' value='1'></div><button class='btn-success'>Agregar al mismo pedido</button></form></div>
     <div class='panel'><div class='section-title'>🧾 Nueva venta / pedido</div><br><form method='post'><input type='hidden' name='accion' value='guardar_pedido'><datalist id='clientes_list'>{cliente_options}</datalist><div class='clean-grid-4'><div><label>Mesa</label><select name='mesa'><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option><option>MESA 5</option><option>MESA 6</option></select></div><div><label>Tipo servicio</label><select name='servicio'><option>SALÓN</option><option>DELIVERY</option><option>RECOJO</option></select></div><div><label>Cliente</label><input name='cliente' list='clientes_list' placeholder='Buscar o escribir cliente'></div><div><label>Teléfono</label><input name='telefono' placeholder='Celular'></div><div><label>Dirección</label><input name='direccion' placeholder='Solo para delivery'></div><div><label>Referencia</label><input name='referencia' placeholder='Referencia'></div><div><label>Categoría</label><select class='venta-cat-filter' data-target='producto_new' name='categoria_venta'>{cat_venta_opts}</select></div><div><label>Producto</label><select id='producto_new' name='producto_id' class='venta-product-select' required>{opts_prod}</select></div><div><label>Cantidad</label><input name='cantidad' type='number' min='1' step='1' value='1'></div><div><label>Método pago</label><select name='metodo_pago'><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div><div><label>Descuento</label><input name='descuento' type='number' min='0' step='1' value='0'></div></div><br><div class='actions'><button class='primary'>Guardar pedido</button><button type='reset'>Limpiar venta</button><a class='btn' href='{url_for('inventario') if is_admin() else url_for('catalogo_admin')}'>Nuevo producto</a><a class='btn' href='{url_for('pedidos')}'>Ver pedidos</a></div></form></div>
+    <div id="crm_alerta" class="hint-card" style="display:none;margin-top:12px;background:#fff7ed;border-color:#fed7aa;color:#9a3412;font-weight:900"></div>
+    <script>
+      async function buscarClienteCRM(term){{
+        term=(term||'').trim();
+        if(term.length<3) return null;
+        try{{
+          const r=await fetch('/api/clientes/buscar?term='+encodeURIComponent(term));
+          const data=await r.json();
+          return data.ok ? data.cliente : null;
+        }}catch(e){{return null;}}
+      }}
+      async function autocompletarVentaDesde(input){{
+        const c=await buscarClienteCRM(input.value);
+        const alerta=document.getElementById('crm_alerta');
+        if(!c){{ if(alerta) alerta.style.display='none'; return; }}
+        const form=input.closest('form')||document;
+        const cliente=form.querySelector('[name="cliente"]');
+        const telefono=form.querySelector('[name="telefono"]');
+        const direccion=form.querySelector('[name="direccion"]');
+        const referencia=form.querySelector('[name="referencia"]');
+        if(cliente && !cliente.value) cliente.value=c.nombre;
+        if(telefono && !telefono.value) telefono.value=c.telefono;
+        if(direccion && !direccion.value) direccion.value=c.direccion;
+        if(referencia && !referencia.value) referencia.value=c.referencia;
+        if(alerta){{
+          alerta.style.display='block';
+          alerta.innerHTML=(c.es_frecuente?'⭐ Cliente frecuente detectado: ':'Cliente detectado: ')+c.nombre+' · visitas: '+c.visitas+' · '+(c.telefono||'sin celular');
+        }}
+      }}
+      document.querySelectorAll('[name="cliente"],[name="telefono"]').forEach(el=>{{
+        el.addEventListener('change',()=>autocompletarVentaDesde(el));
+        el.addEventListener('blur',()=>autocompletarVentaDesde(el));
+      }});
+    </script>
     <div class='panel'><div class='box-title'>Cobro rápido</div><br><form method='post' class='actions'><input type='hidden' name='accion' value='cobrar_ticket'><select name='pedido_id' style='max-width:680px'>{opts_ped}</select><select name='metodo_pago' style='max-width:220px'><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select><button class='btn-success'>Cobrar y ticket / QR</button></form></div>
     <div class='panel filter-sticky' id='filtros-venta'><form method='get' action='{url_for('ventas')}#catalogo-productos' class='catalog-filter-actions'><div><label>Buscar producto</label><input name='buscar' value='{buscar_prod}' placeholder='Buscar producto por nombre, código o categoría'></div><div><label>Categoría</label><select name='categoria' onchange='this.form.submit()'>{cat_opts}</select></div><button name='disponible' value='1'>✅ Filtrar disponibles</button><a class='btn' href='{url_for('ventas')}#catalogo-productos'>Limpiar</a></form></div>
     <div class='panel' id='catalogo-productos'><div class='section-title'>🍽️ Catálogo de productos</div><div class='table-wrap small'><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div>{load_day_html}
@@ -1914,7 +2038,7 @@ def pos_rapido():
         referencia = up(request.form.get("referencia"))
         servicio = request.form.get("servicio", "SALÓN")
         metodo = request.form.get("metodo_pago", "EFECTIVO")
-        asegurar_cliente(cliente, telefono, direccion, referencia)
+        asegurar_cliente(cliente, telefono, direccion, referencia, origen='POS')
         pedido_id = q_exec("INSERT INTO pedidos(codigo,fecha,hora,mesa,cliente,telefono,direccion,referencia,servicio,metodo_pago,subtotal,descuento,total,estado,pagado,usuario,observacion,sucursal_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (codigo, today(), hour(), request.form.get("mesa", ""), cliente, telefono, direccion, referencia, servicio, metodo, subtotal, descuento, total, "PENDIENTE", "NO", session.get("user"), "POS RÁPIDO APP MÓVIL", session.get("sucursal_id",1)))
         q_exec("INSERT INTO pedido_detalle(pedido_id,producto_id,producto,cantidad,precio,total) VALUES(?,?,?,?,?,?)", (pedido_id, producto_id, prod["nombre"], cantidad, precio, total))
         descontar_producto(producto_id, cantidad)
@@ -1941,8 +2065,8 @@ def pos_rapido():
             init_db()
             productos = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY categoria, CASE WHEN stock>0 THEN 0 ELSE 1 END, nombre LIMIT 250")
     categorias = q_all("SELECT DISTINCT categoria FROM productos WHERE activo=1 AND COALESCE(categoria,'')<>'' ORDER BY categoria")
-    clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY nombre LIMIT 250")
-    cliente_options = "".join(f'<option value="{c["nombre"]}">{c["telefono"]} {c["direccion"]}</option>' for c in clientes)
+    clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY es_frecuente DESC, visitas DESC, nombre LIMIT 300")
+    cliente_options = "".join(f'<option value="{c["nombre"]}">⭐ {c["visitas"] if "visitas" in c.keys() else 0} · {c["telefono"] or "SIN CEL"} · {c["direccion"]}</option>' for c in clientes)
     cat_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}" {"selected" if cat_filtro==c["categoria"] else ""}>{c["categoria"]}</option>' for c in categorias)
     cat_links = '<div class="pos-cat-chips"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('pos_rapido') + '">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("pos_rapido", categoria=c["categoria"])}">{c["categoria"]}</a>' for c in categorias) + '</div>'
 
@@ -1955,7 +2079,7 @@ def pos_rapido():
         img = product_image(p)
         feature_cards += f"""<form method='post' class='keep-pos-form' onclick='event.stopPropagation()'>
           <input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'>
-          <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
+          <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''><input type='hidden' name='direccion' class='pos_direccion_hidden' value=''><input type='hidden' name='referencia' class='pos_referencia_hidden' value=''>
           <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
           <button class='pos-feature-card' type='submit'><img src='{img}' alt='{p['nombre']}'><b>{p['nombre']}</b><span>{money(p['precio'])}</span><em class='pos-mini-add'>Agregar</em></button>
         </form>"""
@@ -1965,7 +2089,7 @@ def pos_rapido():
         img = product_image(p)
         list_cards += f"""<form method='post' class='keep-pos-form pos-list-item'>
           <input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'>
-          <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
+          <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''><input type='hidden' name='direccion' class='pos_direccion_hidden' value=''><input type='hidden' name='referencia' class='pos_referencia_hidden' value=''>
           <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
           <img class='pos-list-img' src='{img}' alt='{p['nombre']}'>
           <div class='pos-list-info'><b>{p['nombre']}</b><small>{p['categoria'] or 'PRODUCTO'} · SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small><span>{money(p['precio'])}</span></div>
@@ -1984,6 +2108,8 @@ def pos_rapido():
       <form method="get" class="pos-client-grid">
         <div><label>Cliente</label><input id="pos_cliente" list="clientes_pos_list" placeholder="CLIENTE GENERAL / nombre"></div>
         <div><label>Teléfono / DNI</label><input id="pos_telefono" placeholder="Celular o DNI"></div>
+        <div><label>Dirección</label><input id="pos_direccion" placeholder="Para delivery"></div>
+        <div><label>Referencia</label><input id="pos_referencia" placeholder="Portón, piso, nota"></div>
         <div><label>Mesa</label><select id="pos_mesa"><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option><option>MESA 5</option><option>MESA 6</option></select></div>
         <div><label>Servicio</label><select id="pos_servicio"><option>SALÓN</option><option>RECOJO</option><option>DELIVERY</option></select></div>
         <div><label>Pago</label><select id="pos_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div>
@@ -2012,6 +2138,8 @@ def pos_rapido():
       function syncPOSClient(){{
         const cliente=(document.getElementById('pos_cliente').value||'CLIENTE GENERAL').trim() || 'CLIENTE GENERAL';
         const telefono=(document.getElementById('pos_telefono').value||'').trim();
+        const direccion=(document.getElementById('pos_direccion')?.value||'').trim();
+        const referencia=(document.getElementById('pos_referencia')?.value||'').trim();
         const mesa=document.getElementById('pos_mesa').value||'';
         const servicio=document.getElementById('pos_servicio').value||'SALÓN';
         const pago=document.getElementById('pos_pago').value||'EFECTIVO';
@@ -2340,6 +2468,35 @@ def caja():
     """
     return page(html, "caja")
 
+
+# =========================
+# API CRM CLIENTES PRO
+# =========================
+@app.route("/api/clientes/buscar")
+@login_required
+def api_clientes_buscar():
+    term = clean(request.args.get("term", ""))
+    if len(term) < 3:
+        return jsonify(ok=False)
+    term_up = term.upper()
+    like = f"%{term_up}%"
+    row = q_one("""
+        SELECT * FROM clientes
+         WHERE activo=1 AND (
+               telefono LIKE ?
+            OR UPPER(nombre) LIKE ?
+            OR UPPER(apellido) LIKE ?
+            OR UPPER(direccion) LIKE ?
+            OR UPPER(referencia) LIKE ?
+            OR UPPER(codigo_cliente) LIKE ?
+         )
+         ORDER BY es_frecuente DESC, visitas DESC, ultima_visita DESC, id DESC
+         LIMIT 1
+    """, (like, like, like, like, like, like))
+    if not row:
+        return jsonify(ok=False)
+    return jsonify(ok=True, cliente=cliente_to_dict(row))
+
 # =========================
 # DELIVERY / CLIENTES
 # =========================
@@ -2348,15 +2505,93 @@ def caja():
 @admin_required
 def delivery():
     if request.method == "POST":
-        q_exec("INSERT INTO clientes(nombre,telefono,direccion,referencia,notas,activo) VALUES(?,?,?,?,?,1)", (up(request.form.get("nombre")), clean(request.form.get("telefono")), up(request.form.get("direccion")), up(request.form.get("referencia")), up(request.form.get("notas"))))
-        flash("Cliente guardado.", "ok")
+        asegurar_cliente(
+            request.form.get("nombre"),
+            request.form.get("telefono"),
+            request.form.get("direccion"),
+            request.form.get("referencia"),
+            request.form.get("notas"),
+            origen='DELIVERY'
+        )
+        flash("Cliente guardado / actualizado en CRM.", "ok")
         return redirect(url_for("delivery"))
-    rows = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY id DESC")
-    trs = "".join(f'<tr><td>{r["id"]}</td><td>{r["nombre"]}</td><td>{r["telefono"]}</td><td>{r["direccion"]}</td><td>{r["referencia"]}</td><td>{r["notas"]}</td></tr>' for r in rows) or '<tr><td colspan="6">Sin clientes.</td></tr>'
+
+    filtro = clean(request.args.get("filtro", "todos"))
+    buscar = clean(request.args.get("buscar", ""))
+    where = ["activo=1"]
+    params = []
+    if filtro == "frecuentes":
+        where.append("COALESCE(es_frecuente,0)=1")
+    elif filtro == "delivery":
+        where.append("UPPER(COALESCE(origen_ultimo,''))='DELIVERY'")
+    if buscar:
+        like = f"%{buscar.upper()}%"
+        where.append("(UPPER(nombre) LIKE ? OR telefono LIKE ? OR UPPER(direccion) LIKE ? OR UPPER(referencia) LIKE ? OR UPPER(codigo_cliente) LIKE ?)")
+        params += [like, like, like, like, like]
+    rows = q_all("SELECT * FROM clientes WHERE " + " AND ".join(where) + " ORDER BY es_frecuente DESC, visitas DESC, id DESC LIMIT 500", tuple(params))
+
+    total_clientes = q_one("SELECT COUNT(*) t FROM clientes WHERE activo=1")['t']
+    frecuentes = q_one("SELECT COUNT(*) t FROM clientes WHERE activo=1 AND COALESCE(es_frecuente,0)=1")['t']
+    sin_cel = q_one("SELECT COUNT(*) t FROM clientes WHERE activo=1 AND (telefono='' OR telefono IS NULL)")['t']
+
+    def badge(r):
+        return "<span class='crm-badge frecuente'>⭐ FRECUENTE</span>" if int(r['es_frecuente'] or 0) else "<span class='crm-badge'>NUEVO</span>"
+    trs = "".join(
+        f"""<tr>
+          <td><b>{r['codigo_cliente'] or ('CLI-%06d' % r['id'])}</b><br>{badge(r)}</td>
+          <td><b>{r['nombre']}</b><br><small>{r['apellido'] or ''}</small></td>
+          <td>{r['telefono'] or '<span style="color:#b45309;font-weight:900">SIN CELULAR</span>'}</td>
+          <td>{r['direccion'] or ''}<br><small>{r['referencia'] or ''}</small></td>
+          <td><b>{int(r['visitas'] or 0)}</b></td>
+          <td>{r['origen_ultimo'] or ''}<br><small>{r['ultima_visita'] or ''}</small></td>
+          <td>{r['notas'] or ''}</td>
+        </tr>"""
+        for r in rows
+    ) or '<tr><td colspan="7">Sin clientes para el filtro.</td></tr>'
+
     html = f"""
-    <div class="panel"><div class="section-title">🛵 Clientes delivery / frecuentes</div><form method="post" class="clean-grid">
-      <div><label>Nombre</label><input name="nombre" placeholder="Cliente"></div><div><label>Teléfono</label><input name="telefono" placeholder="Celular"></div><div><label>Dirección</label><input name="direccion" placeholder="Dirección"></div><div><label>Referencia</label><input name="referencia" placeholder="Referencia"></div><div><label>Notas</label><input name="notas" placeholder="Ej. portón negro, paga Yape"></div><button class="btn-success">Guardar cliente</button><a class="btn" href="{url_for('ventas')}">Cargar en venta</a><a class="btn" href="{url_for('delivery')}">Refrescar</a></form></div>
-    <div class="panel"><div class="section-title">📒 Base de clientes frecuentes</div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Referencia</th><th>Notas</th></tr></thead><tbody>{trs}</tbody></table></div></div>
+    <style>
+      .crm-grid{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}}
+      .crm-kpi{{background:linear-gradient(135deg,#fff,#fff1f2);border:1px solid #fecdd3;border-radius:22px;padding:18px;box-shadow:0 14px 35px rgba(15,23,42,.08)}}
+      .crm-kpi b{{font-size:28px;color:#e11d48}}
+      .crm-filter{{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}}
+      .crm-filter a{{padding:10px 14px;border-radius:999px;background:#f1f5f9;text-decoration:none;color:#0f172a;font-weight:950}}
+      .crm-filter a.on{{background:linear-gradient(90deg,#ff1744,#ff6b00);color:#fff}}
+      .crm-badge{{display:inline-flex;padding:5px 8px;border-radius:999px;background:#e2e8f0;font-weight:950;font-size:11px;color:#0f172a;margin-top:4px}}
+      .crm-badge.frecuente{{background:#fef3c7;color:#92400e}}
+      .crm-help{{background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;border-radius:18px;padding:14px;font-weight:850;margin-bottom:14px}}
+      @media(max-width:900px){{.crm-grid{{grid-template-columns:1fr}}}}
+    </style>
+    <div class="crm-grid">
+      <div class="crm-kpi">👥<br><b>{total_clientes}</b><br>Total clientes</div>
+      <div class="crm-kpi">⭐<br><b>{frecuentes}</b><br>Frecuentes automáticos</div>
+      <div class="crm-kpi">🪪<br><b>{sin_cel}</b><br>Clientes sin celular</div>
+    </div>
+    <div class="panel">
+      <div class="section-title">👥 CRM Clientes PRO</div>
+      <div class="crm-help">El sistema centraliza clientes desde POS rápido, Ventas y Delivery. Si un cliente repite 3 veces, se marca como frecuente. Si no entrega celular, se identifica por nombre + dirección y se le asigna código interno CLI.</div>
+      <form method="post" class="clean-grid">
+        <div><label>Nombre y apellido</label><input name="nombre" required placeholder="Ej. Omar Azabache"></div>
+        <div><label>Teléfono opcional</label><input name="telefono" placeholder="Puede quedar vacío"></div>
+        <div><label>Dirección</label><input name="direccion" placeholder="Dirección / zona"></div>
+        <div><label>Referencia</label><input name="referencia" placeholder="Portón negro, piso, oficina"></div>
+        <div><label>Notas</label><input name="notas" placeholder="Preferencias, método pago, etc."></div>
+        <button class="btn-success">Guardar / actualizar cliente</button>
+      </form>
+    </div>
+    <div class="panel">
+      <div class="section-title">📒 Base inteligente de clientes</div>
+      <form method="get" class="actions">
+        <input name="buscar" value="{buscar}" placeholder="Buscar por nombre, celular, código o dirección">
+        <button>Buscar</button><a class="btn" href="{url_for('delivery')}">Limpiar</a>
+      </form>
+      <div class="crm-filter">
+        <a class="{'on' if filtro=='todos' else ''}" href="{url_for('delivery', filtro='todos')}">Todos</a>
+        <a class="{'on' if filtro=='frecuentes' else ''}" href="{url_for('delivery', filtro='frecuentes')}">⭐ Frecuentes</a>
+        <a class="{'on' if filtro=='delivery' else ''}" href="{url_for('delivery', filtro='delivery')}">🛵 Delivery</a>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Código</th><th>Cliente</th><th>Teléfono</th><th>Dirección / referencia</th><th>Visitas</th><th>Origen</th><th>Notas</th></tr></thead><tbody>{trs}</tbody></table></div>
+    </div>
     """
     return page(html, "delivery")
 
