@@ -2782,5 +2782,138 @@ try:
 except NameError:
     pass
 
+
+# =========================
+# APP COMERCIAL PRO - CORRECCIÓN DEFINITIVA LOGO CENTRADO
+# Toro rojo grande ARRIBA y texto Restaurant Grill ABAJO
+# =========================
+try:
+    STYLE += """
+/* === APP COMERCIAL PRO FINAL: LOGO ARRIBA, CENTRADO, SIN LAYOUT HORIZONTAL === */
+.side .brand.brand-el-toro.next-level-brand,
+.side .brand,
+aside.side .brand.brand-el-toro.next-level-brand{
+  display:block!important;
+  position:relative!important;
+  height:auto!important;
+  min-height:250px!important;
+  width:100%!important;
+  padding:18px 14px 14px!important;
+  margin:0!important;
+  overflow:visible!important;
+  text-align:center!important;
+  background:
+    radial-gradient(circle at 50% 6%, rgba(255,30,64,.34), transparent 42%),
+    linear-gradient(180deg,#130009 0%,#250313 68%,#17000a 100%)!important;
+  border-bottom:1px solid rgba(255,255,255,.08)!important;
+}
+.side .brand-hero-card,
+aside.side .brand-hero-card{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  width:100%!important;
+  min-height:142px!important;
+  padding:16px 10px 14px!important;
+  margin:0 auto 12px!important;
+  text-align:center!important;
+  border-radius:28px!important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.035))!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08)!important;
+  overflow:visible!important;
+}
+.side .brand-hero-card .brand-logo-img,
+.side .brand-logo-img,
+aside.side .brand-logo-img{
+  display:block!important;
+  flex:none!important;
+  width:118px!important;
+  height:118px!important;
+  min-width:118px!important;
+  min-height:118px!important;
+  max-width:118px!important;
+  max-height:118px!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  padding:7px!important;
+  margin:0 auto 8px!important;
+  border-radius:24px!important;
+  background:#000!important;
+  box-shadow:0 18px 55px rgba(255,23,68,.42), 0 0 0 1px rgba(255,255,255,.08)!important;
+  filter:drop-shadow(0 20px 32px rgba(255,0,55,.38))!important;
+}
+.side .brand-hero-title,
+aside.side .brand-hero-title{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  text-align:center!important;
+  font-size:25px!important;
+  line-height:1.04!important;
+  font-weight:950!important;
+  color:#fff!important;
+  white-space:normal!important;
+  letter-spacing:-.8px!important;
+  text-shadow:0 4px 22px rgba(255,255,255,.25)!important;
+}
+.side .brand-hero-sub,
+aside.side .brand-hero-sub{
+  display:block!important;
+  width:100%!important;
+  margin:2px auto 0!important;
+  text-align:center!important;
+  font-size:11px!important;
+  line-height:1.25!important;
+  color:#ffd7de!important;
+  font-weight:900!important;
+}
+.side .brand-user-card,
+aside.side .brand-user-card{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  place-items:center!important;
+  gap:4px!important;
+  width:86%!important;
+  max-width:210px!important;
+  margin:0 auto!important;
+  padding:12px 12px!important;
+  border-radius:22px!important;
+  text-align:center!important;
+  background:rgba(255,255,255,.09)!important;
+  border:1px solid rgba(255,255,255,.13)!important;
+  color:white!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.18)!important;
+  white-space:normal!important;
+}
+.side .brand-user-card span,
+.side .brand-user-card small,
+aside.side .brand-user-card span,
+aside.side .brand-user-card small{
+  display:block!important;
+  width:100%!important;
+  text-align:center!important;
+}
+.side .brand-user-card span{font-size:14px!important;line-height:1.12!important;font-weight:950!important;color:#fff!important;}
+.side .brand-user-card small{font-size:12px!important;line-height:1.12!important;color:#ffe4e6!important;font-weight:900!important;}
+@media(max-width:900px){
+  .side{position:sticky!important;top:0!important;width:100%!important;height:auto!important;padding:8px!important;overflow:visible!important;}
+  .main{margin-left:0!important;}
+  .side .brand.brand-el-toro.next-level-brand{display:block!important;min-height:224px!important;padding:12px!important;border-radius:0 0 24px 24px!important;}
+  .side .brand-hero-card{min-height:130px!important;max-width:360px!important;margin:0 auto 10px!important;}
+  .side .brand-logo-img{width:104px!important;height:104px!important;min-width:104px!important;min-height:104px!important;max-width:104px!important;max-height:104px!important;}
+  .side .brand-hero-title{font-size:24px!important;}
+  .side .brand-user-card{max-width:230px!important;}
+  .nav{display:flex!important;gap:8px!important;overflow-x:auto!important;grid-template-columns:none!important;padding:8px 4px 10px!important;scroll-snap-type:x proximity!important;}
+  .nav a{flex:0 0 auto!important;min-width:142px!important;justify-content:center!important;text-align:center!important;}
+}
+"""
+except NameError:
+    pass
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
