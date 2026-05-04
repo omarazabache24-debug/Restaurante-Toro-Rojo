@@ -2684,63 +2684,103 @@ def err500(e):
         pass
     return page('<div class="panel"><h2>Error interno controlado</h2><p>No se perdió información. Revisa los logs de Render o vuelve al panel.</p><a class="btn btn-primary" href="/dashboard">Volver al panel</a></div>'), 500
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
 
 # =========================
-# AJUSTE FINAL BRAND SIDEBAR
-# Logo del toro arriba de Restaurant Grill + bloque más grande
+# NIVEL DIOS COMPLETO - BRAND SIDEBAR FINAL
+# Logo del toro MÁS GRANDE arriba de Restaurant Grill
 # =========================
 try:
     STYLE += """
-/* === AJUSTE SOLICITADO: TORO ARRIBA DE RESTAURANT GRILL === */
+/* === NIVEL DIOS FINAL: LOGO GRANDE ARRIBA + RESTAURANT GRILL ABAJO === */
 @media(min-width:901px){
   .side .brand.brand-el-toro.next-level-brand,
   .side .brand{
-    padding:16px 12px 12px!important;
-    background:linear-gradient(180deg,#16000a,#240414)!important;
+    display:block!important;
+    height:auto!important;
+    min-height:auto!important;
+    padding:16px 12px 14px!important;
+    margin:0!important;
+    overflow:visible!important;
+    background:linear-gradient(180deg,#100008 0%,#210313 100%)!important;
+    border-bottom:1px solid rgba(255,255,255,.08)!important;
   }
   .side .brand-hero-card{
     display:grid!important;
     grid-template-columns:1fr!important;
     justify-items:center!important;
     align-items:center!important;
-    gap:8px!important;
-    padding:14px 12px 12px!important;
-    border-radius:22px!important;
-    min-height:132px!important;
+    gap:9px!important;
+    width:100%!important;
+    min-height:178px!important;
+    padding:18px 12px 16px!important;
+    margin:0!important;
+    border-radius:26px!important;
     text-align:center!important;
-    background:radial-gradient(circle at 50% 8%,rgba(255,35,71,.22),transparent 48%),rgba(255,255,255,.065)!important;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255,35,71,.36), transparent 50%),
+      linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.035))!important;
+    border:1px solid rgba(255,255,255,.09)!important;
+    box-shadow:0 18px 48px rgba(0,0,0,.22)!important;
     overflow:visible!important;
   }
   .side .brand-logo-img{
+    display:block!important;
     flex:none!important;
-    width:76px!important;
-    height:76px!important;
-    padding:5px!important;
-    margin:0 auto!important;
-    border-radius:16px!important;
+    width:112px!important;
+    height:112px!important;
+    max-width:112px!important;
+    max-height:112px!important;
+    object-fit:contain!important;
+    padding:6px!important;
+    margin:0 auto 2px!important;
+    border-radius:22px!important;
     background:#000!important;
-    box-shadow:0 12px 34px rgba(255,23,68,.32)!important;
+    box-shadow:0 18px 48px rgba(255,23,68,.40), 0 0 0 1px rgba(255,255,255,.08)!important;
+    filter:drop-shadow(0 18px 30px rgba(255,0,55,.35))!important;
   }
   .side .brand-hero-title{
     display:block!important;
     width:100%!important;
     text-align:center!important;
-    font-size:24px!important;
+    font-size:25px!important;
     line-height:1.05!important;
+    font-weight:950!important;
+    color:#fff!important;
     white-space:normal!important;
-    letter-spacing:-.6px!important;
+    letter-spacing:-.8px!important;
+    text-shadow:0 4px 22px rgba(255,255,255,.25)!important;
+  }
+  .side .brand-hero-sub{
+    display:block!important;
+    margin:0!important;
+    font-size:11px!important;
+    line-height:1.25!important;
+    color:#ffd7de!important;
+    font-weight:900!important;
   }
   .side .brand-user-card{
-    margin:10px auto 0!important;
-    width:82%!important;
-    padding:10px 12px!important;
-    border-radius:18px!important;
+    display:grid!important;
+    gap:4px!important;
+    margin:12px auto 0!important;
+    width:86%!important;
+    max-width:210px!important;
+    padding:11px 12px!important;
+    border-radius:20px!important;
+    text-align:center!important;
+    background:rgba(255,255,255,.09)!important;
+    border:1px solid rgba(255,255,255,.13)!important;
+    color:white!important;
+    box-shadow:0 12px 30px rgba(0,0,0,.18)!important;
   }
-  .side .brand-user-card span{font-size:14px!important;}
-  .side .brand-user-card small{font-size:12px!important;}
+  .side .brand-user-card span{font-size:14px!important;line-height:1.1!important;font-weight:950!important;}
+  .side .brand-user-card small{font-size:12px!important;line-height:1.1!important;color:#ffe4e6!important;font-weight:900!important;}
+}
+@media(max-width:900px){
+  .side .brand.brand-el-toro.next-level-brand{display:none!important;}
 }
 """
 except NameError:
     pass
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
