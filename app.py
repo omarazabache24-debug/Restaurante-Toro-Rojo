@@ -1285,6 +1285,100 @@ body{
   .main{margin-left:0!important;width:100%!important;}
 }
 
+
+
+/* =========================================================
+   CORRECCIÓN DEFINITIVA: LOGO ARRIBA + TEXTO ABAJO CENTRADO
+   ========================================================= */
+.side .brand.brand-el-toro.next-level-brand,
+.side .brand{
+  display:block!important;
+  position:relative!important;
+  top:auto!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:auto!important;
+  padding:16px 12px 14px!important;
+  margin:0!important;
+  text-align:center!important;
+  background:linear-gradient(180deg,#16000a 0%,#270415 100%)!important;
+  border-bottom:1px solid rgba(255,255,255,.10)!important;
+  overflow:visible!important;
+}
+.side .brand-hero-card{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  width:100%!important;
+  min-height:0!important;
+  height:auto!important;
+  padding:18px 12px!important;
+  margin:0 auto!important;
+  border-radius:24px!important;
+  text-align:center!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.035))!important;
+  box-shadow:0 16px 42px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.06)!important;
+  overflow:visible!important;
+}
+.side .brand-logo-img{
+  display:block!important;
+  flex:none!important;
+  width:116px!important;
+  height:116px!important;
+  max-width:116px!important;
+  max-height:116px!important;
+  object-fit:contain!important;
+  margin:0 auto 8px!important;
+  padding:8px!important;
+  border-radius:22px!important;
+  background:#000!important;
+  box-shadow:0 18px 46px rgba(255,23,68,.32)!important;
+}
+.side .brand-hero-title{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  color:#fff!important;
+  font-size:25px!important;
+  line-height:1.08!important;
+  font-weight:950!important;
+  text-align:center!important;
+  white-space:normal!important;
+  letter-spacing:-.5px!important;
+  text-shadow:0 4px 18px rgba(255,255,255,.16)!important;
+}
+.side .brand-hero-sub{display:none!important;}
+.side .brand-user-card{
+  display:grid!important;
+  justify-items:center!important;
+  align-items:center!important;
+  gap:4px!important;
+  width:min(190px,92%)!important;
+  margin:12px auto 0!important;
+  padding:10px 12px!important;
+  border-radius:22px!important;
+  text-align:center!important;
+  white-space:normal!important;
+  background:rgba(255,255,255,.075)!important;
+  border:1px solid rgba(255,255,255,.11)!important;
+  color:#fff!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.14)!important;
+}
+.side .brand-user-card span,
+.side .brand-user-card small{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  line-height:1.18!important;
+  white-space:normal!important;
+  text-align:center!important;
+}
+@media(max-width:900px){
+  .side .brand.brand-el-toro.next-level-brand{display:none!important;}
+}
 </style>
 </head>
 <body>
