@@ -613,7 +613,7 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
 
 
 /* ===== AJUSTE FINAL PEDIDO USUARIO: SIN LOGO, FONDOS PRO, CATALOGO COMPACTO, ICONOS KPI ===== */
-.brand-no-logo{min-height:96px!important;padding:18px 12px!important;display:flex!important;align-items:center!important;justify-content:center!important;background:linear-gradient(180deg,#07070c,#19000a)!important}.brand-no-logo .user-pill{width:100%;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(255,255,255,.06);color:#fff;font-weight:950;text-align:center;padding:16px 10px;box-shadow:0 14px 30px rgba(0,0,0,.18)}.brand-no-logo .user-pill span{display:inline-block;margin-top:6px;color:#ffd5da;font-size:12px;letter-spacing:.8px}.brand-logo-img,.brand .logo{display:none!important}
+.brand-no-logo{min-height:96px!important;padding:18px 12px!important;display:flex!important;align-items:center!important;justify-content:center!important;background:linear-gradient(180deg,#07070c,#19000a)!important}.brand-no-logo .user-pill{width:100%;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(255,255,255,.06);color:#fff;font-weight:950;text-align:center;padding:16px 10px;box-shadow:0 14px 30px rgba(0,0,0,.18)}.brand-no-logo .user-pill span{display:inline-block;margin-top:6px;color:#ffd5da;font-size:12px;letter-spacing:.8px}.brand .logo{display:none!important}
 .content{background:radial-gradient(circle at 90% 0%,rgba(255,23,68,.10),transparent 28%),linear-gradient(180deg,#f6f8fb,#eef3f8)!important}.panel{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(255,255,255,.92))!important;border:1px solid rgba(255,255,255,.75)!important}.panel:nth-of-type(2n){background:linear-gradient(180deg,#ffffff,#fff7f8)!important}.panel:nth-of-type(3n){background:linear-gradient(180deg,#ffffff,#f4f8ff)!important}
 .catalog-hero{padding:18px 20px!important;border-radius:26px!important;grid-template-columns:minmax(0,1fr) 360px!important}.catalog-phone{width:360px!important;max-width:100%!important}.catalog-admin-clean{grid-template-columns:minmax(280px,.8fr) minmax(360px,1.2fr)!important;gap:14px!important}.catalog-pick-grid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))!important;gap:8px!important;max-height:260px!important}.catalog-pick{min-height:64px!important;font-size:13px!important;line-height:1.2!important;padding:9px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}.catalog-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))!important;gap:12px!important}.catalog-card{padding:10px!important;border-radius:18px!important;display:flex!important;flex-direction:column!important;gap:6px!important;min-height:0!important}.catalog-card img{height:96px!important;object-fit:contain!important;background:#05050a!important;border-radius:14px!important}.catalog-card h3{font-size:14px!important;line-height:1.15!important;margin:0!important;white-space:normal!important;overflow-wrap:anywhere!important;color:#fff!important}.catalog-card p{font-size:11px!important;line-height:1.25!important;min-height:0!important;margin:0!important;color:#e5e7eb!important;white-space:normal!important;overflow-wrap:anywhere!important}.price-pill{font-size:12px!important;padding:6px 9px!important;width:max-content!important}.catalog-card form button{width:100%!important;padding:8px!important;font-size:12px!important}
 .analytics-card{position:relative!important;padding-left:82px!important;min-height:132px!important}.analytics-icon{position:absolute;left:20px;top:24px;width:46px;height:46px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#ff1744,#ff7a00);box-shadow:0 14px 28px rgba(255,23,68,.22);font-size:23px}.analytics-card span,.analytics-card b,.analytics-card small{display:block!important;text-align:left!important}
@@ -651,13 +651,28 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
 @media(max-width:1100px){.catalog-admin-clean{grid-template-columns:1fr!important}.upload-drop form.clean-grid{grid-template-columns:1fr 1fr!important}.content{padding:14px!important}}
 @media(max-width:650px){.upload-drop form.clean-grid{grid-template-columns:1fr!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.qr-box{grid-template-columns:1fr!important}.qr-img{margin:auto!important}.content{padding:10px!important}}
 
+
+
+/* ===== SIGUIENTE NIVEL TOTAL APP MÓVIL - EL TORO ===== */
+:root{--app-bg:#eef5ff;--app-bg2:#fff7f7;--app-card:#ffffff;--app-ink:#0f172a;--app-muted:#64748b;--app-red:#ff2347;--app-orange:#ff7a18;--app-line:#e2e8f0;--app-dark:#101526}
+body{background:radial-gradient(circle at 12% 8%,#ffe0ea 0,#fff4f7 22%,transparent 42%),radial-gradient(circle at 88% 0,#c7edff 0,#e9f8ff 24%,transparent 46%),linear-gradient(135deg,#f8fafc,#eef5ff 48%,#fff7f7)!important;color:var(--app-ink)!important}.app{background:transparent!important}.main{background:transparent!important}.topbar{display:none!important}.content{background:transparent!important;padding:22px!important;max-width:1540px!important}.panel{background:rgba(255,255,255,.88)!important;border:1px solid rgba(255,255,255,.92)!important;border-radius:28px!important;box-shadow:0 20px 55px rgba(15,23,42,.10)!important;color:#0f172a!important}.section-title,.box-title,h1,h2,h3,label{color:#0f172a!important;text-shadow:none!important}.hint-card{background:#fff7ed!important;color:#7c2d12!important;border:1px solid #fed7aa!important}.side{background:linear-gradient(180deg,#080814 0,#180514 45%,#320811 100%)!important;box-shadow:20px 0 60px rgba(15,23,42,.18)!important;border-right:1px solid rgba(255,255,255,.08)!important}.brand-el-toro{display:block!important;padding:22px 16px 18px!important;text-align:center!important;background:radial-gradient(circle at 50% 0,rgba(255,35,71,.24),transparent 48%)!important;border-bottom:1px solid rgba(255,255,255,.12)!important}.brand-logo-img{display:block!important;width:154px!important;height:154px!important;object-fit:contain!important;margin:0 auto 12px!important;border-radius:22px!important;background:#000!important;box-shadow:0 18px 50px rgba(255,35,71,.22)!important}.brand-title{font-size:31px!important;font-weight:950!important;letter-spacing:-1px!important;color:white!important}.brand-title span{color:#ff6b22!important}.brand-el-toro small{display:block!important;color:#f8fafc!important;font-weight:900!important}.brand-user{margin:14px auto 0!important;width:max-content!important;max-width:100%!important;background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.16)!important;color:#ffe4e6!important;border-radius:999px!important;padding:8px 14px!important;font-weight:950!important}.nav{padding:16px 12px 90px!important}.nav a{border:0!important;margin:8px 0!important;border-radius:20px!important;padding:15px 16px!important;background:rgba(255,255,255,.045)!important;color:#f8fafc!important;box-shadow:none!important}.nav a.on,.nav a:hover{background:linear-gradient(135deg,#ff1744,#ff6a3d)!important;color:white!important;box-shadow:0 16px 34px rgba(255,35,71,.30)!important}
+.mobile-active-title{display:none!important}
+.pos-mobile-shell{display:grid;grid-template-columns:minmax(330px,430px) minmax(0,1fr);gap:26px;align-items:start}.pos-phone,.pos-list-phone{background:linear-gradient(180deg,#161a2b,#0f1222)!important;border-radius:34px!important;border:1px solid rgba(15,23,42,.14)!important;box-shadow:0 24px 70px rgba(15,23,42,.22)!important;color:white!important;overflow:hidden;min-height:690px}.pos-phone-top{display:flex;justify-content:space-between;align-items:center;padding:24px 24px 10px;color:#9ca3af;font-size:28px}.pos-hero-card{margin:0 24px 22px;min-height:178px;border-radius:24px;padding:28px 24px;display:flex;align-items:end;background:linear-gradient(135deg,rgba(0,0,0,.10),rgba(127,29,29,.80)),url('/static/toro_logo.png') center/cover no-repeat;position:relative;overflow:hidden}.pos-hero-card:before{content:'';position:absolute;inset:0;background:rgba(2,6,23,.48);backdrop-filter:blur(1px)}.pos-hero-card h2{position:relative;color:white!important;font-size:33px!important;line-height:1.02!important;margin:0!important}.pos-category-title{display:flex;align-items:center;gap:14px;margin:0 24px 16px;color:white!important;font-weight:950}.pos-category-title:after{content:'';height:1px;flex:1;background:rgba(255,255,255,.22)}.pos-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:0 24px 24px}.pos-feature-card{border:0!important;background:linear-gradient(135deg,#ff1744,#ff4b3e)!important;border-radius:24px!important;padding:14px!important;text-align:left!important;color:white!important;box-shadow:0 18px 35px rgba(255,35,71,.25)!important;min-height:168px!important;display:flex!important;flex-direction:column!important;justify-content:space-between!important}.pos-feature-card img,.pos-list-img{width:86px!important;height:86px!important;object-fit:cover!important;border-radius:18px!important;background:white!important;padding:5px!important}.pos-feature-card b{font-size:14px!important;line-height:1.1!important;color:white!important}.pos-feature-card span{font-size:13px!important;color:white!important;font-weight:950!important}.pos-mini-add{align-self:flex-start;background:rgba(255,255,255,.20)!important;color:white!important;border:0!important;border-radius:999px!important;padding:7px 12px!important;font-size:11px!important}.pos-list-phone{padding:28px}.pos-search-row{display:grid;grid-template-columns:minmax(0,1fr) 230px 62px 62px;gap:14px;align-items:center;margin-bottom:20px}.pos-search-row input,.pos-search-row select{background:#fff!important;color:#0f172a!important;border:1px solid #dbe3ef!important;border-radius:18px!important;min-height:58px!important;padding:0 18px!important;font-size:15px!important}.pos-search-row button,.pos-gear{height:58px!important;border-radius:20px!important;background:linear-gradient(135deg,#ff1744,#ff7a18)!important;color:white!important;box-shadow:0 14px 30px rgba(255,35,71,.22)!important}.pos-gear{display:grid;place-items:center;background:#e9eef7!important;color:#1f2937!important}.pos-cat-chips{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}.pos-cat-chips a{background:#f1f5f9!important;color:#0f172a!important;border:1px solid #dbe3ef!important;border-radius:999px!important;padding:12px 18px!important;font-weight:950!important}.pos-cat-chips a.on{background:linear-gradient(135deg,#ff1744,#ff7a18)!important;color:white!important;border:0!important}.pos-list-stack{display:flex;flex-direction:column;gap:14px;max-height:650px;overflow:auto;padding-right:4px}.pos-list-item{display:grid!important;grid-template-columns:96px minmax(0,1fr) 96px!important;gap:18px!important;align-items:center!important;background:rgba(255,255,255,.92)!important;border:1px solid #e2e8f0!important;border-radius:24px!important;padding:14px!important;box-shadow:0 12px 26px rgba(15,23,42,.07)!important;color:#0f172a!important}.pos-list-info b{display:block;color:#0f172a!important;font-size:18px!important;line-height:1.1!important}.pos-list-info small{display:block;color:#64748b!important;font-weight:800;margin-top:4px}.pos-list-info span{display:block;color:#0f172a!important;font-weight:950!important;font-size:18px!important;margin-top:8px}.pos-list-add{background:linear-gradient(135deg,#ff1744,#ff6a3d)!important;color:white!important;border:0!important;border-radius:999px!important;padding:10px 12px!important;font-size:12px!important;box-shadow:0 12px 26px rgba(255,35,71,.22)!important}.pos-client-panel{position:sticky;top:10px;z-index:5;background:rgba(255,255,255,.94)!important}.pos-client-grid{display:grid!important;grid-template-columns:1.35fr 1fr .7fr .8fr .8fr!important;gap:14px!important}.pos-client-grid input,.pos-client-grid select{border-radius:18px!important;min-height:56px!important;border:1px solid #dbe3ef!important;background:#f8fafc!important}.pos-client-grid label{color:#0f172a!important}.pos-empty{padding:24px;border-radius:22px;background:#fff7ed;color:#9a3412;font-weight:900;text-align:center}
+@media(max-width:1080px){.app{grid-template-columns:1fr!important}.side{display:none!important}.content{padding:12px!important}.pos-mobile-shell{grid-template-columns:1fr!important}.pos-phone{display:none!important}.pos-list-phone{border-radius:28px!important;min-height:auto;padding:18px}.pos-search-row{grid-template-columns:1fr 54px!important}.pos-search-row select{grid-column:1/-1;order:3}.pos-search-row .pos-gear{display:none}.pos-client-panel{position:static}.pos-client-grid{grid-template-columns:1fr 1fr!important}.pos-list-stack{max-height:none}.mobile-bottom{display:grid!important}}
+@media(max-width:640px){.content{padding:8px!important}.panel{border-radius:22px!important;padding:12px!important}.pos-client-grid{grid-template-columns:1fr!important}.pos-list-phone{padding:12px;border-radius:24px!important}.pos-list-item{grid-template-columns:76px minmax(0,1fr)!important;gap:12px!important}.pos-list-add{grid-column:2;justify-self:start}.pos-list-img{width:72px!important;height:72px!important}.pos-list-info b{font-size:15px!important}.pos-search-row input,.pos-search-row select,.pos-search-row button{min-height:50px!important;height:50px!important}.pos-cat-chips{overflow:auto;flex-wrap:nowrap;padding-bottom:6px}.pos-cat-chips a{white-space:nowrap;padding:10px 14px!important}}
+
 </style>
 </head>
 <body>
 {% if session.get('user') %}
 <div class="app {{'admin-mode' if session.get('rol') == 'ADMIN' else 'user-mode seller-mode'}}">
   <aside class="side">
-    
+    <div class="brand brand-el-toro">
+      <img class="brand-logo-img" src="/static/toro_logo.png" alt="EL TORO Restaurant Grill">
+      <div class="brand-title">EL <span>TORO</span></div>
+      <small>Restaurant Grill</small>
+      <div class="brand-user">{{session.get('user','')}} · {{session.get('rol','')}}</div>
+    </div>
     <nav class="nav">
       {% if session.get('rol') == 'ADMIN' %}
       <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊 Panel principal</a>
@@ -1079,10 +1094,10 @@ def pos_rapido():
         servicio = request.form.get("servicio", "SALÓN")
         metodo = request.form.get("metodo_pago", "EFECTIVO")
         asegurar_cliente(cliente, telefono, direccion, referencia)
-        pedido_id = q_exec("INSERT INTO pedidos(codigo,fecha,hora,mesa,cliente,telefono,direccion,referencia,servicio,metodo_pago,subtotal,descuento,total,estado,pagado,usuario,observacion,sucursal_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (codigo, today(), hour(), request.form.get("mesa", ""), cliente, telefono, direccion, referencia, servicio, metodo, subtotal, descuento, total, "PENDIENTE", "NO", session.get("user"), "POS RÁPIDO", session.get("sucursal_id",1)))
+        pedido_id = q_exec("INSERT INTO pedidos(codigo,fecha,hora,mesa,cliente,telefono,direccion,referencia,servicio,metodo_pago,subtotal,descuento,total,estado,pagado,usuario,observacion,sucursal_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (codigo, today(), hour(), request.form.get("mesa", ""), cliente, telefono, direccion, referencia, servicio, metodo, subtotal, descuento, total, "PENDIENTE", "NO", session.get("user"), "POS RÁPIDO APP MÓVIL", session.get("sucursal_id",1)))
         q_exec("INSERT INTO pedido_detalle(pedido_id,producto_id,producto,cantidad,precio,total) VALUES(?,?,?,?,?,?)", (pedido_id, producto_id, prod["nombre"], cantidad, precio, total))
         descontar_producto(producto_id, cantidad)
-        log_event("POS", f"POS rápido {codigo} - {cliente} - {prod['nombre']}")
+        log_event("POS", f"POS rápido móvil {codigo} - {cliente} - {prod['nombre']}")
         flash(f"POS guardado: {cliente} · {prod['nombre']} x {cantidad}.", "ok")
         return redirect(url_for("pos_rapido"))
 
@@ -1102,38 +1117,70 @@ def pos_rapido():
     clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY nombre LIMIT 250")
     cliente_options = "".join(f'<option value="{c["nombre"]}">{c["telefono"]} {c["direccion"]}</option>' for c in clientes)
     cat_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}" {"selected" if cat_filtro==c["categoria"] else ""}>{c["categoria"]}</option>' for c in categorias)
-    cards = ""
-    for p in productos[:80]:
-        # POS rápido sin imágenes para que no se repita el logo dentro de los botones.
-        img_html = ""
-        cards += f"""<form method='post' class='pos-card-form keep-pos-form'>
-          <input type='hidden' name='producto_id' value='{p['id']}'>
-          <input type='hidden' name='cantidad' value='1'>
-          <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'>
-          <input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
-          <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''>
-          <input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'>
-          <input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
-          <button class='pos-product' type='submit'>{img_html}<b>{p['nombre']}</b><span>{money(p['precio'])}</span><small>SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small></button>
+    cat_links = '<div class="pos-cat-chips"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('pos_rapido') + '">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("pos_rapido", categoria=c["categoria"])}">{c["categoria"]}</a>' for c in categorias) + '</div>'
+
+    def product_image(prod):
+        img_row = q_one("SELECT imagen FROM catalogo_publico WHERE UPPER(titulo)=UPPER(?) AND activo=1 ORDER BY destacado DESC,id DESC LIMIT 1", (prod['nombre'],))
+        return url_for('static', filename=(img_row['imagen'] if img_row and img_row['imagen'] else 'toro_logo.png'))
+
+    feature_cards = ""
+    for p in productos[:6]:
+        img = product_image(p)
+        feature_cards += f"""<form method='post' class='keep-pos-form'>
+          <input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'>
+          <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
+          <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
+          <button class='pos-feature-card' type='submit'><img src='{img}' alt='{p['nombre']}'><b>{p['nombre']}</b><span>{money(p['precio'])}</span><em class='pos-mini-add'>Add Cart</em></button>
         </form>"""
-    if not cards:
-        cards = "<div class='hint-card'>No hay productos para la búsqueda.</div>"
-    cat_links = '<div class="category-bar"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('pos_rapido') + '">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("pos_rapido", categoria=c["categoria"])}">{c["categoria"]}</a>' for c in categorias) + '</div>'
+
+    list_cards = ""
+    for p in productos[:90]:
+        img = product_image(p)
+        list_cards += f"""<form method='post' class='keep-pos-form pos-list-item'>
+          <input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'>
+          <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
+          <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
+          <img class='pos-list-img' src='{img}' alt='{p['nombre']}'>
+          <div class='pos-list-info'><b>{p['nombre']}</b><small>{p['categoria'] or 'PRODUCTO'} · SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small><span>{money(p['precio'])}</span></div>
+          <button class='pos-list-add' type='submit'>Add Cart</button>
+        </form>"""
+    if not list_cards:
+        list_cards = "<div class='pos-empty'>No hay productos para la búsqueda.</div>"
+    if not feature_cards:
+        feature_cards = "<div class='pos-empty'>Carga productos para iniciar ventas rápidas.</div>"
+
     html = f"""
-    <div class="mobile-active-title">⚡ POS rápido</div>
-    <div class="panel pos-client-panel"><div class="section-title">⚡ POS rápido con cliente identificado</div>
-      <div class="hint-card">Digita o selecciona el cliente una sola vez; luego toca el producto y se registra el pedido rápido con ese cliente.</div><br>
+    <div class="panel pos-client-panel">
+      <div class="section-title">⚡ POS rápido móvil</div>
+      <div class="hint-card">Identifica cliente, mesa y forma de pago una sola vez. Luego toca Add Cart y el pedido se registra al instante.</div><br>
       <datalist id="clientes_pos_list">{cliente_options}</datalist>
       <form method="get" class="pos-client-grid">
-        <div><label>Cliente</label><input id="pos_cliente" list="clientes_pos_list" placeholder="CLIENTE GENERAL / nombre del cliente"></div>
+        <div><label>Cliente</label><input id="pos_cliente" list="clientes_pos_list" placeholder="CLIENTE GENERAL / nombre"></div>
         <div><label>Teléfono / DNI</label><input id="pos_telefono" placeholder="Celular o DNI"></div>
         <div><label>Mesa</label><select id="pos_mesa"><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option><option>MESA 5</option><option>MESA 6</option></select></div>
         <div><label>Servicio</label><select id="pos_servicio"><option>SALÓN</option><option>RECOJO</option><option>DELIVERY</option></select></div>
         <div><label>Pago</label><select id="pos_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div>
       </form>
     </div>
-    <div class="panel filter-sticky"><form method="get" action="{url_for('pos_rapido')}" class="catalog-filter-actions"><div><label>Buscar producto</label><input name="buscar" value="{buscar_prod}" placeholder="Buscar plato, bebida, código o categoría"></div><div><label>Categoría</label><select name="categoria" onchange="this.form.submit()">{cat_opts}</select></div><button class="btn-success">Buscar</button><a class="btn" href="{url_for('pos_rapido')}">Limpiar</a></form></div>
-    <div class="panel"><div class="section-title">🍽️ Toca un producto para vender</div>{cat_links}<div class="pos-only-grid">{cards}</div></div>
+    <div class="pos-mobile-shell">
+      <section class="pos-phone">
+        <div class="pos-phone-top"><span>←</span><span>☰</span></div>
+        <div class="pos-hero-card"><h2>Different<br>Kind of Food</h2></div>
+        <div class="pos-category-title">Food Category</div>
+        <div class="pos-feature-grid">{feature_cards}</div>
+        <div class="pos-category-title">Food Category</div>
+        <div class="pos-feature-grid">{feature_cards}</div>
+      </section>
+      <section class="pos-list-phone">
+        <form method="get" action="{url_for('pos_rapido')}" class="pos-search-row">
+          <input name="buscar" value="{buscar_prod}" placeholder="Search From Here">
+          <select name="categoria" onchange="this.form.submit()">{cat_opts}</select>
+          <button type="submit">🔎</button><a class="pos-gear" href="{url_for('pos_rapido')}">⚙️</a>
+        </form>
+        {cat_links}
+        <div class="pos-list-stack">{list_cards}</div>
+      </section>
+    </div>
     <script>
       function syncPOSClient(){{
         const cliente=(document.getElementById('pos_cliente').value||'CLIENTE GENERAL').trim() || 'CLIENTE GENERAL';
