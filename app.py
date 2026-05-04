@@ -691,6 +691,100 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important;}.table-wrap{ba
 .pos-app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;color:white;}.pos-app-header img{width:88px;height:88px;object-fit:contain;border-radius:22px;background:#020205;padding:6px;box-shadow:0 15px 40px rgba(255,23,68,.24)}.pos-app-header h2{font-size:32px;margin:0;color:#fff}.pos-app-header p{margin:4px 0 0;color:#cbd5e1;font-weight:800}.pos-phone-layout{display:grid;grid-template-columns:420px minmax(0,1fr);gap:28px;align-items:start}.pos-phone{background:#0b0c17;border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px;box-shadow:0 28px 80px rgba(0,0,0,.45);overflow:hidden}.pos-phone-left{max-width:430px}.phone-top{display:flex;justify-content:space-between;align-items:center;color:#94a3b8;font-size:22px;margin-bottom:14px}.pos-hero-food{height:170px;border-radius:22px;background:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.42)),url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80');background-size:cover;background-position:center;display:flex;align-items:end;padding:20px;margin-bottom:22px}.pos-hero-food h1{font-size:30px;line-height:1.02;margin:0;color:#fff;text-shadow:0 4px 16px #000}.pos-category-title{display:flex;align-items:center;gap:14px;color:#fff;font-size:16px;font-weight:950;margin:18px 0 12px}.pos-category-title:after{content:'';height:1px;background:rgba(255,255,255,.22);flex:1}.pos-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.pos-mini-card{background:transparent;border:0;color:#fff;padding:0;text-align:left;box-shadow:none!important;width:100%;}.pos-mini-img{height:86px;border-radius:13px;background:#fff;display:grid;place-items:center;overflow:hidden;margin-bottom:7px}.pos-mini-img img{width:100%;height:100%;object-fit:cover}.pos-mini-img .pos-food-placeholder{font-size:38px;background:#fff;width:100%;height:100%;display:grid;place-items:center}.pos-mini-card b{display:block;font-size:12px;color:#fff;line-height:1.15}.pos-mini-card span{font-size:11px;color:#e5e7eb;display:block;margin:3px 0}.pos-mini-card small{display:inline-block;background:#ff334b;color:#fff;border-radius:999px;padding:4px 9px;font-size:9px;font-weight:950}.pos-client-panel-dark{margin-bottom:18px;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:24px!important;padding:16px!important;}.pos-client-grid{display:grid;grid-template-columns:1.4fr .8fr .7fr .8fr .8fr;gap:12px;align-items:end}.pos-client-grid label{color:#fff!important;font-size:13px}.pos-search-bar{display:grid;grid-template-columns:minmax(260px,1fr) 210px auto auto;gap:12px;align-items:center;margin:0 0 16px}.pos-search-bar button,.pos-search-bar a{border-radius:999px!important}.pos-search-bar a{background:#1f2937;color:#fff;padding:12px 16px;font-weight:950;text-align:center}.category-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.category-bar a{border:1px solid rgba(255,255,255,.12);background:#151827;color:#fff;border-radius:999px;padding:10px 16px;font-weight:950}.category-bar a.on,.category-bar a:hover{background:#ff334b;color:#fff;border-color:#ff334b}.pos-list-card{display:grid;grid-template-columns:104px 1fr auto;gap:14px;align-items:center;background:#151827;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:12px;margin-bottom:13px;color:#fff;width:100%;box-shadow:none!important;text-align:left}.pos-list-card:hover{transform:translateY(-2px);box-shadow:0 18px 45px rgba(255,51,75,.14)!important}.pos-list-img{height:88px;border-radius:14px;background:#fff;overflow:hidden;display:grid;place-items:center}.pos-list-img img{width:100%;height:100%;object-fit:cover}.pos-list-card b{font-size:16px;color:#fff}.pos-list-card p{margin:5px 0 7px;color:#7f8797;font-size:12px;line-height:1.25}.pos-list-card span{font-weight:950;color:#fff}.add-pill{background:#ff334b;color:#fff;border-radius:999px;padding:8px 13px;font-size:11px;font-weight:950;white-space:nowrap}.heart{position:absolute;margin-left:78px;margin-top:-6px;background:white;color:#ff334b;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:12px}.pos-list-form{margin:0}.pos-list-form button{border:0}.mobile-active-title{color:#fff!important}
 @media(max-width:1100px){.pos-phone-layout{grid-template-columns:1fr}.pos-phone-left{max-width:none}.pos-client-grid,.pos-search-bar{grid-template-columns:1fr}.pos-mini-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.pos-app-shell{padding:12px;border-radius:0}.pos-app-header h2{font-size:24px}.pos-app-header img{width:68px;height:68px}.pos-phone{border-radius:22px;padding:14px}.pos-mini-grid{grid-template-columns:repeat(3,1fr);gap:8px}.pos-list-card{grid-template-columns:82px 1fr;}.pos-list-card .add-pill{grid-column:1/-1;text-align:center}.pos-hero-food{height:140px}.pos-hero-food h1{font-size:25px}}
+
+
+/* ===== NIVEL DIOS UI COMPLETO - FONDO PREMIUM SIN NEGRO PLANO ===== */
+body{
+  background:
+    radial-gradient(circle at 8% 4%, rgba(255,23,68,.20), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(59,130,246,.22), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(255,122,0,.12), transparent 36%),
+    linear-gradient(135deg,#f8fbff 0%,#eef4ff 38%,#fff4f7 100%)!important;
+  color:#101827!important;
+}
+.main,.content{background:transparent!important;}
+.topbar{
+  background:
+    radial-gradient(circle at 15% 0%,rgba(255,23,68,.30),transparent 30%),
+    linear-gradient(135deg,#0f172a,#1e1b4b 58%,#450a16)!important;
+  border-bottom:4px solid #ff1744!important;
+}
+.side{
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,23,68,.22),transparent 28%),
+    linear-gradient(180deg,#111827 0%,#0f172a 46%,#27020a 100%)!important;
+}
+.brand{background:transparent!important;}
+.panel{
+  background:rgba(255,255,255,.88)!important;
+  backdrop-filter:blur(16px)!important;
+  border:1px solid rgba(255,255,255,.60)!important;
+  box-shadow:0 24px 70px rgba(15,23,42,.12)!important;
+}
+.tabs{
+  background:rgba(255,255,255,.72)!important;
+  backdrop-filter:blur(14px)!important;
+  border:1px solid rgba(255,255,255,.55)!important;
+}
+
+/* POS rápido estilo app moderna: oscuro elegante, no negro plano */
+.pos-app-shell{
+  background:
+    radial-gradient(circle at 8% 6%,rgba(255,23,68,.34),transparent 28%),
+    radial-gradient(circle at 92% 8%,rgba(56,189,248,.24),transparent 30%),
+    radial-gradient(circle at 50% 105%,rgba(255,122,0,.18),transparent 36%),
+    linear-gradient(145deg,#171923 0%,#1e2435 48%,#2a0d17 100%)!important;
+  border:1px solid rgba(255,255,255,.16)!important;
+  box-shadow:0 36px 95px rgba(15,23,42,.34)!important;
+}
+.pos-phone{
+  background:
+    radial-gradient(circle at 12% 0%,rgba(255,255,255,.08),transparent 28%),
+    linear-gradient(180deg,#202638 0%,#151a2a 56%,#111827 100%)!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  box-shadow:0 28px 80px rgba(15,23,42,.42)!important;
+}
+.pos-list-card{
+  background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.035))!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+}
+.pos-mini-img,.pos-list-img{background:linear-gradient(135deg,#fff,#ffe8ee)!important;}
+.pos-client-panel-dark{
+  background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.055))!important;
+  border:1px solid rgba(255,255,255,.16)!important;
+}
+.pos-hero-food{
+  background:
+    linear-gradient(135deg,rgba(10,13,25,.30),rgba(35,8,18,.35)),
+    radial-gradient(circle at 20% 10%,rgba(255,255,255,.22),transparent 18%),
+    linear-gradient(135deg,#c2410c 0%,#991b1b 38%,#111827 100%)!important;
+}
+.pos-hero-food h1{color:#fff!important;text-shadow:0 6px 22px rgba(0,0,0,.45)!important;}
+.category-bar a{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.14)!important;}
+.category-bar a.on,.category-bar a:hover{background:linear-gradient(135deg,#ff1744,#ff7a00)!important;}
+.add-pill,.pos-mini-card small{background:linear-gradient(135deg,#ff1744,#ff6b35)!important;}
+
+@media(max-width:900px){
+  body,.content{
+    background:
+      radial-gradient(circle at 0% 0%,rgba(255,23,68,.24),transparent 30%),
+      radial-gradient(circle at 100% 18%,rgba(56,189,248,.18),transparent 26%),
+      linear-gradient(145deg,#151827 0%,#1e293b 48%,#2b0a15 100%)!important;
+    color:#f8fafc!important;
+  }
+  .panel{
+    background:rgba(20,26,40,.86)!important;
+    border:1px solid rgba(255,255,255,.10)!important;
+    color:#f8fafc!important;
+  }
+  .section-title,.box-title,label{color:#f8fafc!important;}
+  .mobile-bottom{background:rgba(15,23,42,.90)!important;backdrop-filter:blur(16px)!important;}
+}
+
+/* Catálogo público también sin fondo negro plano */
+.catalog-card{background:linear-gradient(180deg,#171b2a,#111827)!important;}
+.catalog-phone{background:linear-gradient(180deg,#1f2638,#111827)!important;}
+
 </style>
 </head>
 <body>
@@ -1684,7 +1778,7 @@ def menu_publico():
     if not cards:
         cards = "<div class='hint-card'>Catálogo en preparación.</div>"
     logo = url_for('static', filename='toro_logo.png')
-    return f"""<!doctype html><html lang='es'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>{negocio}</title><style>{css}</style></head><body style='background:#101016;color:white'><div style='max-width:1100px;margin:auto;padding:24px'><div class='catalog-hero'><div><img src='{logo}' style='width:120px'><h2>{negocio}</h2><p>Menú digital · Platos · Pizzas · Parrillas · Promociones</p></div></div><br><div class='catalog-grid'>{cards}</div></div></body></html>"""
+    return f"""<!doctype html><html lang='es'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>{negocio}</title><style>{css}</style></head><body style='background:radial-gradient(circle at 10% 0%,rgba(255,23,68,.18),transparent 30%),radial-gradient(circle at 90% 8%,rgba(56,189,248,.16),transparent 30%),linear-gradient(135deg,#151827,#1e293b 55%,#2b0a15);color:white'><div style='max-width:1100px;margin:auto;padding:24px'><div class='catalog-hero'><div><img src='{logo}' style='width:120px'><h2>{negocio}</h2><p>Menú digital · Platos · Pizzas · Parrillas · Promociones</p></div></div><br><div class='catalog-grid'>{cards}</div></div></body></html>"""
 
 # =========================
 # INDICADORES
