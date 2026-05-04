@@ -173,7 +173,11 @@ def init_db():
             CREATE TABLE IF NOT EXISTS sucursales(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 nombre TEXT UNIQUE NOT NULL,
-                activo INTEGER DEFAULT 1
+                direccion TEXT DEFAULT '',
+                responsable TEXT DEFAULT '',
+                telefono TEXT DEFAULT '',
+                activo INTEGER DEFAULT 1,
+                abierta INTEGER DEFAULT 1
             );
             CREATE TABLE IF NOT EXISTS productos(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -312,6 +316,16 @@ def init_db():
             _cols=[rr[1] for rr in q_all(f"PRAGMA table_info({_tbl})")]
             if "sucursal_id" not in _cols:
                 q_exec(f"ALTER TABLE {_tbl} ADD COLUMN sucursal_id INTEGER DEFAULT 1")
+        # MULTI-SUCURSAL: columnas adicionales para crear locales nuevos sin romper BD anterior.
+        _scols=[rr[1] for rr in q_all("PRAGMA table_info(sucursales)")]
+        for _col, _def in [
+            ("direccion", "TEXT DEFAULT ''"),
+            ("responsable", "TEXT DEFAULT ''"),
+            ("telefono", "TEXT DEFAULT ''"),
+            ("abierta", "INTEGER DEFAULT 1"),
+        ]:
+            if _col not in _scols:
+                q_exec(f"ALTER TABLE sucursales ADD COLUMN {_col} {_def}")
     except Exception:
         pass
 
@@ -341,18 +355,17 @@ def init_db():
     for (nombre,) in defaults:
         if not q_one("SELECT id FROM sucursales WHERE nombre=?", (nombre,)):
             q_exec("INSERT INTO sucursales(nombre,activo) VALUES(?,1)", (nombre,))
-    # MODO ACTUAL: trabajar solo con Sucursal Principal.
-    # Se conservan las tablas para escalar luego, pero se ocultan/desactivan otras sucursales.
+    # MULTI-SUCURSAL ACTIVO: Sucursal Principal queda como predeterminada,
+    # pero ahora puedes crear locales nuevos y asignar usuarios a cada uno.
     principal = q_one("SELECT id FROM sucursales WHERE nombre='Sucursal Principal'")
     principal_id = principal["id"] if principal else 1
-    q_exec("UPDATE sucursales SET activo=CASE WHEN id=? THEN 1 ELSE 0 END", (principal_id,))
-    q_exec("UPDATE usuarios SET sucursal_id=? WHERE COALESCE(sucursal_id,0)<>?", (principal_id, principal_id))
+    q_exec("UPDATE sucursales SET activo=1, abierta=COALESCE(abierta,1) WHERE id=?", (principal_id,))
 
     for usuario, nombre, clave, rol, sucursal_id in [
         ("admin", "Administrador", "admin123", "ADMIN", 1),
         ("vendedor1", "Vendedor 1", "vendedor123", "VENDEDOR", 1),
         ("vendedor2", "Vendedor 2", "vendedor123", "VENDEDOR", 1),
-        ("vendedor3", "Vendedor 3", "vendedor123", "VENDEDOR", 2),
+        ("vendedor3", "Vendedor 3", "vendedor123", "VENDEDOR", principal_id),
     ]:
         if not q_one("SELECT id FROM usuarios WHERE usuario=?", (usuario,)):
             q_exec(
@@ -1565,18 +1578,31 @@ def set_ctx(k, v):
     else:
         q_exec("INSERT INTO contexto(clave,valor) VALUES(?,?)", (k, str(v)))
 
-def sucursal_abierta():
-    """Estado operativo de Sucursal Principal.
-    True = permite ventas/POS/pedidos/cobros. False = bloquea operación para pruebas/cierre.
-    """
-    return str(get_ctx("sucursal_cerrada", "0")).strip() != "1"
+def sucursal_actual_id():
+    try:
+        return int(session.get("sucursal_id") or 1)
+    except Exception:
+        return 1
 
-def estado_sucursal_label():
-    return "ABIERTA" if sucursal_abierta() else "CERRADA"
+def sucursal_nombre(sucursal_id=None):
+    sid = sucursal_id or sucursal_actual_id()
+    r = q_one("SELECT nombre FROM sucursales WHERE id=?", (sid,))
+    return r["nombre"] if r else "Sucursal Principal"
+
+def sucursal_abierta(sucursal_id=None):
+    """Estado operativo por sucursal. True permite ventas/POS/pedidos/cobros."""
+    sid = sucursal_id or sucursal_actual_id()
+    r = q_one("SELECT abierta, activo FROM sucursales WHERE id=?", (sid,))
+    if not r:
+        return str(get_ctx("sucursal_cerrada", "0")).strip() != "1"
+    return int(r["activo"] or 0) == 1 and int(r["abierta"] if r["abierta"] is not None else 1) == 1
+
+def estado_sucursal_label(sucursal_id=None):
+    return "ABIERTA" if sucursal_abierta(sucursal_id) else "CERRADA"
 
 def bloquear_si_sucursal_cerrada(destino="ventas"):
     if not sucursal_abierta():
-        flash("Sucursal Principal está CERRADA. Abre la sucursal desde Usuarios/Admin o Cierre para continuar con ventas.", "error")
+        flash(f"{sucursal_nombre()} está CERRADA. Abre la sucursal desde Usuarios/Admin o Cierre para continuar.", "error")
         return redirect(url_for(destino))
     return None
 
@@ -3130,9 +3156,19 @@ def admin():
         accion = request.form.get("accion")
         if accion == "sucursal":
             nombre = up(request.form.get("nombre"))
+            direccion = clean(request.form.get("direccion"))
+            responsable = up(request.form.get("responsable"))
+            telefono = clean(request.form.get("telefono"))
             if nombre:
-                q_exec("INSERT OR IGNORE INTO sucursales(nombre,activo) VALUES(?,1)", (nombre,))
-                flash("Sucursal registrada.", "ok")
+                existe = q_one("SELECT id FROM sucursales WHERE UPPER(nombre)=UPPER(?)", (nombre,))
+                if existe:
+                    q_exec("UPDATE sucursales SET direccion=?, responsable=?, telefono=?, activo=1 WHERE id=?", (direccion, responsable, telefono, existe["id"]))
+                    flash("Sucursal actualizada correctamente.", "ok")
+                    log_event("SUCURSAL ACTUALIZADA", nombre)
+                else:
+                    q_exec("INSERT INTO sucursales(nombre,direccion,responsable,telefono,activo,abierta) VALUES(?,?,?,?,1,1)", (nombre, direccion, responsable, telefono))
+                    flash("Sucursal nueva creada correctamente.", "ok")
+                    log_event("SUCURSAL CREADA", nombre)
         elif accion == "usuario":
             usuario = clean(request.form.get("usuario"))
             clave = clean(request.form.get("clave"))
@@ -3166,18 +3202,42 @@ def admin():
             init_db()
             flash("Demo sembrada / verificada.", "ok")
         elif accion == "cerrar_sucursal":
-            set_ctx("sucursal_cerrada", "1")
-            log_event("SUCURSAL CERRADA", "Sucursal Principal cerrada desde Admin")
-            flash("Sucursal Principal cerrada. Se bloquean ventas, POS, pedidos y cobros.", "ok")
+            sid = int(request.form.get("sucursal_id_estado") or 1)
+            nom = sucursal_nombre(sid)
+            q_exec("UPDATE sucursales SET abierta=0 WHERE id=?", (sid,))
+            log_event("SUCURSAL CERRADA", f"{nom} cerrada desde Admin")
+            flash(f"{nom} cerrada. Se bloquean ventas, POS, pedidos y cobros para esa sede.", "ok")
         elif accion == "abrir_sucursal":
-            set_ctx("sucursal_cerrada", "0")
-            log_event("SUCURSAL ABIERTA", "Sucursal Principal abierta desde Admin")
-            flash("Sucursal Principal abierta. Ya puedes entrar a modo prueba.", "ok")
+            sid = int(request.form.get("sucursal_id_estado") or 1)
+            nom = sucursal_nombre(sid)
+            q_exec("UPDATE sucursales SET abierta=1, activo=1 WHERE id=?", (sid,))
+            log_event("SUCURSAL ABIERTA", f"{nom} abierta desde Admin")
+            flash(f"{nom} abierta. Ya puedes entrar a modo prueba en esa sede.", "ok")
+        elif accion == "desactivar_sucursal":
+            sid = int(request.form.get("sucursal_id_estado") or 1)
+            nom = sucursal_nombre(sid)
+            if sid == 1 or nom.upper() == "SUCURSAL PRINCIPAL":
+                flash("La Sucursal Principal no se elimina ni se desactiva.", "error")
+            else:
+                q_exec("UPDATE sucursales SET activo=0, abierta=0 WHERE id=?", (sid,))
+                log_event("SUCURSAL DESACTIVADA", nom)
+                flash(f"{nom} desactivada.", "ok")
         return redirect(url_for("admin"))
-    sucursales = q_all("SELECT * FROM sucursales WHERE nombre='Sucursal Principal' ORDER BY nombre")
+    sucursales = q_all("SELECT * FROM sucursales ORDER BY activo DESC, id ASC")
     usuarios = q_all("SELECT u.id,u.usuario,u.nombre,u.rol,u.activo,u.clave_plain,COALESCE(s.nombre,'Sucursal Principal') sucursal FROM usuarios u LEFT JOIN sucursales s ON s.id=u.sucursal_id ORDER BY u.usuario")
-    suc_opts = ''.join(f'<option value="{s["id"]}" selected>{s["nombre"]}</option>' for s in sucursales)
-    tr_s = "".join(f'<tr><td>{s["id"]}</td><td>{s["nombre"]}</td><td>{s["activo"]}</td></tr>' for s in sucursales)
+    suc_opts = ''.join(f'<option value="{s["id"]}">{s["nombre"]}{" (INACTIVA)" if int(s["activo"] or 0)==0 else ""}</option>' for s in sucursales if int(s["activo"] or 0)==1)
+    tr_s = ""
+    for s in sucursales:
+        sid = s["id"]
+        nom = s["nombre"]
+        abierta = int(s["abierta"] if "abierta" in s.keys() and s["abierta"] is not None else 1)
+        activo = int(s["activo"] or 0)
+        badge_estado = "ABIERTA" if abierta and activo else "CERRADA"
+        btn_accion = "cerrar_sucursal" if abierta and activo else "abrir_sucursal"
+        btn_txt = "Cerrar" if abierta and activo else "Abrir"
+        btn_cls = "btn-danger" if abierta and activo else "btn-success"
+        desactivar = "" if nom.upper()=="SUCURSAL PRINCIPAL" else f"""<button name='accion' value='desactivar_sucursal' class='btn-delete btn-mini' onclick="return confirm('¿Desactivar esta sucursal?')">Desactivar</button>"""
+        tr_s += f"""<tr><td>{sid}</td><td><b>{nom}</b><br><small>{s['direccion'] if 'direccion' in s.keys() else ''}</small></td><td>{s['responsable'] if 'responsable' in s.keys() else ''}</td><td>{s['telefono'] if 'telefono' in s.keys() else ''}</td><td>{'ACTIVA' if activo else 'INACTIVA'}</td><td><span class='badge {'ok' if abierta and activo else 'off'}'>{badge_estado}</span></td><td><form method='post' class='admin-action-stack'><input type='hidden' name='sucursal_id_estado' value='{sid}'><button name='accion' value='{btn_accion}' class='{btn_cls} btn-mini'>{btn_txt}</button>{desactivar}</form></td></tr>"""
     tr_u = ""
     for u in usuarios:
         clave_visible = u["clave_plain"] or ""
@@ -3203,7 +3263,7 @@ def admin():
     sucursal_boton_txt = "🔒 Cerrar sucursal" if sucursal_abierta() else "🔓 Abrir sucursal"
     sucursal_boton_cls = "btn-danger" if sucursal_abierta() else "btn-success"
     html = f"""
-    <div class="role-note">✅ Modo actual: Sucursal Principal fija. Usuarios, ventas, pedidos, caja y cierres trabajan sobre esta sede.</div>
+    <div class="role-note">✅ Modo multi-sucursal activo. Puedes crear locales, asignar usuarios y abrir/cerrar cada sede para pruebas.</div>
     <div class="admin-super-grid">
       <div class="panel"><div class="section-title">👤 Crear / actualizar usuario</div>
         <form method="post" class="admin-form-grid">
@@ -3216,19 +3276,26 @@ def admin():
           <button class="primary" style="grid-column:1/-1">Guardar usuario</button>
         </form>
       </div>
-      <div class="panel"><div class="section-title">🏬 Sucursal principal</div>
-        <div class="locked-sucursal-card">Estado actual: <span class="badge {sucursal_badge}">{sucursal_estado}</span><br>Por ahora el sistema queda fijo en <b>Sucursal Principal</b>. La estructura multi-sucursal se conserva para activar locales después.</div>
-        <br><form method="post" class="actions"><button name="accion" value="{sucursal_boton}" class="{sucursal_boton_cls}" onclick="return confirm('¿Cambiar estado de Sucursal Principal?')">{sucursal_boton_txt}</button><button name="accion" value="sembrar" class="btn-orange">Sembrar demo</button><a class="btn" href="{url_for('ventas')}">Ir a pruebas de venta</a></form>
-        <div class="keep-position-note">Cuando está CERRADA se bloquean ventas, POS rápido, pedidos y cobros. Cuando está ABIERTA el sistema queda listo para pruebas.</div>
+      <div class="panel"><div class="section-title">🏬 Crear nueva sucursal</div>
+        <form method="post" class="admin-form-grid">
+          <input type="hidden" name="accion" value="sucursal">
+          <div><label>Nombre de sucursal</label><input name="nombre" required placeholder="Ej: Sucursal Centro"></div>
+          <div><label>Responsable</label><input name="responsable" placeholder="Encargado"></div>
+          <div><label>Dirección</label><input name="direccion" placeholder="Dirección del local"></div>
+          <div><label>Teléfono</label><input name="telefono" placeholder="Celular / fijo"></div>
+          <button class="primary" style="grid-column:1/-1">Guardar sucursal</button>
+        </form>
+        <br><form method="post" class="actions"><button name="accion" value="sembrar" class="btn-orange">Sembrar demo</button><a class="btn" href="{url_for('ventas')}">Ir a pruebas de venta</a></form>
+        <div class="keep-position-note">Cada sucursal puede abrirse/cerrarse por separado. Los usuarios quedan asignados a la sucursal elegida.</div>
       </div>
     </div>
     <div class="food-card-grid">
       <div class="food-card"><div class="thumb">🔐</div><b>Roles claros</b><small>Admin controla todo; vendedores trabajan ventas/pedidos/cierre.</small></div>
-      <div class="food-card"><div class="thumb">🏪</div><b>Sucursal Principal</b><small>Operación fija y ordenada para esta etapa.</small></div>
+      <div class="food-card"><div class="thumb">🏪</div><b>Multi-sucursal</b><small>Crea locales, asigna usuarios y controla apertura/cierre por sede.</small></div>
       <div class="food-card"><div class="thumb">📱</div><b>Celular</b><small>Botones grandes y navegación tipo app.</small></div>
     </div><br>
     <div class="admin-table-grid">
-      <div class="panel"><div class="section-title">🏬 Sucursal activa</div><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Activo</th></tr></thead><tbody>{tr_s}</tbody></table></div></div>
+      <div class="panel"><div class="section-title">🏬 Sucursales creadas</div><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Responsable</th><th>Teléfono</th><th>Activo</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>{tr_s}</tbody></table></div></div>
       <div class="panel admin-users-panel same-place-anchor" id="usuarios-admin"><div class="section-title">👥 Usuarios creados</div><div class="keep-position-note">Ahora puedes desactivar, reactivar o eliminar usuarios sin perder tu posición en pantalla.</div><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Sucursal</th><th>Clave</th><th>Activo</th><th>Acciones</th></tr></thead><tbody>{tr_u}</tbody></table></div></div>
     </div>
     <div class="panel"><div class="section-title">📌 Resumen funcional</div><textarea class="report-box" readonly>NEGOCIO EL TORO - NIVEL DIOS UI/UX
@@ -3238,7 +3305,7 @@ MEJORAS ACTIVAS:
 - Administración limpia y visible, sin tablas escondidas.
 - Vista celular modo app.
 - Roles: ADMIN completo; usuarios operativos limitados.
-- Preparado para restaurante, pizzería y cadena con sucursales.
+- Multi-sucursal activo: locales, usuarios, ventas, pedidos, caja y cierres por sede.
 
 Base actual: {DB_PATH}</textarea></div>
     """
