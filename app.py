@@ -23,7 +23,7 @@ import csv
 import os
 import sqlite3
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO, StringIO
 from zoneinfo import ZoneInfo
@@ -92,6 +92,12 @@ def now():
 
 def today():
     return now().date().isoformat()
+
+def next_work_date(fecha):
+    try:
+        return (datetime.strptime(fecha, "%Y-%m-%d").date() + timedelta(days=1)).isoformat()
+    except Exception:
+        return (now().date() + timedelta(days=1)).isoformat()
 
 def hour():
     return now().strftime("%H:%M:%S")
@@ -605,13 +611,53 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
 @media(max-width:1180px){.pos-client-grid{grid-template-columns:1fr 1fr}.catalog-hero,.catalog-admin-clean{grid-template-columns:1fr!important}.catalog-phone{width:100%!important}.qr-box{grid-template-columns:1fr!important}.qr-img{margin:auto}}
 @media(max-width:640px){.pos-client-grid{grid-template-columns:1fr}.pos-only-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.pos-product{min-height:126px!important;padding:12px!important}.pos-product b{font-size:14px!important}.pos-product img{height:58px!important}.catalog-hero{padding:16px!important}.catalog-hero h2{font-size:22px!important}.catalog-phone{display:none!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.catalog-card img{height:88px!important}.catalog-card h3{font-size:13px!important}.catalog-card p{display:none}.qr-img{width:120px!important;height:120px!important}.catalog-pick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
+
+/* ===== AJUSTE FINAL PEDIDO USUARIO: SIN LOGO, FONDOS PRO, CATALOGO COMPACTO, ICONOS KPI ===== */
+.brand-no-logo{min-height:96px!important;padding:18px 12px!important;display:flex!important;align-items:center!important;justify-content:center!important;background:linear-gradient(180deg,#07070c,#19000a)!important}.brand-no-logo .user-pill{width:100%;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(255,255,255,.06);color:#fff;font-weight:950;text-align:center;padding:16px 10px;box-shadow:0 14px 30px rgba(0,0,0,.18)}.brand-no-logo .user-pill span{display:inline-block;margin-top:6px;color:#ffd5da;font-size:12px;letter-spacing:.8px}.brand-logo-img,.brand .logo{display:none!important}
+.content{background:radial-gradient(circle at 90% 0%,rgba(255,23,68,.10),transparent 28%),linear-gradient(180deg,#f6f8fb,#eef3f8)!important}.panel{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(255,255,255,.92))!important;border:1px solid rgba(255,255,255,.75)!important}.panel:nth-of-type(2n){background:linear-gradient(180deg,#ffffff,#fff7f8)!important}.panel:nth-of-type(3n){background:linear-gradient(180deg,#ffffff,#f4f8ff)!important}
+.catalog-hero{padding:18px 20px!important;border-radius:26px!important;grid-template-columns:minmax(0,1fr) 360px!important}.catalog-phone{width:360px!important;max-width:100%!important}.catalog-admin-clean{grid-template-columns:minmax(280px,.8fr) minmax(360px,1.2fr)!important;gap:14px!important}.catalog-pick-grid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))!important;gap:8px!important;max-height:260px!important}.catalog-pick{min-height:64px!important;font-size:13px!important;line-height:1.2!important;padding:9px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}.catalog-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))!important;gap:12px!important}.catalog-card{padding:10px!important;border-radius:18px!important;display:flex!important;flex-direction:column!important;gap:6px!important;min-height:0!important}.catalog-card img{height:96px!important;object-fit:contain!important;background:#05050a!important;border-radius:14px!important}.catalog-card h3{font-size:14px!important;line-height:1.15!important;margin:0!important;white-space:normal!important;overflow-wrap:anywhere!important;color:#fff!important}.catalog-card p{font-size:11px!important;line-height:1.25!important;min-height:0!important;margin:0!important;color:#e5e7eb!important;white-space:normal!important;overflow-wrap:anywhere!important}.price-pill{font-size:12px!important;padding:6px 9px!important;width:max-content!important}.catalog-card form button{width:100%!important;padding:8px!important;font-size:12px!important}
+.analytics-card{position:relative!important;padding-left:82px!important;min-height:132px!important}.analytics-icon{position:absolute;left:20px;top:24px;width:46px;height:46px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#ff1744,#ff7a00);box-shadow:0 14px 28px rgba(255,23,68,.22);font-size:23px}.analytics-card span,.analytics-card b,.analytics-card small{display:block!important;text-align:left!important}
+.cierre-admin-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end;margin-top:14px}.day-status-next{background:#ecfdf5;border:1px solid #bbf7d0;color:#14532d;border-radius:18px;padding:12px;font-weight:950;margin-top:12px}
+@media(max-width:900px){.brand-no-logo{display:none!important}.catalog-hero{grid-template-columns:1fr!important}.catalog-phone{display:none!important}.catalog-admin-clean{grid-template-columns:1fr!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.catalog-card img{height:82px!important}.analytics-card{padding-left:72px!important}.content{background:#101016!important}}
+
+
+/* ===== AJUSTE URGENTE: SIN LOGO LATERAL + CATALOGO SIN ESPACIOS GRISES ===== */
+.side .brand, .brand, .brand-no-logo, .brand-logo-img, .brand .logo, .logo-word, .brand-title{display:none!important;height:0!important;min-height:0!important;padding:0!important;margin:0!important;overflow:hidden!important}
+.side{padding-top:12px!important}
+.content{background:linear-gradient(135deg,#f8fafc 0%,#fff 48%,#fff7f8 100%)!important;padding:18px 22px!important}
+.catalog-hero{display:none!important}
+.catalog-admin-clean{display:grid!important;grid-template-columns:minmax(280px,420px) minmax(520px,1fr)!important;gap:16px!important;align-items:start!important;margin:0!important}
+.catalog-admin-clean .panel{margin:0!important}
+.catalog-admin-clean .panel,.upload-drop,#productos-catalogo{border-radius:24px!important;box-shadow:0 12px 34px rgba(15,23,42,.08)!important;background:#fff!important}
+.qr-box{display:grid!important;grid-template-columns:122px minmax(0,1fr)!important;gap:14px!important;align-items:center!important;padding:14px!important;border-radius:20px!important}
+.qr-img{width:112px!important;height:112px!important;border-width:6px!important;border-radius:18px!important}
+.upload-drop{padding:18px!important}
+.upload-drop .hint-card{margin:10px 0 12px!important;padding:12px 14px!important}
+.catalog-pick-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(118px,1fr))!important;gap:8px!important;max-height:158px!important;overflow:auto!important;margin-bottom:12px!important}
+.catalog-pick{min-height:58px!important;border-radius:16px!important;padding:8px!important;font-size:12px!important;line-height:1.12!important;white-space:normal!important;overflow-wrap:anywhere!important}
+.upload-drop form.clean-grid{display:grid!important;grid-template-columns:1.1fr .85fr .55fr 1.15fr!important;gap:10px!important;align-items:end!important}
+.upload-drop form.clean-grid textarea{min-height:54px!important;height:54px!important}
+.upload-drop form.clean-grid input,.upload-drop form.clean-grid select{min-height:45px!important}
+.upload-drop form.clean-grid button{min-height:52px!important;padding:10px 14px!important}
+.catalog-config-panel{margin-top:14px!important}
+#productos-catalogo{padding:18px!important;margin-top:16px!important}
+.catalog-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:10px!important}
+.catalog-card{padding:9px!important;border-radius:18px!important;min-height:0!important;background:linear-gradient(180deg,#0b0d17,#05060c)!important;color:#fff!important;overflow:hidden!important}
+.catalog-card img{height:78px!important;width:100%!important;object-fit:contain!important;background:#000!important;border-radius:13px!important;margin-bottom:7px!important}
+.catalog-card h3{font-size:13px!important;line-height:1.12!important;margin:0 0 4px!important;color:#fff!important;overflow-wrap:anywhere!important}
+.catalog-card p{font-size:11px!important;line-height:1.15!important;min-height:0!important;margin:0 0 6px!important;color:#e5e7eb!important;overflow-wrap:anywhere!important;display:block!important}
+.price-pill{font-size:11px!important;padding:5px 8px!important}
+.catalog-card form{margin-top:7px!important}.catalog-card form button{min-height:34px!important;font-size:11px!important;padding:6px!important}
+@media(max-width:1100px){.catalog-admin-clean{grid-template-columns:1fr!important}.upload-drop form.clean-grid{grid-template-columns:1fr 1fr!important}.content{padding:14px!important}}
+@media(max-width:650px){.upload-drop form.clean-grid{grid-template-columns:1fr!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.qr-box{grid-template-columns:1fr!important}.qr-img{margin:auto!important}.content{padding:10px!important}}
+
 </style>
 </head>
 <body>
 {% if session.get('user') %}
 <div class="app {{'admin-mode' if session.get('rol') == 'ADMIN' else 'user-mode seller-mode'}}">
   <aside class="side">
-    <div class="brand"><img class="brand-logo-img" src="{{url_for('static', filename='toro_logo.png')}}" onerror="this.style.display='none'"><div class="logo">EL <span>TORO</span></div><small>Restaurant Grill</small><br><small>{{session.get('user')}} - {{session.get('rol')}}</small></div>
+    
     <nav class="nav">
       {% if session.get('rol') == 'ADMIN' %}
       <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊 Panel principal</a>
@@ -846,7 +892,7 @@ def dashboard():
       <div class="sku-help">Usuario y rol se controlan internamente por login, por eso ya no se muestran en el panel.</div>
     </form>
     <div class="actions" style="margin:12px 0"><h2 style="color:#047857;margin:0">🟢 DÍA ABIERTO: {f}</h2><a class="btn btn-danger" href="{url_for('cierre')}">🔒 Ir a cierre</a><a class="btn" href="{url_for('reportes',fi=f,ff=f)}">Ver reporte</a></div>
-    <div class="panel"><div class="section-title">📊 Indicadores de hoy</div><div class="kpis"><div class="kpi dash-kpi"><h3>Ventas hoy</h3><b>{money(ventas_hoy['t'])}</b><p class="muted">Pedidos pagados: {ventas_hoy['c']}</p></div><div class="kpi dash-kpi"><h3>Pedidos activos</h3><b>{pedidos_act}</b><p class="muted">Pendientes/preparación/listos</p></div><div class="kpi dash-kpi"><h3>Mesas ocupadas</h3><b class="red">{mesas}</b><p class="muted">Salón en atención</p></div><div class="kpi dash-kpi"><h3>Stock bajo</h3><b class="red">{stock_bajo}</b><p class="muted">Productos por reponer</p></div></div></div>
+    <div class="panel"><div class="section-title">📊 Indicadores de hoy</div><div class="kpis"><div class="kpi dash-kpi"><h3>💰 Ventas hoy</h3><b>{money(ventas_hoy['t'])}</b><p class="muted">Pedidos pagados: {ventas_hoy['c']}</p></div><div class="kpi dash-kpi"><h3>🧾 Pedidos activos</h3><b>{pedidos_act}</b><p class="muted">Pendientes/preparación/listos</p></div><div class="kpi dash-kpi"><h3>🍽️ Mesas ocupadas</h3><b class="red">{mesas}</b><p class="muted">Salón en atención</p></div><div class="kpi dash-kpi"><h3>⚠️ Stock bajo</h3><b class="red">{stock_bajo}</b><p class="muted">Productos por reponer</p></div></div></div>
     <div class="ops-strip"><div class="hint-card">✅ Ventas: salón, recojo o delivery.</div><div class="hint-card">✅ Pedidos: cocina, estados y quitar ítems.</div><div class="hint-card">✅ Indicadores: ventas, ticket y top productos.</div></div>'''
     return page(html, "dashboard")
 
@@ -855,39 +901,61 @@ def dashboard():
 def cierre():
     f = get_ctx("dia_abierto", today())
     sucid = session.get("sucursal_id", 1)
+    fecha_req = request.form.get("fecha_trabajo") or request.args.get("fecha") or f
     if request.method == "POST":
         accion = request.form.get("accion")
+        fecha_sel = fecha_req
         if accion == "cerrar":
-            set_ctx(f"dia_cerrado_{sucid}_{f}", "1")
-            log_event("CIERRE", f"Día cerrado {f} - sucursal {sucid}")
-            flash("Día cerrado correctamente. La información queda guardada en línea para el administrador.", "ok")
+            set_ctx(f"dia_cerrado_{sucid}_{fecha_sel}", "1")
+            log_event("CIERRE", f"Día cerrado {fecha_sel} - sucursal {sucid}")
+            if fecha_sel == f:
+                nf = next_work_date(fecha_sel)
+                set_ctx("dia_abierto", nf)
+                flash(f"Día {fecha_sel} cerrado. Se abrió automáticamente el día siguiente: {nf}.", "ok")
+            else:
+                flash(f"Día anterior {fecha_sel} cerrado correctamente.", "ok")
         elif accion == "reabrir" and is_admin():
-            set_ctx(f"dia_cerrado_{sucid}_{f}", "")
-            log_event("REABRIR", f"Día reabierto {f}")
-            flash("Día reabierto correctamente.", "ok")
-        return redirect(url_for("cierre"))
-    cerrado = get_ctx(f"dia_cerrado_{sucid}_{f}", "") == "1"
-    pedidos = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND COALESCE(sucursal_id,1)=?", (f, sucid))["c"]
-    pendientes = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND COALESCE(sucursal_id,1)=? AND estado NOT IN ('PAGADO','ENTREGADO')", (f, sucid))["c"]
+            set_ctx(f"dia_cerrado_{sucid}_{fecha_sel}", "")
+            log_event("REABRIR", f"Día reabierto {fecha_sel}")
+            flash(f"Día {fecha_sel} reabierto correctamente.", "ok")
+        elif accion == "abrir_fecha" and is_admin():
+            set_ctx("dia_abierto", fecha_sel)
+            set_ctx(f"dia_cerrado_{sucid}_{fecha_sel}", "")
+            log_event("ABRIR FECHA", f"Día abierto manualmente {fecha_sel}")
+            flash(f"Día de trabajo abierto: {fecha_sel}", "ok")
+        return redirect(url_for("cierre", fecha=fecha_sel) if is_admin() else url_for("cierre"))
+
+    f = get_ctx("dia_abierto", today())
+    fecha_vista = request.args.get("fecha", f) if is_admin() else f
+    cerrado = get_ctx(f"dia_cerrado_{sucid}_{fecha_vista}", "") == "1"
+    pedidos = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND COALESCE(sucursal_id,1)=?", (fecha_vista, sucid))["c"]
+    pendientes = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND COALESCE(sucursal_id,1)=? AND estado NOT IN ('PAGADO','ENTREGADO')", (fecha_vista, sucid))["c"]
+    siguiente = next_work_date(fecha_vista)
     if not is_admin():
         html = f"""
         <div class="mobile-active-title">🔒 Cierre</div>
         <div class="panel user-cierre-simple"><div class="section-title">🔒 Cierre del día del vendedor</div>
-          <div class="role-note">Solo verás pedidos del día y pendientes. Al cerrar, la información queda disponible para el administrador.</div>
-          <div class="kpis"><div class="kpi"><h3>Pedidos del día</h3><b>{pedidos}</b></div><div class="kpi"><h3>Pedidos pendientes</h3><b class="red">{pendientes}</b></div></div><br>
-          <form method="post" class="actions"><button name="accion" value="cerrar" class="btn-danger">🔒 Cerrar día</button><a class="btn" href="{url_for('pedidos')}">Ver pedidos</a></form>
+          <div class="role-note">Al cerrar el día actual, el sistema abrirá automáticamente el día siguiente.</div>
+          <div class="day-status-next">Día actual: {fecha_vista} · Siguiente automático: {siguiente}</div><br>
+          <div class="kpis"><div class="kpi"><h3>📦 Pedidos del día</h3><b>{pedidos}</b></div><div class="kpi"><h3>⏳ Pedidos pendientes</h3><b class="red">{pendientes}</b></div></div><br>
+          <form method="post" class="actions"><input type="hidden" name="fecha_trabajo" value="{fecha_vista}"><button name="accion" value="cerrar" class="btn-danger" onclick="return confirm('¿Cerrar el día {fecha_vista}?')">🔒 Cerrar día y abrir {siguiente}</button><a class="btn" href="{url_for('pedidos')}">Ver pedidos</a></form>
         </div>"""
         return page(html, "cierre")
-    ventas_hoy = q_one("SELECT COALESCE(SUM(total),0) t, COUNT(*) c FROM ventas WHERE fecha=?", (f,))
-    caja_ing = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='INGRESO'", (f,))["t"]
-    caja_egr = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='EGRESO'", (f,))["t"]
+    ventas_hoy = q_one("SELECT COALESCE(SUM(total),0) t, COUNT(*) c FROM ventas WHERE fecha=?", (fecha_vista,))
+    caja_ing = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='INGRESO'", (fecha_vista,))["t"]
+    caja_egr = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='EGRESO'", (fecha_vista,))["t"]
     estado = "CERRADO" if cerrado else "ABIERTO"
     cls = "off" if cerrado else "ok"
     html = f"""
     <div class="panel"><div class="section-title">🔒 Cierre administrativo</div>
-      <div class="role-note">Estado actual: <span class="badge {cls}">{estado}</span> · Fecha: <b>{f}</b></div>
-      <div class="kpis"><div class="kpi"><h3>Ventas del día</h3><b>{money(ventas_hoy['t'])}</b></div><div class="kpi"><h3>Pedidos</h3><b>{pedidos}</b></div><div class="kpi"><h3>Pendientes</h3><b class="red">{pendientes}</b></div><div class="kpi"><h3>Caja neta</h3><b>{money(float(caja_ing or 0)-float(caja_egr or 0))}</b></div></div><br>
-      <form method="post" class="actions"><button name="accion" value="cerrar" class="btn-danger">🔒 Cerrar día</button><button name="accion" value="reabrir" class="btn-warning">🔓 Reabrir día</button><a class="btn" href="{url_for('reportes',fi=f,ff=f)}">📄 Ver reporte del día</a><a class="btn" href="{url_for('export_excel',fi=f,ff=f)}">📊 Exportar Excel</a></form>
+      <div class="role-note">Estado fecha vista: <span class="badge {cls}">{estado}</span> · Fecha: <b>{fecha_vista}</b> · Día operativo actual: <b>{f}</b></div>
+      <div class="cierre-admin-tools">
+        <form method="get"><label>Ver día anterior o actual</label><input type="date" name="fecha" value="{fecha_vista}"><button class="btn-primary">🔎 Consultar día</button></form>
+        <form method="post"><input type="hidden" name="fecha_trabajo" value="{fecha_vista}"><label>Control de día</label><button name="accion" value="abrir_fecha" class="btn-warning">🔓 Abrir este día</button></form>
+        <div class="day-status-next">Si cierras el día operativo actual, se abrirá automáticamente: {next_work_date(f)}</div>
+      </div><br>
+      <div class="kpis"><div class="kpi"><h3>💰 Ventas del día</h3><b>{money(ventas_hoy['t'])}</b></div><div class="kpi"><h3>📦 Pedidos</h3><b>{pedidos}</b></div><div class="kpi"><h3>⏳ Pendientes</h3><b class="red">{pendientes}</b></div><div class="kpi"><h3>💵 Caja neta</h3><b>{money(float(caja_ing or 0)-float(caja_egr or 0))}</b></div></div><br>
+      <form method="post" class="actions"><input type="hidden" name="fecha_trabajo" value="{fecha_vista}"><button name="accion" value="cerrar" class="btn-danger" onclick="return confirm('¿Cerrar el día {fecha_vista}?')">🔒 Cerrar día</button><button name="accion" value="reabrir" class="btn-warning">🔓 Reabrir día anterior/actual</button><a class="btn" href="{url_for('reportes',fi=fecha_vista,ff=fecha_vista)}">📄 Ver reporte</a><a class="btn" href="{url_for('export_excel',fi=fecha_vista,ff=fecha_vista)}">📊 Exportar Excel</a></form>
     </div>"""
     return page(html, "cierre")
 
@@ -1465,16 +1533,16 @@ def catalogo_admin():
             <div style="grid-column:1/-1"><label>Descripción</label><textarea name="descripcion" placeholder="Ingredientes, tamaño, promoción, etc."></textarea></div>
             <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="destacado" style="width:auto"> Destacar</label><button class="btn-success">Agregar al catálogo</button>
           </form></div>
-        <div class="panel"><div class="section-title">Configuración</div><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}"></div><button class="btn-warning">Guardar configuración</button></form></div>
+        <div class="panel catalog-config-panel"><div class="section-title">Configuración</div><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}"></div><button class="btn-warning">Guardar configuración</button></form></div>
         """
     else:
         admin_block = """<div class="panel"><div class="section-title">Catálogo para vendedor</div><div class="role-note">Puedes abrir, copiar y compartir el catálogo. La carga de imágenes y configuración la maneja el administrador.</div></div>"""
 
     html = f"""
-    <div class="mobile-active-title">🖼️ Catálogo</div>
-    <div class="catalog-hero same-place-anchor" id="catalogo-top"><div><h2>Catálogo online con imágenes y QR</h2><p>Catálogo ajustado y dinámico: QR, link público e imágenes de productos en diseño compacto.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div><div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div></div><br>
-    <div class="grid2 catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div></div>{admin_block}</div><br>
-    <div class="panel same-place-anchor" id="productos-catalogo"><div class="section-title">Productos publicados</div><div class="keep-position-note">Al retirar o agregar productos, la pantalla conserva la misma posición.</div><div class="catalog-grid">{cards}</div></div>
+    <div class="mobile-active-title">🖼️ Catálogo / QR</div>
+    <div class="same-place-anchor" id="catalogo-top"></div>
+    <div class="grid2 catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">WhatsApp</a></div></div></div></div>{admin_block}</div>
+    <div class="panel same-place-anchor" id="productos-catalogo"><div class="section-title">Productos publicados</div><div class="catalog-grid">{cards}</div></div>
     <script>function pickCatalog(n,c,p){{document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c;document.getElementById('cat_precio').value=p;window.scrollTo({{top:document.getElementById('cat_titulo').getBoundingClientRect().top+window.scrollY-120,behavior:'smooth'}});}}</script>
     """
     return page(html, "catalogo")
@@ -1514,7 +1582,7 @@ def indicadores():
         trs = "".join(f'<tr><td>{r["periodo"]}</td><td>{money(r["ventas"])}</td><td>{r["pedidos"]}</td><td>{money(float(r["ventas"] or 0)/int(r["pedidos"] or 1))}</td></tr>' for r in rows) or '<tr><td colspan="4">Sin detalle.</td></tr>'
         trp = "".join(f'<tr><td>{p["metodo_pago"]}</td><td>{money(p["total"])}</td></tr>' for p in pagos) or '<tr><td colspan="2">Sin pagos.</td></tr>'
         trt = "".join(f'<tr><td>{t["producto"]}</td><td>{t["cant"]}</td><td>{money(t["total"])}</td></tr>' for t in top) or '<tr><td colspan="3">Sin productos vendidos.</td></tr>'
-        html = f'''<div class="panel analytics-hero"><div class="section-title">📈 Indicadores para cadena de restaurantes y pizzerías</div><form method="get" class="clean-grid"><div><label>Fecha inicio</label><input type="date" name="fi" value="{fi}"></div><div><label>Fecha fin</label><input type="date" name="ff" value="{ff}"></div><div class="actions"><button class="btn-success">Actualizar</button><a class="btn" href="{url_for('indicadores')}">Hoy</a></div></form></div><div class="analytics-grid"><div class="analytics-card"><span>Ventas netas</span><b>{money(ventas['t'])}</b><small>Ingreso del periodo</small></div><div class="analytics-card"><span>Pedidos pagados</span><b>{ventas['c']}</b><small>Transacciones cobradas</small></div><div class="analytics-card"><span>Ticket promedio</span><b>{money(ticket)}</b><small>Venta promedio por pedido</small></div><div class="analytics-card"><span>Pendientes / stock bajo</span><b>{pendientes} / {stock_bajo}</b><small>Operación y abastecimiento</small></div></div><div class="analytics-layout"><div class="panel"><div class="section-title">📊 Ventas por día</div><div class="chart-pro">{bars}</div></div><div class="panel"><div class="section-title">💳 Ventas por método de pago</div><div class="table-wrap small"><table><thead><tr><th>Método</th><th>Total</th></tr></thead><tbody>{trp}</tbody></table></div><br><div class="hint-card">Mide ticket promedio, top productos, ventas por día y pagos para controlar rentabilidad, stock y velocidad de atención.</div></div></div><div class="analytics-layout analytics-wide"><div class="panel"><div class="section-title">🏆 Top productos vendidos</div><div class="table-wrap small"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Total</th></tr></thead><tbody>{trt}</tbody></table></div></div><div class="panel"><div class="section-title">📅 Detalle por periodo</div><div class="table-wrap small"><table><thead><tr><th>Periodo</th><th>Ventas S/</th><th>Pedidos</th><th>Ticket promedio</th></tr></thead><tbody>{trs}</tbody></table></div></div></div>'''
+        html = f'''<div class="panel analytics-hero"><div class="section-title">📈 Indicadores para cadena de restaurantes y pizzerías</div><form method="get" class="clean-grid"><div><label>Fecha inicio</label><input type="date" name="fi" value="{fi}"></div><div><label>Fecha fin</label><input type="date" name="ff" value="{ff}"></div><div class="actions"><button class="btn-success">Actualizar</button><a class="btn" href="{url_for('indicadores')}">Hoy</a></div></form></div><div class="analytics-grid"><div class="analytics-card"><i class="analytics-icon">💰</i><span>Ventas netas</span><b>{money(ventas['t'])}</b><small>Ingreso del periodo</small></div><div class="analytics-card"><i class="analytics-icon">🧾</i><span>Pedidos pagados</span><b>{ventas['c']}</b><small>Transacciones cobradas</small></div><div class="analytics-card"><i class="analytics-icon">🎯</i><span>Ticket promedio</span><b>{money(ticket)}</b><small>Venta promedio por pedido</small></div><div class="analytics-card"><i class="analytics-icon">⚠️</i><span>Pendientes / stock bajo</span><b>{pendientes} / {stock_bajo}</b><small>Operación y abastecimiento</small></div></div><div class="analytics-layout"><div class="panel"><div class="section-title">📊 Ventas por día</div><div class="chart-pro">{bars}</div></div><div class="panel"><div class="section-title">💳 Ventas por método de pago</div><div class="table-wrap small"><table><thead><tr><th>Método</th><th>Total</th></tr></thead><tbody>{trp}</tbody></table></div><br><div class="hint-card">Mide ticket promedio, top productos, ventas por día y pagos para controlar rentabilidad, stock y velocidad de atención.</div></div></div><div class="analytics-layout analytics-wide"><div class="panel"><div class="section-title">🏆 Top productos vendidos</div><div class="table-wrap small"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Total</th></tr></thead><tbody>{trt}</tbody></table></div></div><div class="panel"><div class="section-title">📅 Detalle por periodo</div><div class="table-wrap small"><table><thead><tr><th>Periodo</th><th>Ventas S/</th><th>Pedidos</th><th>Ticket promedio</th></tr></thead><tbody>{trs}</tbody></table></div></div></div>'''
         return page(html, "indicadores")
     except Exception as ex:
         log_event("ERROR INDICADORES", str(ex))
