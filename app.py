@@ -757,6 +757,11 @@ body{
 }
 
 
+
+
+/* ===== AJUSTES SOLICITADOS - POS / PEDIDOS / CATALOGO ===== */
+.pos-mobile-shell{grid-template-columns:1fr!important}.pos-phone{display:none!important}.pos-list-phone{min-height:auto!important}.pos-list-add,.pos-mini-add{font-weight:950!important}.pedido-bloques{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin:16px 0}.pedido-bloque{background:linear-gradient(180deg,#ffffff,#fff7f8);border:1px solid #fecdd3;border-radius:22px;padding:16px;box-shadow:0 12px 28px rgba(255,23,68,.08);display:flex;flex-direction:column;gap:10px}.pedido-bloque-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.pedido-bloque h3{margin:0!important;font-size:17px!important;line-height:1.15!important;color:#071827!important}.pedido-code{font-weight:950;color:#ff1744;font-size:13px}.pedido-products{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:10px;font-weight:850;color:#334155;line-height:1.35;min-height:48px}.pedido-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:13px;color:#64748b;font-weight:850}.pedido-total{font-size:22px;font-weight:950;color:#071827}.pedido-bloque-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}.pedido-bloque-actions select,.pedido-bloque-actions button,.pedido-bloque-actions a{min-height:44px!important;border-radius:14px!important;font-size:13px!important;padding:8px 10px!important;text-align:center!important}.pedido-bloque-actions .full{grid-column:1/-1}.catalog-card{cursor:pointer!important;transition:transform .18s ease,box-shadow .18s ease!important}.catalog-card:hover{transform:translateY(-3px)!important;box-shadow:0 20px 44px rgba(15,23,42,.18)!important}.edit-hint{display:block;margin-top:8px;font-size:12px;font-weight:950;color:#ffccd3}.catalog-edit-id{display:inline-flex;align-items:center;justify-content:center;min-height:34px;border-radius:999px;background:#111827;color:#fff;padding:6px 10px;font-weight:950;font-size:12px;margin-bottom:8px}.upload-drop form.clean-grid{grid-template-columns:1.1fr .8fr .55fr 1fr!important}.upload-drop textarea{min-height:78px!important}.qr-box input{width:100%!important;min-width:0!important}.qr-box .actions{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}.qr-box .actions a,.qr-box .actions button{width:100%!important;white-space:normal!important;line-height:1.15!important}.catalog-config-panel form.clean-grid{grid-template-columns:1fr 1fr auto!important}@media(max-width:900px){.pedido-bloques{grid-template-columns:1fr!important}.pedido-bloque{background:#1f1f20!important;border-color:#333845!important;color:#f8fafc!important}.pedido-bloque h3,.pedido-total{color:#f8fafc!important}.pedido-products{background:#111827!important;border-color:#374151!important;color:#e5e7eb!important}.pedido-meta{grid-template-columns:1fr!important;color:#cbd5e1!important}.pedido-bloque-actions{grid-template-columns:1fr!important}.upload-drop form.clean-grid,.catalog-config-panel form.clean-grid{grid-template-columns:1fr!important}.pos-search-row input{grid-column:1/-1!important}}
+
 /* ===== BRANDING EL TORO - encabezado web + panel de pestañas ===== */
 .el-toro-web-header{
   display:flex;align-items:center;justify-content:space-between;gap:18px;
@@ -1352,7 +1357,7 @@ def pos_rapido():
           <input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'>
           <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
           <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
-          <button class='pos-feature-card' type='submit'><img src='{img}' alt='{p['nombre']}'><b>{p['nombre']}</b><span>{money(p['precio'])}</span><em class='pos-mini-add'>Add Cart</em></button>
+          <button class='pos-feature-card' type='submit'><img src='{img}' alt='{p['nombre']}'><b>{p['nombre']}</b><span>{money(p['precio'])}</span><em class='pos-mini-add'>Agregar</em></button>
         </form>"""
 
     list_cards = ""
@@ -1364,7 +1369,7 @@ def pos_rapido():
           <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
           <img class='pos-list-img' src='{img}' alt='{p['nombre']}'>
           <div class='pos-list-info'><b>{p['nombre']}</b><small>{p['categoria'] or 'PRODUCTO'} · SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small><span>{money(p['precio'])}</span></div>
-          <button class='pos-list-add' type='submit'>Add Cart</button>
+          <button class='pos-list-add' type='submit'>Agregar</button>
         </form>"""
     if not list_cards:
         list_cards = "<div class='pos-empty'>No hay productos para la búsqueda.</div>"
@@ -1374,7 +1379,7 @@ def pos_rapido():
     html = f"""
     <div class="panel pos-client-panel">
       <div class="section-title">⚡ POS rápido móvil</div>
-      <div class="hint-card">Identifica cliente, mesa y forma de pago una sola vez. Luego toca Add Cart y el pedido se registra al instante.</div><br>
+      <div class="hint-card">Identifica cliente, mesa y forma de pago una sola vez. Luego toca Agregar y el pedido se registra al instante.</div><br>
       <datalist id="clientes_pos_list">{cliente_options}</datalist>
       <form method="get" class="pos-client-grid">
         <div><label>Cliente</label><input id="pos_cliente" list="clientes_pos_list" placeholder="CLIENTE GENERAL / nombre"></div>
@@ -1387,15 +1392,15 @@ def pos_rapido():
     <div class="pos-mobile-shell">
       <section class="pos-phone">
         <div class="pos-phone-top"><span>←</span><span>☰</span></div>
-        <div class="pos-hero-card"><h2>Different<br>Kind of Food</h2></div>
-        <div class="pos-category-title">Food Category</div>
+        <div class="pos-hero-card"><h2>El sabor<br>que te provoca</h2></div>
+        <div class="pos-category-title">Categoría de comida</div>
         <div class="pos-feature-grid">{feature_cards}</div>
-        <div class="pos-category-title">Food Category</div>
+        <div class="pos-category-title">Categoría de comida</div>
         <div class="pos-feature-grid">{feature_cards}</div>
       </section>
       <section class="pos-list-phone">
         <form method="get" action="{url_for('pos_rapido')}" class="pos-search-row">
-          <input name="buscar" value="{buscar_prod}" placeholder="Search From Here">
+          <input name="buscar" value="{buscar_prod}" placeholder="Buscar producto">
           <select name="categoria" onchange="this.form.submit()">{cat_opts}</select>
           <button type="submit">🔎</button><a class="pos-gear" href="{url_for('pos_rapido')}">⚙️</a>
         </form>
@@ -1506,11 +1511,22 @@ def pedidos():
     pendientes = sum(1 for r in rows if r["estado"] not in ("PAGADO","ENTREGADO"))
     resumen_cards = f"<div class='pedido-resumen'><div class='pedido-card'><b>{len(rows)}</b><br>Pedidos encontrados</div><div class='pedido-card'><b>{pendientes}</b><br>Pendientes de cocina</div><div class='pedido-card'><b>{money(total_abierto)}</b><br>Importe abierto</div></div>"
     trs = "".join(f'<tr><td>{r["id"]}</td><td>{r["codigo"]}</td><td>{r["fecha"]}</td><td>{r["hora"]}</td><td>{r["mesa"]}</td><td>{r["cliente"]}</td><td><b class="pedido-prod-text">{r["productos"] or "Sin ítems"}</b></td><td>{r["servicio"]}</td><td><span class="badge warn">{r["estado"]}</span></td><td>{money(r["total"])}</td><td>{r["pagado"]}</td></tr>' for r in rows) or '<tr><td colspan="11">Sin pedidos.</td></tr>'
+    pedido_bloques = ""
+    for r in rows[:24]:
+        editable = (r["estado"] not in ("ENTREGADO", "PAGADO") and r["pagado"] != "SI")
+        if editable:
+            action_html = f'''<form method="post" class="pedido-bloque-actions"><input type="hidden" name="pedido_id" value="{r['id']}"><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select><button name="accion" value="estado" class="btn-success">Actualizar</button><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select><button name="accion" value="pagado" class="btn-success">Cobrar</button><a class="btn-warning full" href="{url_for('ticket', pedido_id=r['id'])}">Imprimir ticket</a></form>''' 
+        else:
+            action_html = f'''<div class="pedido-bloque-actions"><a class="btn-warning full" href="{url_for('ticket', pedido_id=r['id'])}">Imprimir ticket</a></div>''' 
+        pedido_bloques += f'''<div class="pedido-bloque"><div class="pedido-bloque-head"><div><h3>{r['cliente'] or 'CLIENTE GENERAL'}</h3><span class="pedido-code">{r['codigo']}</span></div><span class="badge warn">{r['estado']}</span></div><div class="pedido-products">{r['productos'] or 'Sin ítems'}</div><div class="pedido-meta"><span>Hora: {r['fecha']} {r['hora']}</span><span>Mesa/servicio: {r['mesa'] or r['servicio']}</span><span>Pagado: {r['pagado']}</span><span>Usuario: {r['usuario'] or ''}</span></div><div class="pedido-total">{money(r['total'])}</div>{action_html}</div>''' 
+    if not pedido_bloques:
+        pedido_bloques = '<div class="hint-card">Sin pedidos para mostrar.</div>' 
     chips = "".join(f'<div class="item-chip"><b>{r["producto"]}</b><span>{r["codigo"]} · {r["cliente"]}</span><br>Cant. {int(float(r["cantidad"] or 0))} · {money(r["precio"])} · <b>{money(r["total"])}</b></div>' for r in detalles) or '<div class="hint-card">Sin detalle de ítems.</div>'
     html = f'''
     <div class="mobile-active-title">🚚 Pedidos</div>
     <div class="panel"><div class="section-title">🚚 Control de pedidos / cocina</div>{resumen_cards}
       <form method="get" class="clean-grid"><div><label>Filtrar por estado</label><select name="estado"><option>TODOS</option><option>PENDIENTE</option><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button>Refrescar</button><a class="btn" href="{url_for('ventas')}">Nuevo pedido</a></form><br>
+      <div class="section-title">📦 Pedidos en bloques</div><div class="pedido-bloques">{pedido_bloques}</div><br>
       <form method="post" class="pedido-actions smart-pedido-form"><div><label>Pedido pendiente / cliente</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Cambiar a estado</label><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button name="accion" value="estado" class="btn-success">Actualizar estado</button></form><br>
       <form method="post" class="pedido-actions smart-pedido-form"><div><label>Pedido para cobrar</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_cobro}</select><small class="muted">Solo pedidos no pagados.</small></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">Marcar pagado</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('ticket', pedido_id=selected_first)}">Imprimir ticket</a></div></form><br>
       <form method="post" class="pedido-actions-2 smart-pedido-form"><div><label>Pedido editable</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Ítem del pedido</label><select name="item_id">{item_opts}</select></div><button name="accion" value="quitar_item" class="btn-warning">➖ Quitar ítem</button></form>
@@ -1803,6 +1819,21 @@ def catalogo_admin():
                 flash("Producto con imagen agregado al catálogo.", "ok")
             except Exception as ex:
                 flash(str(ex), "error")
+        elif accion == "actualizar_item":
+            try:
+                item_id = int(request.form.get("item_id") or 0)
+                actual = q_one("SELECT imagen FROM catalogo_publico WHERE id=?", (item_id,))
+                if not actual:
+                    flash("Producto del catálogo no encontrado.", "error")
+                else:
+                    archivo = request.files.get("imagen")
+                    nueva_imagen = actual["imagen"]
+                    if archivo and archivo.filename:
+                        nueva_imagen = save_catalog_image(archivo)
+                    q_exec("UPDATE catalogo_publico SET titulo=?, descripcion=?, precio=?, categoria=?, imagen=?, destacado=? WHERE id=?", (up(request.form.get("titulo")), clean(request.form.get("descripcion")), int(float(request.form.get("precio") or 0)), up(request.form.get("categoria") or "PLATOS"), nueva_imagen, 1 if request.form.get("destacado") else 0, item_id))
+                    flash("Producto actualizado correctamente.", "ok")
+            except Exception as ex:
+                flash(str(ex), "error")
         elif accion == "desactivar_item":
             q_exec("UPDATE catalogo_publico SET activo=0 WHERE id=?", (int(request.form.get("id") or 0),))
             flash("Imagen/producto retirado del catálogo.", "ok")
@@ -1827,8 +1858,13 @@ def catalogo_admin():
         img = url_for("static", filename=(i["imagen"] or "toro_logo.png"))
         admin_form = ""
         if is_admin():
-            admin_form = f"<form method='post' style='margin-top:10px'><input type='hidden' name='accion' value='desactivar_item'><input type='hidden' name='id' value='{i['id']}'><button class='btn-danger' onclick=\"return confirm('¿Retirar del catálogo?')\">Retirar</button></form>"
-        cards += f"""<div class='catalog-card'><img src='{img}'><h3>{i['titulo']}</h3><p>{i['descripcion'] or i['categoria']}</p><span class='price-pill'>{money(i['precio'])}</span>{admin_form}</div>"""
+            safe_title = str(i["titulo"] or "").replace("'", "\'").replace('"', '&quot;')
+            safe_cat = str(i["categoria"] or "PLATOS").replace("'", "\'").replace('"', '&quot;')
+            safe_desc = str(i["descripcion"] or "").replace("'", "\'").replace('"', '&quot;').replace("\n", " ")
+            admin_form = f'''<form method="post" style="margin-top:10px" onclick="event.stopPropagation()"><input type="hidden" name="accion" value="desactivar_item"><input type="hidden" name="id" value="{i['id']}"><button class="btn-danger" onclick="return confirm('¿Retirar del catálogo?')">Retirar</button></form><span class="edit-hint">Clic para editar imagen/datos</span>'''
+            cards += f'''<div class="catalog-card" onclick="editCatalog('{i['id']}','{safe_title}','{safe_cat}','{int(float(i['precio'] or 0))}','{safe_desc}','{1 if i['destacado'] else 0}')"><img src="{img}"><h3>{i['titulo']}</h3><p>{i['descripcion'] or i['categoria']}</p><span class="price-pill">{money(i['precio'])}</span>{admin_form}</div>'''
+        else:
+            cards += f"""<div class='catalog-card'><img src='{img}'><h3>{i['titulo']}</h3><p>{i['descripcion'] or i['categoria']}</p><span class='price-pill'>{money(i['precio'])}</span></div>"""
     if not cards:
         cards = "<div class='hint-card'>Aún no tienes imágenes. Carga tus platos, pizzas, combos o bebidas para publicarlos.</div>"
 
@@ -1845,13 +1881,14 @@ def catalogo_admin():
         <div class="panel upload-drop"><div class="section-title">Cargar imagen de producto</div>
           <div class="hint-card">Haz clic en pizza, pollo, bebida o plato para cargar datos automáticamente; luego selecciona la imagen.</div>
           <div class="catalog-pick-grid">{pickers}</div>
-          <form method="post" enctype="multipart/form-data" class="clean-grid"><input type="hidden" name="accion" value="crear_item">
+          <form method="post" enctype="multipart/form-data" class="clean-grid" id="catalog_form"><input type="hidden" id="cat_accion" name="accion" value="crear_item"><input type="hidden" id="cat_item_id" name="item_id" value="">
+            <div style="grid-column:1/-1"><span id="cat_mode" class="catalog-edit-id">Nuevo producto</span></div>
             <div><label>Nombre del plato</label><input id="cat_titulo" name="titulo" required placeholder="Ej. Parrilla familiar / Pizza americana"></div>
-            <div><label>Categoría</label><select id="cat_categoria" name="categoria"><option>PLATOS</option><option>PIZZAS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>COMBOS</option><option>POSTRES</option></select></div>
+            <div><label>Categoría</label><select id="cat_categoria" name="categoria"><option>PLATOS</option><option>PIZZAS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>COMBOS</option><option>POSTRES</option><option>ADICIONALES</option></select></div>
             <div><label>Precio</label><input id="cat_precio" name="precio" type="number" step="1" value="0"></div>
-            <div><label>Imagen</label><input name="imagen" type="file" accept="image/*" required></div>
-            <div style="grid-column:1/-1"><label>Descripción</label><textarea name="descripcion" placeholder="Ingredientes, tamaño, promoción, etc."></textarea></div>
-            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" name="destacado" style="width:auto"> Destacar</label><button class="btn-success">Agregar al catálogo</button>
+            <div><label>Imagen</label><input id="cat_imagen" name="imagen" type="file" accept="image/*"><small class="muted">Para editar, la imagen es opcional.</small></div>
+            <div style="grid-column:1/-1"><label>Descripción</label><textarea id="cat_descripcion" name="descripcion" placeholder="Ingredientes, tamaño, promoción, etc."></textarea></div>
+            <label style="display:flex;gap:8px;align-items:center"><input id="cat_destacado" type="checkbox" name="destacado" style="width:auto"> Destacar</label><button id="cat_submit" class="btn-success">Agregar al catálogo</button><button type="button" class="btn-warning" onclick="resetCatalogForm()">Nuevo / limpiar</button>
           </form></div>
         <div class="panel catalog-config-panel"><div class="section-title">Configuración</div><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}"></div><button class="btn-warning">Guardar configuración</button></form></div>
         """
@@ -1863,7 +1900,12 @@ def catalogo_admin():
     <div class="same-place-anchor" id="catalogo-top"></div>
     <div class="grid2 catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">WhatsApp</a></div></div></div></div>{admin_block}</div>
     <div class="panel same-place-anchor" id="productos-catalogo"><div class="section-title">Productos publicados</div><div class="catalog-grid">{cards}</div></div>
-    <script>function pickCatalog(n,c,p){{document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c;document.getElementById('cat_precio').value=p;window.scrollTo({{top:document.getElementById('cat_titulo').getBoundingClientRect().top+window.scrollY-120,behavior:'smooth'}});}}</script>
+    <script>
+    function goCatForm(){{const el=document.getElementById('cat_titulo'); if(el) window.scrollTo({{top:el.getBoundingClientRect().top+window.scrollY-140,behavior:'smooth'}});}}
+    function pickCatalog(n,c,p){{resetCatalogForm(false);document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c;document.getElementById('cat_precio').value=p;goCatForm();}}
+    function editCatalog(id,n,c,p,d,star){{document.getElementById('cat_accion').value='actualizar_item';document.getElementById('cat_item_id').value=id;document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c||'PLATOS';document.getElementById('cat_precio').value=p||0;document.getElementById('cat_descripcion').value=d||'';document.getElementById('cat_destacado').checked=(String(star)==='1');document.getElementById('cat_mode').textContent='Editando producto #' + id;document.getElementById('cat_submit').textContent='Actualizar producto';goCatForm();}}
+    function resetCatalogForm(clear){{const f=document.getElementById('catalog_form'); if(clear!==false && f) f.reset();document.getElementById('cat_accion').value='crear_item';document.getElementById('cat_item_id').value='';document.getElementById('cat_mode').textContent='Nuevo producto';document.getElementById('cat_submit').textContent='Agregar al catálogo';}}
+    </script>
     """
     return page(html, "catalogo")
 
