@@ -1164,7 +1164,11 @@ def pedidos():
         if not pedido_id:
             flash("Selecciona un pedido.", "error")
             return redirect(url_for("pedidos"))
+        pedido_actual = q_one("SELECT estado,pagado FROM pedidos WHERE id=?", (pedido_id,))
         if accion == "estado":
+            if pedido_actual and (pedido_actual["estado"] in ("ENTREGADO", "PAGADO") or pedido_actual["pagado"] == "SI"):
+                flash("Este pedido ya fue entregado o pagado; no se puede cambiar desde el desplegable.", "error")
+                return redirect(url_for("pedidos"))
             nuevo = request.form.get("estado", "PENDIENTE")
             if nuevo == "PAGADO":
                 flash("Para pagar usa el botón Marcar pagado; así se registra caja y venta.", "error")
@@ -1172,9 +1176,15 @@ def pedidos():
                 q_exec("UPDATE pedidos SET estado=? WHERE id=?", (nuevo, pedido_id))
                 flash("Estado actualizado.", "ok")
         elif accion == "pagado":
+            if pedido_actual and (pedido_actual["pagado"] == "SI" or pedido_actual["estado"] == "PAGADO"):
+                flash("Este pedido ya está pagado; no aparece en el cobro pendiente.", "error")
+                return redirect(url_for("pedidos"))
             crear_venta_desde_pedido(pedido_id, request.form.get("metodo_pago", "EFECTIVO"))
             flash("Pedido marcado como pagado.", "ok")
         elif accion == "quitar_item":
+            if pedido_actual and (pedido_actual["estado"] in ("ENTREGADO", "PAGADO") or pedido_actual["pagado"] == "SI"):
+                flash("No se puede quitar ítems de un pedido entregado o pagado.", "error")
+                return redirect(url_for("pedidos"))
             item_id = int(request.form.get("item_id") or 0)
             if item_id:
                 q_exec("DELETE FROM pedido_detalle WHERE id=? AND pedido_id=?", (item_id, pedido_id))
@@ -1194,10 +1204,31 @@ def pedidos():
         rows = q_all(base_sql + " ORDER BY p.id DESC LIMIT 200") if estado == "TODOS" else q_all(base_sql + " WHERE p.estado=? ORDER BY p.id DESC LIMIT 200", (estado,))
     else:
         rows = q_all(base_sql + " WHERE COALESCE(p.sucursal_id,1)=? ORDER BY p.id DESC LIMIT 200", (sucid,)) if estado == "TODOS" else q_all(base_sql + " WHERE COALESCE(p.sucursal_id,1)=? AND p.estado=? ORDER BY p.id DESC LIMIT 200", (sucid, estado))
-    opts_p = '<option value="">Selecciona pedido</option>' + "".join(f'<option value="{r["id"]}">{r["codigo"]} · {r["cliente"] or "CLIENTE GENERAL"} · {r["productos"]} · {r["estado"]} · {money(r["total"])}</option>' for r in rows)
-    selected_first = rows[0]["id"] if rows else 0
-    detalles = q_all("SELECT d.*,p.codigo,p.cliente FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 120")
-    item_opts = '<option value="">Selecciona item a quitar</option>' + "".join(f'<option value="{r["id"]}">#{r["id"]} · {r["codigo"]} · {r["producto"]} · Cant. {int(float(r["cantidad"] or 0))}</option>' for r in detalles)
+    # Listas separadas para evitar operaciones incorrectas:
+    # - Estado: solo pedidos NO entregados y NO pagados.
+    # - Cobro: solo pedidos abiertos/no pagados.
+    # - Quitar ítem: solo pedidos editables, no entregados ni pagados.
+    pedidos_estado = [r for r in rows if (r["estado"] not in ("ENTREGADO", "PAGADO") and r["pagado"] != "SI")]
+    pedidos_cobro = [r for r in rows if (r["pagado"] != "SI" and r["estado"] != "PAGADO")]
+    pedidos_editables_ids = {r["id"] for r in pedidos_estado}
+
+    def pedido_label(r):
+        cliente = r["cliente"] or "CLIENTE GENERAL"
+        productos = r["productos"] or "Sin ítems"
+        return f'{cliente} · {r["codigo"]} · {productos} · {r["estado"]} · {money(r["total"])}'
+
+    opts_estado = '<option value="">Selecciona pedido pendiente por cliente o código</option>' + "".join(
+        f'<option value="{r["id"]}">{pedido_label(r)}</option>' for r in pedidos_estado
+    )
+    opts_cobro = '<option value="">Selecciona pedido abierto por cliente o código</option>' + "".join(
+        f'<option value="{r["id"]}">{pedido_label(r)}</option>' for r in pedidos_cobro
+    )
+    selected_first = (pedidos_cobro[0]["id"] if pedidos_cobro else (pedidos_estado[0]["id"] if pedidos_estado else 0))
+    detalles = q_all("SELECT d.*,p.codigo,p.cliente,p.estado,p.pagado FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 120")
+    detalles_editables = [r for r in detalles if r["pedido_id"] in pedidos_editables_ids]
+    item_opts = '<option value="">Selecciona ítem editable</option>' + "".join(
+        f'<option value="{r["id"]}">#{r["id"]} · {r["cliente"] or "CLIENTE GENERAL"} · {r["codigo"]} · {r["producto"]} · Cant. {int(float(r["cantidad"] or 0))}</option>' for r in detalles_editables
+    )
     tr_items = "".join(
         f'<tr><td>{r["id"]}</td><td>{r["codigo"]}</td><td><b>{r["producto"]}</b></td><td>{int(float(r["cantidad"] or 0))}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>'
         for r in detalles
@@ -1211,9 +1242,29 @@ def pedidos():
     <div class="mobile-active-title">🚚 Pedidos</div>
     <div class="panel"><div class="section-title">🚚 Control de pedidos / cocina</div>{resumen_cards}
       <form method="get" class="clean-grid"><div><label>Filtrar por estado</label><select name="estado"><option>TODOS</option><option>PENDIENTE</option><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button>Refrescar</button><a class="btn" href="{url_for('ventas')}">Nuevo pedido</a></form><br>
-      <form method="post" class="pedido-actions"><div><label>Pedido</label><select name="pedido_id">{opts_p}</select></div><div><label>Cambiar a estado</label><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button name="accion" value="estado" class="btn-success">Actualizar estado</button></form><br>
-      <form method="post" class="pedido-actions"><div><label>Pedido para cobrar o limpiar</label><select name="pedido_id">{opts_p}</select></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">Marcar pagado</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('ticket', pedido_id=selected_first)}">Imprimir ticket</a></div></form><br>
-      <form method="post" class="pedido-actions-2"><div><label>Pedido</label><select name="pedido_id">{opts_p}</select></div><div><label>Ítem del pedido</label><select name="item_id">{item_opts}</select></div><button name="accion" value="quitar_item" class="btn-warning">➖ Quitar ítem</button></form>
+      <form method="post" class="pedido-actions smart-pedido-form"><div><label>Pedido pendiente / cliente</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Cambiar a estado</label><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button name="accion" value="estado" class="btn-success">Actualizar estado</button></form><br>
+      <form method="post" class="pedido-actions smart-pedido-form"><div><label>Pedido para cobrar</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_cobro}</select><small class="muted">Solo pedidos no pagados.</small></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">Marcar pagado</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('ticket', pedido_id=selected_first)}">Imprimir ticket</a></div></form><br>
+      <form method="post" class="pedido-actions-2 smart-pedido-form"><div><label>Pedido editable</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Ítem del pedido</label><select name="item_id">{item_opts}</select></div><button name="accion" value="quitar_item" class="btn-warning">➖ Quitar ítem</button></form>
+      <script>
+      document.querySelectorAll('.smart-pedido-form').forEach(function(form){{
+        const input=form.querySelector('.pedido-search');
+        const select=form.querySelector('.pedido-select');
+        if(!input||!select) return;
+        const original=[...select.options].map(o=>({{value:o.value,text:o.text}}));
+        input.addEventListener('input',function(){{
+          const q=input.value.toLowerCase().trim();
+          const current=select.value;
+          select.innerHTML='';
+          original.forEach(function(o,i){{
+            if(i===0 || !q || o.text.toLowerCase().includes(q)){{
+              const opt=document.createElement('option'); opt.value=o.value; opt.text=o.text; select.appendChild(opt);
+            }}
+          }});
+          if([...select.options].some(o=>o.value===current)) select.value=current;
+          else if(select.options.length>1) select.selectedIndex=1;
+        }});
+      }});
+      </script>
     </div>
     <div class="panel"><div class="section-title">📋 Listado de pedidos</div><div class="table-wrap"><table><thead><tr><th>ID</th><th>Código</th><th>Fecha</th><th>Hora</th><th>Mesa</th><th>Cliente</th><th>Productos</th><th>Servicio</th><th>Estado</th><th>Total</th><th>Pagado</th></tr></thead><tbody>{trs}</tbody></table></div></div>
     <div class="panel"><div class="section-title">🧾 Detalle de ítems</div><div class="table-wrap detalle-table-simple"><table><thead><tr><th>Pedido ID</th><th>Código</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{tr_items}</tbody></table></div></div>'''
