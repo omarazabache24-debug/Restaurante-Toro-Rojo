@@ -373,6 +373,9 @@ def init_db():
         "dia_abierto": today(),
         "caja_abierta": "0",
         "monto_apertura": "0",
+        # MODO PRUEBA SIN RECETAS: por defecto NO descuenta insumos de recetas.
+        # Se puede activar/desactivar desde la pestaña Recetas.
+        "recetas_activas": "0",
     }.items():
         if not q_one("SELECT clave FROM contexto WHERE clave=?", (k,)):
             q_exec("INSERT INTO contexto(clave,valor) VALUES(?,?)", (k, v))
@@ -1594,7 +1597,18 @@ def select_options(rows, value_key="id", text_key="nombre", selected=None):
 # =========================
 # LÓGICA NEGOCIO
 # =========================
+def recetas_activas():
+    """True cuando el modo RECETAS está ON.
+    En modo prueba queda OFF para vender sin descontar insumos ni bloquear operaciones.
+    """
+    return str(get_ctx("recetas_activas", "0")).strip() == "1"
+
 def descontar_receta(producto_id, cantidad_producto):
+    # MODO PRUEBA SIN RECETAS:
+    # Si recetas está OFF, NO descuenta insumos. Esto permite probar ventas, POS, pedidos, caja y delivery
+    # sin depender de configuración de recetas/insumos.
+    if not recetas_activas():
+        return
     for r in q_all("SELECT * FROM recetas WHERE producto_id=?", (producto_id,)):
         q_exec(
             "UPDATE insumos SET stock=COALESCE(stock,0)-? WHERE id=?",
@@ -1602,6 +1616,7 @@ def descontar_receta(producto_id, cantidad_producto):
         )
 
 def descontar_producto(producto_id, cantidad):
+    # El stock del producto sí puede bajar; el descuento de INSUMOS depende de RECETAS OFF/ON.
     q_exec("UPDATE productos SET stock=COALESCE(stock,0)-? WHERE id=?", (float(cantidad or 0), producto_id))
     descontar_receta(producto_id, cantidad)
 
@@ -2405,25 +2420,56 @@ def importar_productos(file_storage):
 def recetas():
     if request.method == "POST":
         accion = request.form.get("accion", "agregar")
-        if accion == "insumo":
+        if accion == "toggle_recetas":
+            nuevo_estado = request.form.get("recetas_activas", "0")
+            set_ctx("recetas_activas", "1" if str(nuevo_estado) == "1" else "0")
+            log_event("RECETAS", "ON" if str(nuevo_estado) == "1" else "OFF - Modo prueba")
+            flash("Recetas activadas: desde ahora se descuentan insumos." if str(nuevo_estado) == "1" else "Modo prueba activado: recetas OFF, no se descuentan insumos.", "ok")
+        elif accion == "insumo":
             nombre = up(request.form.get("nombre"))
             if nombre:
                 q_exec("INSERT OR REPLACE INTO insumos(nombre,unidad,stock,stock_min,costo,activo) VALUES(?,?,?,?,?,1)", (nombre, up(request.form.get("unidad") or "UND"), float(request.form.get("stock") or 0), float(request.form.get("stock_min") or 0), float(request.form.get("costo") or 0)))
                 flash("Insumo guardado.", "ok")
         else:
-            q_exec("INSERT INTO recetas(producto_id,insumo_id,cantidad,observacion) VALUES(?,?,?,?)", (int(request.form.get("producto_id")), int(request.form.get("insumo_id")), float(request.form.get("cantidad") or 0), up(request.form.get("observacion"))))
-            flash("Insumo agregado a receta.", "ok")
+            producto_id = int(request.form.get("producto_id") or 0)
+            insumo_id = int(request.form.get("insumo_id") or 0)
+            if producto_id and insumo_id:
+                q_exec("INSERT INTO recetas(producto_id,insumo_id,cantidad,observacion) VALUES(?,?,?,?)", (producto_id, insumo_id, float(request.form.get("cantidad") or 0), up(request.form.get("observacion"))))
+                flash("Insumo agregado a receta.", "ok")
+            else:
+                flash("Selecciona producto e insumo para agregar receta.", "error")
         return redirect(url_for("recetas"))
+
     productos = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY nombre")
     insumos = q_all("SELECT * FROM insumos WHERE activo=1 ORDER BY nombre")
     opts_p = select_options(productos)
     opts_i = select_options(insumos)
     rows = q_all("SELECT r.id,p.nombre producto,i.nombre insumo,i.unidad,r.cantidad,r.observacion FROM recetas r JOIN productos p ON p.id=r.producto_id JOIN insumos i ON i.id=r.insumo_id ORDER BY p.nombre,i.nombre")
     trs = "".join(f'<tr><td>{r["id"]}</td><td>{r["producto"]}</td><td>{r["insumo"]}</td><td>{r["unidad"]}</td><td>{r["cantidad"]}</td><td>{r["observacion"]}</td></tr>' for r in rows) or '<tr><td colspan="6">Sin receta.</td></tr>'
+
+    recetas_on = recetas_activas()
+    modo_txt = "RECETAS ON" if recetas_on else "MODO PRUEBA SIN RECETAS"
+    modo_det = "Las ventas descuentan insumos según receta." if recetas_on else "Puedes vender, cobrar, probar POS, pedidos, delivery y clientes sin que bajen insumos de recetas."
+    badge_cls = "ok" if recetas_on else "warn"
+    checked_on = "checked" if recetas_on else ""
+    checked_off = "" if recetas_on else "checked"
     html = f"""
+    <div class="panel" style="border:2px solid {'#24c26a' if recetas_on else '#ffb020'};">
+      <div class="box-title">🧪 Control de recetas OFF / ON</div><br>
+      <div class="role-note"><b>{modo_txt}</b><br>{modo_det}</div>
+      <form method="post" class="actions" style="margin-top:14px;align-items:center;gap:12px;flex-wrap:wrap;">
+        <input type="hidden" name="accion" value="toggle_recetas">
+        <label class="pill" style="padding:12px 18px;"><input type="radio" name="recetas_activas" value="0" {checked_off}> OFF - Pruebas sin descontar insumos</label>
+        <label class="pill" style="padding:12px 18px;"><input type="radio" name="recetas_activas" value="1" {checked_on}> ON - Descontar insumos por receta</label>
+        <button class="primary">Guardar modo</button>
+      </form>
+      <div style="margin-top:12px;color:#5b6b85;font-weight:800;">Recomendado para tus pruebas actuales: <span class="badge {badge_cls}">{modo_txt}</span></div>
+    </div>
+
     <div class="panel"><div class="box-title">Recetas detalladas</div><br>
-      <form method="post" class="grid5"><input type="hidden" name="accion" value="agregar"><div><label>Producto de venta</label><select name="producto_id">{opts_p}</select></div><div><label>Insumo</label><select name="insumo_id">{opts_i}</select></div><div><label>Cantidad del insumo</label><input name="cantidad" type="number" step="1" value="1"></div><div><label>Observación</label><input name="observacion"></div><button>Agregar insumo</button></form><br>
-      <form method="post" class="grid5"><input type="hidden" name="accion" value="insumo"><div><label>Nuevo insumo</label><input name="nombre" placeholder="Ej. AJI"></div><div><label>Unidad</label><select name="unidad"><option>PORCION</option><option>UND</option><option>KG</option></select></div><div><label>Stock</label><input name="stock" type="number" step="1"></div><div><label>Mínimo</label><input name="stock_min" type="number" step="1"></div><button>Guardar insumo</button></form>
+      <div class="role-note">Configura recetas solo cuando ya quieras controlar inventario real. Mientras está OFF, estas recetas quedan guardadas pero no descuentan insumos.</div><br>
+      <form method="post" class="grid5"><input type="hidden" name="accion" value="agregar"><div><label>Producto de venta</label><select name="producto_id">{opts_p}</select></div><div><label>Insumo</label><select name="insumo_id">{opts_i}</select></div><div><label>Cantidad del insumo</label><input name="cantidad" type="number" step="0.01" value="1"></div><div><label>Observación</label><input name="observacion"></div><button>Agregar insumo</button></form><br>
+      <form method="post" class="grid5"><input type="hidden" name="accion" value="insumo"><div><label>Nuevo insumo</label><input name="nombre" placeholder="Ej. AJI"></div><div><label>Unidad</label><select name="unidad"><option>PORCION</option><option>UND</option><option>KG</option><option>LT</option></select></div><div><label>Stock</label><input name="stock" type="number" step="0.01"></div><div><label>Mínimo</label><input name="stock_min" type="number" step="0.01"></div><button>Guardar insumo</button></form>
     </div>
     <div class="panel"><div class="box-title">Detalle de receta</div><br><div class="table-wrap"><table><thead><tr><th>ID</th><th>Producto</th><th>Insumo</th><th>Unidad</th><th>Cantidad</th><th>Observación</th></tr></thead><tbody>{trs}</tbody></table></div></div>
     """
@@ -2617,6 +2663,132 @@ def save_catalog_image(file_storage):
     file_storage.save(path)
     return f"catalogo/{new_name}"
 
+
+def _catalog_to_float(v, default=0):
+    try:
+        if v is None:
+            return default
+        s = str(v).strip().replace("S/", "").replace("s/", "").replace(" ", "")
+        # Soporta 1,234.50 y también 1234,50
+        if "," in s and "." not in s:
+            s = s.replace(",", ".")
+        else:
+            s = s.replace(",", "")
+        return float(s or default)
+    except Exception:
+        return default
+
+def _catalog_to_int(v, default=0):
+    try:
+        return int(float(v or default))
+    except Exception:
+        return default
+
+def _norm_header_catalog(h):
+    h = clean(h).lower()
+    repl = str.maketrans("áéíóúñü", "aeiounu")
+    h = h.translate(repl).replace(" ", "_").replace("-", "_").replace("/", "_")
+    return h
+
+def _catalog_get(row, *names, default=""):
+    for n in names:
+        key = _norm_header_catalog(n)
+        if key in row and clean(row.get(key)) != "":
+            return row.get(key)
+    return default
+
+def _read_rows_excel_csv(file_storage):
+    """Lee CSV/XLSX y devuelve filas como dict con encabezados normalizados."""
+    if not file_storage or not file_storage.filename:
+        raise ValueError("Selecciona un archivo Excel o CSV.")
+    filename = secure_filename(file_storage.filename)
+    ext = os.path.splitext(filename)[1].lower()
+    rows = []
+    if ext == ".csv":
+        raw = file_storage.read()
+        text = raw.decode("utf-8-sig", errors="ignore")
+        sample = text[:2048]
+        delimiter = ";" if sample.count(";") > sample.count(",") else ","
+        reader = csv.DictReader(StringIO(text), delimiter=delimiter)
+        for r in reader:
+            rows.append({_norm_header_catalog(k): v for k, v in (r or {}).items()})
+    elif ext in (".xlsx", ".xlsm"):
+        if not OPENPYXL:
+            raise ValueError("openpyxl no está instalado. Usa CSV o instala openpyxl.")
+        wb = load_workbook(file_storage, data_only=True)
+        ws = wb.active
+        headers = []
+        for cell in next(ws.iter_rows(min_row=1, max_row=1)):
+            headers.append(_norm_header_catalog(cell.value))
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not any(clean(v) for v in row):
+                continue
+            rows.append({headers[i] if i < len(headers) else f"col_{i}": row[i] for i in range(len(row))})
+    else:
+        raise ValueError("Formato no permitido. Usa .xlsx o .csv")
+    return rows
+
+def importar_catalogo_masivo(file_storage, actualizar_productos=True):
+    """
+    Carga masiva de catálogo público.
+    Columnas aceptadas: titulo/nombre/producto, descripcion, precio, categoria,
+    destacado, activo, imagen, codigo/sku, stock, stock_min, unidad.
+    Si actualizar_productos=True, también crea/actualiza la tabla productos para que aparezca en Ventas/POS.
+    """
+    rows = _read_rows_excel_csv(file_storage)
+    if not rows:
+        raise ValueError("El archivo está vacío o no tiene filas válidas.")
+    insertados = actualizados = omitidos = productos_sync = 0
+    for r in rows:
+        titulo = up(_catalog_get(r, "titulo", "nombre", "producto", "plato"))
+        if not titulo:
+            omitidos += 1
+            continue
+        categoria = up(_catalog_get(r, "categoria", "categoría", default="PLATOS")) or "PLATOS"
+        descripcion = clean(_catalog_get(r, "descripcion", "descripción", "detalle", "observacion", "observación"))
+        precio = _catalog_to_float(_catalog_get(r, "precio", "precio_venta", "p_venta", default=0))
+        destacado = 1 if str(_catalog_get(r, "destacado", "principal", "promocion", "promoción", default="0")).strip().lower() in ("1", "si", "sí", "true", "x", "ok", "destacado") else 0
+        activo_val = str(_catalog_get(r, "activo", "estado", default="1")).strip().lower()
+        activo = 0 if activo_val in ("0", "no", "inactivo", "baja", "false") else 1
+        imagen = clean(_catalog_get(r, "imagen", "foto", "archivo_imagen", default="")) or "toro_logo.png"
+        # Si el usuario pone una URL o archivo inexistente, no rompe: usa logo.
+        if imagen.startswith("http://") or imagen.startswith("https://"):
+            pass
+        elif imagen and not imagen.startswith("catalogo/") and imagen != "toro_logo.png":
+            local_candidate = os.path.join(STATIC_DIR, imagen)
+            if not os.path.exists(local_candidate):
+                imagen = "toro_logo.png"
+
+        existente = q_one("SELECT id FROM catalogo_publico WHERE UPPER(titulo)=UPPER(?) AND activo=1 ORDER BY id DESC LIMIT 1", (titulo,))
+        if existente:
+            q_exec("UPDATE catalogo_publico SET descripcion=?, precio=?, categoria=?, imagen=?, destacado=?, activo=? WHERE id=?", (descripcion, precio, categoria, imagen, destacado, activo, existente["id"]))
+            actualizados += 1
+        else:
+            q_exec("INSERT INTO catalogo_publico(titulo,descripcion,precio,categoria,imagen,destacado,activo) VALUES(?,?,?,?,?,?,?)", (titulo, descripcion, precio, categoria, imagen, destacado, activo))
+            insertados += 1
+
+        if actualizar_productos:
+            codigo = up(_catalog_get(r, "codigo", "código", "sku", default=""))
+            if not codigo:
+                base = ''.join(ch for ch in titulo if ch.isalnum())[:6] or "PROD"
+                codigo = base + str(abs(hash(titulo)))[-4:]
+            unidad = up(_catalog_get(r, "unidad", default="PLATO")) or "PLATO"
+            stock = _catalog_to_float(_catalog_get(r, "stock", "stock_inicial", default=0))
+            stock_min = _catalog_to_float(_catalog_get(r, "stock_min", "minimo", "mínimo", default=0))
+            prod = q_one("SELECT id FROM productos WHERE UPPER(nombre)=UPPER(?) OR UPPER(codigo)=UPPER(?) LIMIT 1", (titulo, codigo))
+            if prod:
+                q_exec("UPDATE productos SET codigo=?, nombre=?, categoria=?, tipo='VENTA', unidad=?, precio=?, stock=?, stock_min=?, activo=? WHERE id=?", (codigo, titulo, categoria, unidad, precio, stock, stock_min, activo, prod["id"]))
+            else:
+                try:
+                    q_exec("INSERT INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,?)", (codigo, titulo, categoria, "VENTA", unidad, precio, 0, stock, stock_min, activo))
+                except Exception:
+                    # Si el código colisiona, crea uno único por id temporal.
+                    codigo2 = codigo + str(uuid.uuid4().hex[:4]).upper()
+                    q_exec("INSERT INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,?)", (codigo2, titulo, categoria, "VENTA", unidad, precio, 0, stock, stock_min, activo))
+            productos_sync += 1
+    log_event("Carga masiva catálogo", f"Insertados {insertados}, actualizados {actualizados}, omitidos {omitidos}, productos sincronizados {productos_sync}")
+    return insertados, actualizados, omitidos, productos_sync
+
 def qr_svg_data(text):
     try:
         import qrcode
@@ -2629,6 +2801,37 @@ def qr_svg_data(text):
         return "data:image/svg+xml;base64," + base64.b64encode(bio.getvalue()).decode("ascii")
     except Exception:
         return ""
+
+
+@app.route("/plantilla_catalogo")
+@login_required
+def plantilla_catalogo():
+    if not is_admin():
+        flash("Solo administrador.", "error")
+        return redirect(url_for("catalogo_admin"))
+    headers = ["codigo", "titulo", "categoria", "descripcion", "precio", "stock", "stock_min", "unidad", "destacado", "activo", "imagen"]
+    ejemplos = [
+        ["P001", "1/4 POLLO", "PLATOS", "Pollo a la brasa con papas y ensalada", 18, 50, 5, "PLATO", 1, 1, "toro_logo.png"],
+        ["P002", "1/2 POLLO", "PLATOS", "Medio pollo con papas y ensalada", 35, 40, 5, "PLATO", 1, 1, "toro_logo.png"],
+        ["B001", "GASEOSA PERSONAL", "BEBIDAS", "Bebida personal", 4, 100, 20, "UNIDAD", 0, 1, "toro_logo.png"],
+    ]
+    if OPENPYXL:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "catalogo"
+        ws.append(headers)
+        for e in ejemplos:
+            ws.append(e)
+        bio = BytesIO()
+        wb.save(bio)
+        bio.seek(0)
+        return send_file(bio, as_attachment=True, download_name="plantilla_carga_masiva_catalogo.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    out = StringIO()
+    writer = csv.writer(out)
+    writer.writerow(headers)
+    writer.writerows(ejemplos)
+    bio = BytesIO(out.getvalue().encode("utf-8-sig"))
+    return send_file(bio, as_attachment=True, download_name="plantilla_carga_masiva_catalogo.csv", mimetype="text/csv")
 
 @app.route("/catalogo", methods=["GET", "POST"])
 @login_required
@@ -2674,6 +2877,13 @@ def catalogo_admin():
         elif accion == "desactivar_item":
             q_exec("UPDATE catalogo_publico SET activo=0 WHERE id=?", (int(request.form.get("id") or 0),))
             flash("Imagen/producto retirado del catálogo.", "ok")
+        elif accion == "importar_catalogo":
+            try:
+                sync_prod = 1 if request.form.get("sincronizar_productos") else 0
+                ins, upd, omi, sync = importar_catalogo_masivo(request.files.get("archivo_catalogo"), actualizar_productos=bool(sync_prod))
+                flash(f"Carga masiva lista: {ins} nuevos, {upd} actualizados, {omi} omitidos. Productos sincronizados para venta/POS: {sync}.", "ok")
+            except Exception as ex:
+                flash(f"Error en carga masiva de catálogo: {ex}", "error")
         return redirect(url_for("catalogo_admin"))
 
     negocio = get_ctx("negocio_nombre", "EL TORO RESTAURANT GRILL")
@@ -2715,6 +2925,16 @@ def catalogo_admin():
 
     if is_admin():
         admin_block = f"""
+        <div class="panel upload-drop"><div class="section-title">📥 Carga masiva de catálogo</div>
+          <div class="hint-card">Importa Excel/CSV para crear o actualizar productos publicados. Marca sincronizar para que también aparezcan en Ventas y POS rápido.</div>
+          <form method="post" enctype="multipart/form-data" class="clean-grid" style="margin-top:14px">
+            <input type="hidden" name="accion" value="importar_catalogo">
+            <div><label>Archivo Excel/CSV</label><input type="file" name="archivo_catalogo" accept=".xlsx,.xlsm,.csv" required></div>
+            <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" name="sincronizar_productos" checked style="width:auto"> Sincronizar también con Ventas/POS</label>
+            <button class="btn-warning">📥 Importar catálogo</button>
+            <a class="btn" href="{url_for('plantilla_catalogo')}">📄 Descargar plantilla</a>
+          </form>
+        </div>
         <div class="panel upload-drop"><div class="section-title">Cargar imagen de producto</div>
           <div class="hint-card">Haz clic en un producto para cargar sus datos automáticamente y abrir el selector de imagen. También puedes hacer clic en una tarjeta publicada para actualizar datos o cambiar imagen.</div>
           <div class="catalog-tool-row"><input type="search" id="buscar_catalog_picker" placeholder="Buscar producto por nombre, código o categoría" oninput="filterCatalogPicker()"><select id="filtro_catalog_picker" onchange="filterCatalogPicker()"><option value="">Todas las categorías</option><option>PLATOS</option><option>BEBIDAS</option><option>ADICIONALES</option><option>PARRILLAS</option><option>COMBOS</option><option>POSTRES</option><option>INSUMOS</option></select></div>
