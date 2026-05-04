@@ -661,6 +661,84 @@ body{background:radial-gradient(circle at 12% 8%,#ffe0ea 0,#fff4f7 22%,transpare
 @media(max-width:1080px){.app{grid-template-columns:1fr!important}.side{display:none!important}.content{padding:12px!important}.pos-mobile-shell{grid-template-columns:1fr!important}.pos-phone{display:none!important}.pos-list-phone{border-radius:28px!important;min-height:auto;padding:18px}.pos-search-row{grid-template-columns:1fr 54px!important}.pos-search-row select{grid-column:1/-1;order:3}.pos-search-row .pos-gear{display:none}.pos-client-panel{position:static}.pos-client-grid{grid-template-columns:1fr 1fr!important}.pos-list-stack{max-height:none}.mobile-bottom{display:grid!important}}
 @media(max-width:640px){.content{padding:8px!important}.panel{border-radius:22px!important;padding:12px!important}.pos-client-grid{grid-template-columns:1fr!important}.pos-list-phone{padding:12px;border-radius:24px!important}.pos-list-item{grid-template-columns:76px minmax(0,1fr)!important;gap:12px!important}.pos-list-add{grid-column:2;justify-self:start}.pos-list-img{width:72px!important;height:72px!important}.pos-list-info b{font-size:15px!important}.pos-search-row input,.pos-search-row select,.pos-search-row button{min-height:50px!important;height:50px!important}.pos-cat-chips{overflow:auto;flex-wrap:nowrap;padding-bottom:6px}.pos-cat-chips a{white-space:nowrap;padding:10px 14px!important}}
 
+
+/* ===== MODO APP COMERCIAL EL TORO - HEADER + POS PREMIUM ===== */
+body{
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255,59,48,.14), transparent 28%),
+    radial-gradient(circle at 92% 4%, rgba(14,165,233,.14), transparent 30%),
+    linear-gradient(135deg,#f8fafc 0%,#eef4f8 45%,#fef2f2 100%) !important;
+  color:#0f172a!important;
+}
+.main{background:transparent!important;}
+.content{max-width:1720px!important;}
+.commercial-header{
+  position:sticky;top:0;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  margin:0 0 18px 0;padding:14px 18px;
+  background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,245,245,.92))!important;
+  border:1px solid rgba(255,255,255,.95)!important;
+  border-radius:26px!important;
+  box-shadow:0 18px 50px rgba(15,23,42,.10)!important;
+  backdrop-filter:blur(14px);
+}
+.commercial-brand{display:flex;align-items:center;gap:14px;min-width:0;}
+.commercial-logo{
+  width:72px;height:72px;object-fit:contain;border-radius:22px;background:#050505;padding:7px;
+  box-shadow:0 16px 40px rgba(255,23,68,.28)!important;
+}
+.commercial-brand h1{margin:0;color:#0f172a!important;font-size:30px!important;line-height:1!important;font-weight:950!important;letter-spacing:-.8px!important;}
+.commercial-brand h1 span{color:#ff3b30!important;}
+.commercial-brand p{margin:4px 0 0;color:#64748b!important;font-weight:900!important;font-size:13px!important;}
+.commercial-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+.commercial-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:#fff!important;border:1px solid #e2e8f0!important;color:#0f172a!important;font-weight:950!important;box-shadow:0 10px 24px rgba(15,23,42,.06)!important;}
+.commercial-pill.hot{background:linear-gradient(135deg,#ff1744,#ff7a18)!important;color:white!important;border:0!important;}
+.topbar{display:none!important;}
+.panel,.pos-client-panel,.pos-list-phone,.pos-phone{
+  border:1px solid rgba(255,255,255,.95)!important;
+  box-shadow:0 18px 50px rgba(15,23,42,.10)!important;
+}
+.pos-mobile-shell{grid-template-columns:minmax(320px,405px) minmax(0,1fr)!important;gap:22px!important;}
+.pos-phone,.pos-list-phone{
+  background:linear-gradient(180deg,#ffffff,#f8fafc)!important;color:#0f172a!important;border-radius:32px!important;
+}
+.pos-phone-top{color:#334155!important;}
+.pos-category-title{color:#0f172a!important;}
+.pos-category-title:after{background:#cbd5e1!important;}
+.pos-hero-card{
+  background:linear-gradient(135deg,rgba(0,0,0,.20),rgba(127,29,29,.70)),url('/static/toro_logo.png') center/cover no-repeat!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),0 18px 45px rgba(255,23,68,.18)!important;
+}
+.pos-list-item{transition:transform .18s ease, box-shadow .18s ease!important;}
+.pos-list-item:hover{transform:translateY(-2px)!important;box-shadow:0 18px 35px rgba(15,23,42,.12)!important;}
+.pos-list-add,.pos-mini-add{transition:transform .15s ease, filter .15s ease!important;}
+.pos-list-add:hover,.pos-mini-add:hover{transform:scale(1.04)!important;filter:brightness(1.05)!important;}
+.commercial-toast{
+  position:fixed;right:18px;bottom:92px;z-index:9999;display:none;
+  background:linear-gradient(135deg,#0f172a,#111827)!important;color:white!important;
+  padding:14px 18px;border-radius:18px;font-weight:950;box-shadow:0 18px 55px rgba(15,23,42,.34);
+}
+.commercial-toast.show{display:block;animation:toastIn .25s ease both;}
+@keyframes toastIn{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.commercial-fab{
+  position:fixed;right:18px;bottom:22px;z-index:9990;width:64px;height:64px;border-radius:22px;
+  display:grid;place-items:center;background:linear-gradient(135deg,#ff1744,#ff7a18)!important;color:white!important;
+  box-shadow:0 18px 45px rgba(255,23,68,.32)!important;font-size:26px;font-weight:950;
+}
+.mobile-bottom{box-shadow:0 -16px 40px rgba(15,23,42,.14)!important;border-top:1px solid rgba(255,255,255,.72)!important;}
+@media(max-width:1080px){
+  .commercial-header{position:sticky;top:0;margin:0 0 12px;border-radius:22px!important;padding:12px;}
+  .commercial-logo{width:58px;height:58px;border-radius:18px;}
+  .commercial-brand h1{font-size:23px!important;}
+  .commercial-actions{display:none;}
+  .pos-list-phone{background:#fff!important;}
+}
+@media(max-width:640px){
+  .commercial-header{border-radius:18px!important;}
+  .commercial-brand p{font-size:11px!important;}
+  .commercial-fab{width:56px;height:56px;border-radius:18px;bottom:82px;}
+}
+
 </style>
 </head>
 <body>
@@ -710,6 +788,9 @@ body{background:radial-gradient(circle at 12% 8%,#ffe0ea 0,#fff4f7 22%,transpare
         <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="pos-link {{'on' if active=='pos' else ''}}" href="{{url_for('pos_rapido')}}">⚡<br>POS</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒<br>Cierre</a><a href="{{url_for('logout')}}">🚪<br>Salir</a>
         {% endif %}
       </div>
+
+      <div id="commercialToast" class="commercial-toast">✅ Producto agregado / pedido registrado</div>
+      <a class="commercial-fab" href="{{url_for('pos_rapido')}}" title="POS rápido">🛒</a>
     </div>
   </main>
 </div>
@@ -728,6 +809,27 @@ function togglePass(id){const el=document.getElementById('pass_'+id); if(!el) re
     try { const y = parseInt(sessionStorage.getItem(key) || '0', 10); if (y > 0) setTimeout(function(){ window.scrollTo({top:y, behavior:'instant'}); }, 40); } catch(e){}
   });
 })();
+
+(function(){
+  function beep(){
+    try{
+      const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+      const ctx=new C(); const o=ctx.createOscillator(); const g=ctx.createGain();
+      o.type='sine'; o.frequency.value=880; g.gain.value=.045; o.connect(g); g.connect(ctx.destination); o.start();
+      setTimeout(function(){o.stop();ctx.close();},90);
+    }catch(e){}
+  }
+  function toast(){
+    const t=document.getElementById('commercialToast'); if(!t) return;
+    t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},1700);
+  }
+  document.addEventListener('submit',function(e){
+    if(e.target && (e.target.classList.contains('keep-pos-form') || e.target.classList.contains('pos-card-form'))){
+      beep(); toast();
+    }
+  },true);
+})();
+
 </script>
 </body>
 </html>
