@@ -376,6 +376,8 @@ def init_db():
         # MODO PRUEBA SIN RECETAS: por defecto NO descuenta insumos de recetas.
         # Se puede activar/desactivar desde la pestaña Recetas.
         "recetas_activas": "0",
+        # SUCURSAL ABIERTA/CERRADA para modo prueba real. 0 = abierta, 1 = cerrada.
+        "sucursal_cerrada": "0",
     }.items():
         if not q_one("SELECT clave FROM contexto WHERE clave=?", (k,)):
             q_exec("INSERT INTO contexto(clave,valor) VALUES(?,?)", (k, v))
@@ -1404,6 +1406,11 @@ body{
 @media(max-width:900px){
   .side .brand.brand-el-toro.next-level-brand{display:none!important;}
 }
+
+/* ===== SIGUIENTE NIVEL TOTAL: SUCURSAL ABIERTA/CERRADA + PRUEBAS ===== */
+.locked-sucursal-card .badge{font-size:14px!important;padding:8px 14px!important;margin-bottom:8px!important;}
+.flash.error{border-radius:20px!important;background:#fff1f2!important;border:1px solid #fecaca!important;color:#991b1b!important;font-weight:950!important;}
+
 </style>
 </head>
 <body>
@@ -1557,6 +1564,21 @@ def set_ctx(k, v):
         q_exec("UPDATE contexto SET valor=? WHERE clave=?", (str(v), k))
     else:
         q_exec("INSERT INTO contexto(clave,valor) VALUES(?,?)", (k, str(v)))
+
+def sucursal_abierta():
+    """Estado operativo de Sucursal Principal.
+    True = permite ventas/POS/pedidos/cobros. False = bloquea operación para pruebas/cierre.
+    """
+    return str(get_ctx("sucursal_cerrada", "0")).strip() != "1"
+
+def estado_sucursal_label():
+    return "ABIERTA" if sucursal_abierta() else "CERRADA"
+
+def bloquear_si_sucursal_cerrada(destino="ventas"):
+    if not sucursal_abierta():
+        flash("Sucursal Principal está CERRADA. Abre la sucursal desde Usuarios/Admin o Cierre para continuar con ventas.", "error")
+        return redirect(url_for(destino))
+    return None
 
 def tabs():
     # Admin trabaja con panel vertical fijo; no necesita panel horizontal.
@@ -1716,6 +1738,8 @@ def agregar_item_a_pedido(pedido_id, producto_id, cantidad=1):
     return True, 'Ítem agregado al pedido inicial.'
 
 def crear_venta_desde_pedido(pedido_id, metodo_pago="EFECTIVO"):
+    if not sucursal_abierta():
+        return None
     p = q_one("SELECT * FROM pedidos WHERE id=?", (pedido_id,))
     if not p:
         return None
@@ -1805,7 +1829,7 @@ def dashboard():
       <div class="actions"><button class="btn-primary">Guardar contexto</button><a class="btn" href="{url_for('dashboard')}">Recargar panel</a><a class="btn btn-success" href="{url_for('ventas')}">Ir a ventas</a></div>
       <div class="sku-help">Usuario y rol se controlan internamente por login, por eso ya no se muestran en el panel.</div>
     </form>
-    <div class="actions" style="margin:12px 0"><h2 style="color:#047857;margin:0">🟢 DÍA ABIERTO: {f}</h2><a class="btn btn-danger" href="{url_for('cierre')}">🔒 Ir a cierre</a><a class="btn" href="{url_for('reportes',fi=f,ff=f)}">Ver reporte</a></div>
+    <div class="actions" style="margin:12px 0"><h2 style="color:#047857;margin:0">🟢 DÍA ABIERTO: {f}</h2><span class="badge {'ok' if sucursal_abierta() else 'off'}">Sucursal {estado_sucursal_label()}</span><a class="btn btn-danger" href="{url_for('cierre')}">🔒 Ir a cierre</a><a class="btn" href="{url_for('reportes',fi=f,ff=f)}">Ver reporte</a></div>
     <div class="panel"><div class="section-title">📊 Indicadores de hoy</div><div class="kpis"><div class="kpi dash-kpi"><h3>💰 Ventas hoy</h3><b>{money(ventas_hoy['t'])}</b><p class="muted">Pedidos pagados: {ventas_hoy['c']}</p></div><div class="kpi dash-kpi"><h3>🧾 Pedidos activos</h3><b>{pedidos_act}</b><p class="muted">Pendientes/preparación/listos</p></div><div class="kpi dash-kpi"><h3>🍽️ Mesas ocupadas</h3><b class="red">{mesas}</b><p class="muted">Salón en atención</p></div><div class="kpi dash-kpi"><h3>⚠️ Stock bajo</h3><b class="red">{stock_bajo}</b><p class="muted">Productos por reponer</p></div></div></div>
     <div class="ops-strip"><div class="hint-card">✅ Ventas: salón, recojo o delivery.</div><div class="hint-card">✅ Pedidos: cocina, estados y quitar ítems.</div><div class="hint-card">✅ Indicadores: ventas, ticket y top productos.</div></div>'''
     return page(html, "dashboard")
@@ -1881,6 +1905,9 @@ def cierre():
 def ventas():
     if request.method == "POST":
         accion = request.form.get("accion", "guardar_pedido")
+        if accion != "importar_productos" and not sucursal_abierta():
+            flash("Sucursal Principal está CERRADA. No se pueden registrar ventas, pedidos ni cobros.", "error")
+            return redirect(url_for("ventas"))
         if accion == "importar_productos" and "archivo" in request.files:
             if not is_admin():
                 flash("Carga de inicio de día restringida: solo administrador.", "error")
@@ -1968,7 +1995,9 @@ def ventas():
     load_day_html = ""
     if is_admin():
         load_day_html = f"""<div class='panel load-day-panel'><div class='section-title'>📥 Carga de inicio de día</div><div class='hint-card'>Solo ADMIN: importa Excel/CSV para actualizar productos, precios y stock antes de iniciar ventas.</div><br><form method='post' enctype='multipart/form-data' class='actions'><input type='hidden' name='accion' value='importar_productos'><input type='file' name='archivo' accept='.xlsx,.csv' style='max-width:420px'><button class='btn-warning'>📥 Cargar día / importar Excel productos</button><a class='btn' href='{url_for('plantilla_inventario')}'>📄 Descargar plantilla</a></form></div>"""
+    estado_operativo_html = "" if sucursal_abierta() else "<div class='flash error'>🔒 Sucursal Principal CERRADA: abre la sucursal desde Usuarios/Admin para iniciar pruebas.</div>"
     html = f"""
+    {estado_operativo_html}
     <div class='panel'><div class='section-title'>➕ Agregar producto a pedido inicial</div><div class='hint-card'>Busca el pedido abierto del cliente y agrega gaseosa, pollo, pizza u otro producto. El importe sube en el mismo pedido y el detalle queda disgregado por ítem.</div><form method='post' class='clean-grid'><input type='hidden' name='accion' value='agregar_a_pedido'><div><label>Pedido inicial / cliente</label><select name='pedido_existente_id' required>{opts_ped}</select></div><div><label>Categoría</label><select class='venta-cat-filter' data-target='producto_add'>{cat_venta_opts}</select></div><div><label>Producto a agregar</label><select id='producto_add' name='producto_id' class='venta-product-select' required>{opts_prod}</select></div><div><label>Cantidad</label><input name='cantidad' type='number' min='1' step='1' value='1'></div><button class='btn-success'>Agregar al mismo pedido</button></form></div>
     <div class='panel'><div class='section-title'>🧾 Nueva venta / pedido</div><br><form method='post'><input type='hidden' name='accion' value='guardar_pedido'><datalist id='clientes_list'>{cliente_options}</datalist><div class='clean-grid-4'><div><label>Mesa</label><select name='mesa'><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option><option>MESA 5</option><option>MESA 6</option></select></div><div><label>Tipo servicio</label><select name='servicio'><option>SALÓN</option><option>DELIVERY</option><option>RECOJO</option></select></div><div><label>Cliente</label><input name='cliente' list='clientes_list' placeholder='Buscar o escribir cliente'></div><div><label>Teléfono</label><input name='telefono' placeholder='Celular'></div><div><label>Dirección</label><input name='direccion' placeholder='Solo para delivery'></div><div><label>Referencia</label><input name='referencia' placeholder='Referencia'></div><div><label>Categoría</label><select class='venta-cat-filter' data-target='producto_new' name='categoria_venta'>{cat_venta_opts}</select></div><div><label>Producto</label><select id='producto_new' name='producto_id' class='venta-product-select' required>{opts_prod}</select></div><div><label>Cantidad</label><input name='cantidad' type='number' min='1' step='1' value='1'></div><div><label>Método pago</label><select name='metodo_pago'><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div><div><label>Descuento</label><input name='descuento' type='number' min='0' step='1' value='0'></div></div><br><div class='actions'><button class='primary'>Guardar pedido</button><button type='reset'>Limpiar venta</button><a class='btn' href='{url_for('inventario') if is_admin() else url_for('catalogo_admin')}'>Nuevo producto</a><a class='btn' href='{url_for('pedidos')}'>Ver pedidos</a></div></form></div>
     <div id="crm_alerta" class="hint-card" style="display:none;margin-top:12px;background:#fff7ed;border-color:#fed7aa;color:#9a3412;font-weight:900"></div>
@@ -2036,6 +2065,9 @@ def ventas():
 @login_required
 def pos_rapido():
     if request.method == "POST":
+        if not sucursal_abierta():
+            flash("Sucursal Principal está CERRADA. No se puede usar POS rápido.", "error")
+            return redirect(url_for("pos_rapido"))
         producto_id = int(request.form.get("producto_id") or 0)
         cantidad = int(float(request.form.get("cantidad") or 1))
         prod = q_one("SELECT * FROM productos WHERE id=? AND activo=1", (producto_id,))
@@ -3133,6 +3165,14 @@ def admin():
         elif accion == "sembrar":
             init_db()
             flash("Demo sembrada / verificada.", "ok")
+        elif accion == "cerrar_sucursal":
+            set_ctx("sucursal_cerrada", "1")
+            log_event("SUCURSAL CERRADA", "Sucursal Principal cerrada desde Admin")
+            flash("Sucursal Principal cerrada. Se bloquean ventas, POS, pedidos y cobros.", "ok")
+        elif accion == "abrir_sucursal":
+            set_ctx("sucursal_cerrada", "0")
+            log_event("SUCURSAL ABIERTA", "Sucursal Principal abierta desde Admin")
+            flash("Sucursal Principal abierta. Ya puedes entrar a modo prueba.", "ok")
         return redirect(url_for("admin"))
     sucursales = q_all("SELECT * FROM sucursales WHERE nombre='Sucursal Principal' ORDER BY nombre")
     usuarios = q_all("SELECT u.id,u.usuario,u.nombre,u.rol,u.activo,u.clave_plain,COALESCE(s.nombre,'Sucursal Principal') sucursal FROM usuarios u LEFT JOIN sucursales s ON s.id=u.sucursal_id ORDER BY u.usuario")
@@ -3157,6 +3197,11 @@ def admin():
           <td><div class='pass-box'><input id='pass_{u['id']}' type='password' value='{clave_visible}' readonly><button type='button' onclick='togglePass({u['id']})'>👁</button></div></td>
           <td>{'ACTIVO' if int(u['activo'] or 0)==1 else 'INACTIVO'}</td><td>{accion}</td>
         </tr>"""
+    sucursal_estado = estado_sucursal_label()
+    sucursal_badge = "ok" if sucursal_abierta() else "off"
+    sucursal_boton = "cerrar_sucursal" if sucursal_abierta() else "abrir_sucursal"
+    sucursal_boton_txt = "🔒 Cerrar sucursal" if sucursal_abierta() else "🔓 Abrir sucursal"
+    sucursal_boton_cls = "btn-danger" if sucursal_abierta() else "btn-success"
     html = f"""
     <div class="role-note">✅ Modo actual: Sucursal Principal fija. Usuarios, ventas, pedidos, caja y cierres trabajan sobre esta sede.</div>
     <div class="admin-super-grid">
@@ -3172,8 +3217,9 @@ def admin():
         </form>
       </div>
       <div class="panel"><div class="section-title">🏬 Sucursal principal</div>
-        <div class="locked-sucursal-card">🔒 Por ahora el sistema queda fijo en <b>Sucursal Principal</b>. La estructura multi-sucursal se conserva para activar locales después.</div>
-        <br><form method="post" class="actions"><button name="accion" value="sembrar" class="btn-orange">Sembrar demo</button></form>
+        <div class="locked-sucursal-card">Estado actual: <span class="badge {sucursal_badge}">{sucursal_estado}</span><br>Por ahora el sistema queda fijo en <b>Sucursal Principal</b>. La estructura multi-sucursal se conserva para activar locales después.</div>
+        <br><form method="post" class="actions"><button name="accion" value="{sucursal_boton}" class="{sucursal_boton_cls}" onclick="return confirm('¿Cambiar estado de Sucursal Principal?')">{sucursal_boton_txt}</button><button name="accion" value="sembrar" class="btn-orange">Sembrar demo</button><a class="btn" href="{url_for('ventas')}">Ir a pruebas de venta</a></form>
+        <div class="keep-position-note">Cuando está CERRADA se bloquean ventas, POS rápido, pedidos y cobros. Cuando está ABIERTA el sistema queda listo para pruebas.</div>
       </div>
     </div>
     <div class="food-card-grid">
@@ -3228,6 +3274,19 @@ def api_live_pedidos():
     else:
         rows = q_all("SELECT id,codigo,fecha,hora,cliente,servicio,estado,total,pagado FROM pedidos WHERE COALESCE(sucursal_id,1)=? ORDER BY id DESC LIMIT 50", (sucid,))
     return jsonify({'ok': True, 'pedidos': [dict(r) for r in rows]})
+
+
+@app.route('/api/productos/categoria')
+@login_required
+def api_productos_categoria():
+    cat = clean(request.args.get('categoria'))
+    params = []
+    where = "WHERE activo=1"
+    if cat and cat.upper() not in ('TODAS', 'TODOS', 'TODAS LAS CATEGORÍAS', 'TODAS LAS CATEGORIAS'):
+        where += " AND UPPER(categoria)=UPPER(?)"
+        params.append(cat)
+    rows = q_all(f"SELECT id,codigo,nombre,categoria,precio,stock FROM productos {where} ORDER BY categoria,nombre", tuple(params))
+    return jsonify({'ok': True, 'productos': [dict(r) for r in rows]})
 
 @app.route("/logs")
 @login_required
