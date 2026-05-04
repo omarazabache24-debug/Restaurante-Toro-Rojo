@@ -679,6 +679,18 @@ input,select,textarea{background:#0b1020!important;color:#fff!important;border:1
 .pos-food-list{grid-template-columns:repeat(auto-fit,minmax(310px,1fr))!important;gap:14px!important}.pos-card-form{margin:0!important}.pos-product{min-height:126px!important;padding:14px!important;border-radius:22px!important;background:#111827!important;border:1px solid rgba(255,255,255,.10)!important;color:#fff!important;display:grid!important;grid-template-columns:96px 1fr auto!important;grid-template-rows:auto auto!important;align-items:center!important;column-gap:14px!important;text-align:left!important;box-shadow:0 16px 34px rgba(0,0,0,.25)!important}.pos-product:hover{transform:translateY(-2px);box-shadow:0 22px 44px rgba(255,23,68,.22)!important}.pos-food-img,.pos-food-placeholder{grid-row:1/3;width:96px!important;height:86px!important;border-radius:18px!important;object-fit:cover!important;background:#fff!important;color:#111827!important;display:grid!important;place-items:center!important;font-size:34px!important}.pos-product b{font-size:18px!important;color:#fff!important;line-height:1.15!important}.pos-product span{grid-column:2;color:#ffd1d8!important;font-size:16px!important;font-weight:1000!important}.pos-product small{grid-column:2;color:#94a3b8!important;font-size:12px!important}.pos-product:after{content:'Add Cart';grid-column:3;grid-row:1/3;background:#ff1744;color:#fff;border-radius:999px;padding:8px 12px;font-size:11px;font-weight:1000}
 @media(max-width:900px){.side .brand.brand-logo-panel{min-height:150px!important}.side .brand-logo-img{width:116px!important}.pos-app-shell{padding:14px;border-radius:26px}.pos-app-header img{width:64px;height:64px}.pos-app-header h2{font-size:26px}.pos-client-grid,.pos-search-bar{grid-template-columns:1fr!important}.pos-food-list{grid-template-columns:1fr!important}.pos-product{grid-template-columns:86px 1fr!important}.pos-product:after{display:none}.content{background:linear-gradient(135deg,#09090f,#121827)!important}.mobile-bottom{background:#050508!important;border-top:1px solid rgba(255,255,255,.10)!important}.mobile-bottom a{background:#111827!important;color:#fff!important}.mobile-bottom a.on{background:linear-gradient(135deg,#ff1744,#ff6b35)!important}}
 
+
+/* ================= POS RAPIDO NIVEL APP OSCURA ================= */
+body{background:radial-gradient(circle at 16% 0%,rgba(255,51,102,.20),transparent 28%),radial-gradient(circle at 90% 8%,rgba(80,190,255,.18),transparent 30%),linear-gradient(135deg,#07070d 0%,#111827 45%,#250612 100%)!important;color:#f8fafc!important;}
+.content{background:transparent!important;}
+.panel,.kpi,.pedido-card{background:rgba(11,13,23,.88)!important;color:#f8fafc!important;border:1px solid rgba(255,255,255,.10)!important;box-shadow:0 22px 70px rgba(0,0,0,.22)!important;}
+.panel label,.panel .section-title,.panel .box-title{color:#fff!important;}
+input,select,textarea{background:#101522!important;color:#f8fafc!important;border:1px solid rgba(255,255,255,.18)!important;border-radius:14px!important;}
+input::placeholder,textarea::placeholder{color:#94a3b8!important;}.table-wrap{background:#0b1020!important;border-color:rgba(255,255,255,.10)!important;}td{background:#101522!important;color:#f8fafc!important;border-color:rgba(255,255,255,.08)!important;}th{background:#050914!important;color:#fff!important;border-color:rgba(255,255,255,.08)!important;}
+.pos-app-shell{min-height:calc(100vh - 34px);padding:22px;border-radius:34px;background:radial-gradient(circle at 15% 8%,rgba(255,71,87,.18),transparent 35%),radial-gradient(circle at 90% 0%,rgba(59,130,246,.18),transparent 32%),linear-gradient(135deg,#07070d 0%,#111827 50%,#220713 100%)!important;box-shadow:0 30px 90px rgba(0,0,0,.35);}
+.pos-app-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;color:white;}.pos-app-header img{width:88px;height:88px;object-fit:contain;border-radius:22px;background:#020205;padding:6px;box-shadow:0 15px 40px rgba(255,23,68,.24)}.pos-app-header h2{font-size:32px;margin:0;color:#fff}.pos-app-header p{margin:4px 0 0;color:#cbd5e1;font-weight:800}.pos-phone-layout{display:grid;grid-template-columns:420px minmax(0,1fr);gap:28px;align-items:start}.pos-phone{background:#0b0c17;border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:20px;box-shadow:0 28px 80px rgba(0,0,0,.45);overflow:hidden}.pos-phone-left{max-width:430px}.phone-top{display:flex;justify-content:space-between;align-items:center;color:#94a3b8;font-size:22px;margin-bottom:14px}.pos-hero-food{height:170px;border-radius:22px;background:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,.42)),url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80');background-size:cover;background-position:center;display:flex;align-items:end;padding:20px;margin-bottom:22px}.pos-hero-food h1{font-size:30px;line-height:1.02;margin:0;color:#fff;text-shadow:0 4px 16px #000}.pos-category-title{display:flex;align-items:center;gap:14px;color:#fff;font-size:16px;font-weight:950;margin:18px 0 12px}.pos-category-title:after{content:'';height:1px;background:rgba(255,255,255,.22);flex:1}.pos-mini-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.pos-mini-card{background:transparent;border:0;color:#fff;padding:0;text-align:left;box-shadow:none!important;width:100%;}.pos-mini-img{height:86px;border-radius:13px;background:#fff;display:grid;place-items:center;overflow:hidden;margin-bottom:7px}.pos-mini-img img{width:100%;height:100%;object-fit:cover}.pos-mini-img .pos-food-placeholder{font-size:38px;background:#fff;width:100%;height:100%;display:grid;place-items:center}.pos-mini-card b{display:block;font-size:12px;color:#fff;line-height:1.15}.pos-mini-card span{font-size:11px;color:#e5e7eb;display:block;margin:3px 0}.pos-mini-card small{display:inline-block;background:#ff334b;color:#fff;border-radius:999px;padding:4px 9px;font-size:9px;font-weight:950}.pos-client-panel-dark{margin-bottom:18px;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:24px!important;padding:16px!important;}.pos-client-grid{display:grid;grid-template-columns:1.4fr .8fr .7fr .8fr .8fr;gap:12px;align-items:end}.pos-client-grid label{color:#fff!important;font-size:13px}.pos-search-bar{display:grid;grid-template-columns:minmax(260px,1fr) 210px auto auto;gap:12px;align-items:center;margin:0 0 16px}.pos-search-bar button,.pos-search-bar a{border-radius:999px!important}.pos-search-bar a{background:#1f2937;color:#fff;padding:12px 16px;font-weight:950;text-align:center}.category-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.category-bar a{border:1px solid rgba(255,255,255,.12);background:#151827;color:#fff;border-radius:999px;padding:10px 16px;font-weight:950}.category-bar a.on,.category-bar a:hover{background:#ff334b;color:#fff;border-color:#ff334b}.pos-list-card{display:grid;grid-template-columns:104px 1fr auto;gap:14px;align-items:center;background:#151827;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:12px;margin-bottom:13px;color:#fff;width:100%;box-shadow:none!important;text-align:left}.pos-list-card:hover{transform:translateY(-2px);box-shadow:0 18px 45px rgba(255,51,75,.14)!important}.pos-list-img{height:88px;border-radius:14px;background:#fff;overflow:hidden;display:grid;place-items:center}.pos-list-img img{width:100%;height:100%;object-fit:cover}.pos-list-card b{font-size:16px;color:#fff}.pos-list-card p{margin:5px 0 7px;color:#7f8797;font-size:12px;line-height:1.25}.pos-list-card span{font-weight:950;color:#fff}.add-pill{background:#ff334b;color:#fff;border-radius:999px;padding:8px 13px;font-size:11px;font-weight:950;white-space:nowrap}.heart{position:absolute;margin-left:78px;margin-top:-6px;background:white;color:#ff334b;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:12px}.pos-list-form{margin:0}.pos-list-form button{border:0}.mobile-active-title{color:#fff!important}
+@media(max-width:1100px){.pos-phone-layout{grid-template-columns:1fr}.pos-phone-left{max-width:none}.pos-client-grid,.pos-search-bar{grid-template-columns:1fr}.pos-mini-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.pos-app-shell{padding:12px;border-radius:0}.pos-app-header h2{font-size:24px}.pos-app-header img{width:68px;height:68px}.pos-phone{border-radius:22px;padding:14px}.pos-mini-grid{grid-template-columns:repeat(3,1fr);gap:8px}.pos-list-card{grid-template-columns:82px 1fr;}.pos-list-card .add-pill{grid-column:1/-1;text-align:center}.pos-hero-food{height:140px}.pos-hero-food h1{font-size:25px}}
 </style>
 </head>
 <body>
@@ -1133,32 +1145,37 @@ def pos_rapido():
     clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY nombre LIMIT 250")
     cliente_options = "".join(f'<option value="{c["nombre"]}">{c["telefono"]} {c["direccion"]}</option>' for c in clientes)
     cat_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}" {"selected" if cat_filtro==c["categoria"] else ""}>{c["categoria"]}</option>' for c in categorias)
-    cards = ""
-    for p in productos[:80]:
+    mini_cards = ""
+    list_cards = ""
+    for idx, p in enumerate(productos[:80]):
         img_row = q_one("SELECT imagen FROM catalogo_publico WHERE UPPER(titulo)=UPPER(?) AND activo=1 ORDER BY destacado DESC,id DESC LIMIT 1", (p['nombre'],))
         if img_row and img_row['imagen'] and img_row['imagen'] != 'toro_logo.png':
-            img_html = f"<img class='pos-food-img' src='{url_for('static', filename=img_row['imagen'])}' alt='{p['nombre']}'>"
+            img_src = url_for('static', filename=img_row['imagen'])
+            img_tag = f"<img src='{img_src}' alt='{p['nombre']}'>"
         else:
-            img_html = "<div class='pos-food-placeholder'>🍽️</div>"
-        cards += f"""<form method='post' class='pos-card-form keep-pos-form'>
+            img_tag = "<div class='pos-food-placeholder'>🍽️</div>"
+        hidden = f"""
           <input type='hidden' name='producto_id' value='{p['id']}'>
           <input type='hidden' name='cantidad' value='1'>
           <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'>
           <input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
           <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''>
           <input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'>
-          <input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
-          <button class='pos-product' type='submit'>{img_html}<b>{p['nombre']}</b><span>{money(p['precio'])}</span><small>SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small></button>
-        </form>"""
-    if not cards:
-        cards = "<div class='hint-card'>No hay productos para la búsqueda.</div>"
+          <input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>"""
+        if idx < 6:
+            mini_cards += f"""<form method='post' class='pos-card-form keep-pos-form'>{hidden}<button class='pos-mini-card' type='submit'><div class='pos-mini-img'>{img_tag}</div><b>{p['nombre']}</b><span>{money(p['precio'])}</span><small>Add Cart</small></button></form>"""
+        list_cards += f"""<form method='post' class='pos-list-form keep-pos-form'>{hidden}<button class='pos-list-card' type='submit'><div class='pos-list-img'><span class='heart'>♥</span>{img_tag}</div><div><b>{p['nombre']}</b><p>{p['categoria'] or 'Producto'} · SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</p><span>{money(p['precio'])}</span></div><em class='add-pill'>Add Cart</em></button></form>"""
+    if not mini_cards:
+        mini_cards = "<div class='hint-card'>No hay productos para mostrar.</div>"
+    if not list_cards:
+        list_cards = "<div class='hint-card'>No hay productos para la búsqueda.</div>"
     cat_links = '<div class="category-bar"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('pos_rapido') + '">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("pos_rapido", categoria=c["categoria"])}">{c["categoria"]}</a>' for c in categorias) + '</div>'
     html = f"""
     <div class="mobile-active-title">⚡ POS rápido</div>
     <div class="pos-app-shell">
       <div class="pos-app-header">
-        <img src="{url_for('static', filename='toro_logo.png')}" alt="EL TORO">
-        <div><h2>POS rápido</h2><p>Toca producto y agrega venta al instante</p></div>
+        <div style="display:flex;align-items:center;gap:14px"><img src="{url_for('static', filename='toro_logo.png')}" alt="EL TORO"><div><h2>POS rápido</h2><p>Diseño oscuro tipo app: busca, toca y vende al instante</p></div></div>
+        <div style="font-size:26px;color:#94a3b8">☰</div>
       </div>
       <div class="pos-client-panel-dark">
         <datalist id="clientes_pos_list">{cliente_options}</datalist>
@@ -1170,13 +1187,26 @@ def pos_rapido():
           <div><label>Pago</label><select id="pos_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div>
         </form>
       </div>
-      <form method="get" action="{url_for('pos_rapido')}" class="pos-search-bar">
-        <input name="buscar" value="{buscar_prod}" placeholder="Buscar comida, bebida o código">
-        <select name="categoria" onchange="this.form.submit()">{cat_opts}</select>
-        <button>🔎 Buscar</button><a href="{url_for('pos_rapido')}">Limpiar</a>
-      </form>
-      {cat_links}
-      <div class="pos-only-grid pos-food-list">{cards}</div>
+      <div class="pos-phone-layout">
+        <div class="pos-phone pos-phone-left">
+          <div class="phone-top"><span>←</span><span>☰</span></div>
+          <div class="pos-hero-food"><h1>Different<br>Kind of Food</h1></div>
+          <div class="pos-category-title">Food Category</div>
+          <div class="pos-mini-grid">{mini_cards[:999999]}</div>
+          <div class="pos-category-title">Food Category</div>
+          <div class="pos-mini-grid">{mini_cards}</div>
+        </div>
+        <div class="pos-phone">
+          <div class="phone-top"><span>←</span><span>☰</span></div>
+          <form method="get" action="{url_for('pos_rapido')}" class="pos-search-bar">
+            <input name="buscar" value="{buscar_prod}" placeholder="Search From Here">
+            <select name="categoria" onchange="this.form.submit()">{cat_opts}</select>
+            <button>🔎</button><a href="{url_for('pos_rapido')}">⚙️</a>
+          </form>
+          {cat_links}
+          <div class="pos-food-list">{list_cards}</div>
+        </div>
+      </div>
     </div>
     <script>
       function syncPOSClient(){{
