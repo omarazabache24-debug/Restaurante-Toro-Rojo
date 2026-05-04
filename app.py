@@ -579,6 +579,11 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
 .topbar{position:sticky!important;top:0!important;z-index:120!important}.side{position:fixed!important;top:0!important;left:0!important;height:100vh!important;overflow:auto!important}.main{margin-left:250px!important}.tabs{position:relative!important;top:auto!important}.admin-mode .tabs{display:none!important}.content{background:radial-gradient(circle at 90% 0%,rgba(255,0,34,.12),transparent 30%),linear-gradient(180deg,#eef2f7,#f8fafc)!important}.panel{overflow:hidden}.btn-danger,.btn-success,.btn-primary,.primary,button.primary{background:linear-gradient(135deg,#ff002b,#ff5a3d)!important;color:#fff!important}.btn-warning{background:linear-gradient(135deg,#ff7a00,#ffb000)!important;color:#fff!important}.pedido-resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}.pedido-card{border:1px solid #fee2e2;border-radius:18px;padding:14px;background:linear-gradient(180deg,#fff,#fff7f7)}.pedido-card b{font-size:18px}.detalle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.item-chip{border:1px solid #e2e8f0;border-radius:16px;padding:12px;background:#fff;box-shadow:0 8px 18px rgba(15,23,42,.06)}.item-chip b{display:block;font-size:16px}.catalog-pick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}.catalog-pick{border:1px solid #ffb4bd;border-radius:16px;padding:12px;background:#fff6f7;cursor:pointer;font-weight:900}.catalog-pick:hover{background:#ffe5e8}.inventory-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}.inventory-tab{padding:12px 16px;border-radius:16px;background:#f1f5f9;font-weight:950}.inventory-tab.active{background:linear-gradient(135deg,#ff002b,#ff5a3d);color:white}.admin-menu-note{padding:12px;border-radius:14px;background:#fff1f2;color:#7f1d1d;font-weight:900}.user-cierre-simple .kpi:nth-child(1),.user-cierre-simple .kpi:nth-child(4){display:none!important}.catalog-admin-only{display:block}.seller-mode .catalog-admin-only{display:none!important}.seller-mode .admin-only{display:none!important}.mobile-active-title{display:none}
 @media(max-width:900px){.side{display:none!important}.main{margin-left:0!important}.topbar{position:sticky!important;top:0!important}.mobile-active-title{display:block!important;background:#11131d;color:#fff;border:1px solid #2b2f3d;border-radius:18px;padding:12px 14px;margin-bottom:12px;font-weight:950;text-align:center}.content{padding-bottom:86px!important}.panel{max-width:100%!important}.clean-grid,.pedido-actions,.pedido-actions-2,.clean-grid-4{display:grid!important;grid-template-columns:1fr!important}.pedido-resumen,.detalle-grid{grid-template-columns:1fr!important}.table-wrap{border-radius:20px!important;overflow:auto!important}.table-wrap table{min-width:620px!important}.login-page{min-height:100dvh!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:14px!important}.login-card{margin:0 auto!important;transform:none!important}.login-logo-img{display:block!important;margin:0 auto 12px!important}.catalog-hero{grid-template-columns:1fr!important}.catalog-phone{max-width:100%!important}.mobile-bottom a.on{background:linear-gradient(135deg,#ff002b,#ff5a3d)!important;color:#fff!important}}
 
+
+/* ===== AJUSTES V10: catálogo, POS por categorías y móvil admin ===== */
+.pos-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(175px,1fr))!important;gap:16px!important;align-items:stretch!important}.pos-category-title{grid-column:1/-1;font-size:22px;font-weight:950;margin:16px 0 4px;padding:10px 14px;border-radius:18px;background:linear-gradient(135deg,#05050a,#2a0008);color:#fff;border-left:6px solid #ff002b}.pos-product b{white-space:normal!important;line-height:1.12!important}.pos-product span{font-size:20px!important;color:#fff!important;background:#ff002b;border-radius:999px;padding:5px 10px;display:inline-block;width:max-content;margin-top:6px}.catalog-hero{display:grid!important;grid-template-columns:minmax(320px,1fr) minmax(360px,560px)!important;gap:22px!important;align-items:center!important;min-height:auto!important;margin-bottom:22px}.catalog-phone{width:100%!important;min-height:auto!important}.phone-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}.phone-food{min-width:0!important}.phone-food img{width:100%!important;height:110px!important;object-fit:cover!important;border-radius:14px!important}.phone-food b{display:block!important;white-space:normal!important;line-height:1.12!important}.phone-food small{font-size:16px!important;color:#fff!important;background:#ff002b;border-radius:999px;padding:3px 8px;display:inline-block;margin-top:5px}.catalog-card{background:#10121b!important;color:#fff!important;border-radius:22px!important;padding-bottom:14px!important}.catalog-card img{height:180px!important;object-fit:cover!important}.catalog-card h3{font-size:17px!important;line-height:1.12!important;margin:10px 12px 4px!important;color:#fff!important}.catalog-card p{margin:0 12px 8px!important;color:#cbd5e1!important;white-space:normal!important}.price-pill{margin:0 12px!important;background:#ff002b!important;color:#fff!important;font-size:17px!important;font-weight:950!important;border-radius:999px!important;padding:7px 12px!important}.catalog-admin-layout{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(420px,.9fr)!important;gap:22px!important;align-items:start!important}.catalog-admin-layout .panel{min-width:0!important}.mobile-admin-tabs{display:none}.user-pass-admin{margin-top:18px}.load-day-panel{margin-top:22px!important}
+@media(max-width:900px){.mobile-admin-tabs{display:flex!important;gap:8px;overflow-x:auto;position:sticky;top:0;z-index:300;background:rgba(3,3,7,.96);padding:8px 8px 10px;border-bottom:1px solid rgba(255,255,255,.10)}.mobile-admin-tabs a{flex:0 0 auto;color:#fff;background:#1b1b22;border-radius:14px;padding:10px 12px;font-weight:950;font-size:12px}.mobile-admin-tabs a.on{background:linear-gradient(135deg,#ff002b,#ff5a45)}.catalog-hero,.catalog-admin-layout{grid-template-columns:1fr!important}.catalog-hero{gap:14px!important}.phone-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}.catalog-card img{height:120px!important}.catalog-card h3{font-size:14px!important}.price-pill{font-size:14px!important}.load-day-panel{display:none!important}.pos-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.pos-category-title{font-size:18px!important}.pos-product span{font-size:15px!important}.admin-mode .mobile-bottom{display:grid!important}}
+
 </style>
 </head>
 <body>
@@ -615,6 +620,23 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
       </div>{% endif %}
       {% with msgs=get_flashed_messages(with_categories=true) %}{% for cat,msg in msgs %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}{% endwith %}
       {{content|safe}}
+      {% if session.get('rol') == 'ADMIN' %}
+      <div class="mobile-admin-tabs">
+        <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊 Panel</a>
+        <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾 Venta</a>
+        <a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚 Pedido</a>
+        <a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️ Catálogo</a>
+        <a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒 Cierre</a>
+        <a class="{{'on' if active=='inventario' else ''}}" href="{{url_for('inventario')}}">📦 Inventario</a>
+        <a class="{{'on' if active=='recetas' else ''}}" href="{{url_for('recetas')}}">🍽️ Recetas</a>
+        <a class="{{'on' if active=='caja' else ''}}" href="{{url_for('caja')}}">💵 Caja</a>
+        <a class="{{'on' if active=='delivery' else ''}}" href="{{url_for('delivery')}}">🛵 Delivery</a>
+        <a class="{{'on' if active=='indicadores' else ''}}" href="{{url_for('indicadores')}}">📈 Indicadores</a>
+        <a class="{{'on' if active=='reportes' else ''}}" href="{{url_for('reportes')}}">📄 Reportes</a>
+        <a class="{{'on' if active=='admin' else ''}}" href="{{url_for('admin')}}">⚙️ Admin</a>
+        <a href="{{url_for('logout')}}">🚪 Salir</a>
+      </div>
+      {% endif %}
       <div class="mobile-bottom"><a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒<br>Cierre</a><a href="{{url_for('logout')}}">🚪<br>Salir</a></div>
     </div>
   </main>
@@ -914,10 +936,18 @@ def ventas():
     detalle = q_all("SELECT d.*,p.codigo FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 40")
     tr_det = "".join(f'<tr><td>{r["codigo"]}</td><td><b>{r["producto"]}</b></td><td>{int(float(r["cantidad"] or 0))}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>' for r in detalle) or '<tr><td colspan="5">Sin detalle.</td></tr>'
     pos_cards = ""
-    for p in productos[:24]:
+    cat_actual = None
+    ncat = 0
+    for p in productos:
+        cat = (p["categoria"] or "SIN CATEGORÍA").upper()
+        if cat != cat_actual:
+            cat_actual = cat
+            ncat = 1
+            pos_cards += f"<div class='pos-category-title'>🍽️ {cat}</div>"
         img_row = q_one("SELECT imagen FROM catalogo_publico WHERE UPPER(titulo)=UPPER(?) AND activo=1 ORDER BY destacado DESC,id DESC LIMIT 1", (p['nombre'],))
         img_html = f"<img src='{url_for('static', filename=img_row['imagen'])}' alt='{p['nombre']}'>" if img_row and img_row['imagen'] else ""
-        pos_cards += f"""<form method='post' class='pos-card-form'><input type='hidden' name='accion' value='pos_rapido'><input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'><input type='hidden' name='cliente' value='CLIENTE GENERAL'><input type='hidden' name='servicio' value='SALÓN'><input type='hidden' name='metodo_pago' value='EFECTIVO'><button class='pos-product' type='submit'>{img_html}<b>{p['nombre']}</b><span>{money(p['precio'])}</span><small>SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small></button></form>"""
+        pos_cards += f"""<form method='post' class='pos-card-form'><input type='hidden' name='accion' value='pos_rapido'><input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'><input type='hidden' name='cliente' value='CLIENTE GENERAL'><input type='hidden' name='servicio' value='SALÓN'><input type='hidden' name='metodo_pago' value='EFECTIVO'><button class='pos-product' type='submit'>{img_html}<b>{ncat}. {p['nombre']}</b><span>{money(p['precio'])}</span><small>SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small></button></form>"""
+        ncat += 1
     load_day_html = ""
     if is_admin():
         load_day_html = f"""<div class='panel load-day-panel'><div class='section-title'>📥 Carga de inicio de día</div><div class='hint-card'>Solo ADMIN: importa Excel/CSV para actualizar productos, precios y stock antes de iniciar ventas.</div><br><form method='post' enctype='multipart/form-data' class='actions'><input type='hidden' name='accion' value='importar_productos'><input type='file' name='archivo' accept='.xlsx,.csv' style='max-width:420px'><button class='btn-warning'>📥 Cargar día / importar Excel productos</button><a class='btn' href='{url_for('plantilla_inventario')}'>📄 Descargar plantilla</a></form></div>"""
@@ -1313,7 +1343,7 @@ def catalogo_admin():
     html = f"""
     <div class="mobile-active-title">🖼️ Catálogo</div>
     <div class="catalog-hero"><div><h2>Catálogo online con imágenes y QR</h2><p>Publica platos, pizzas, combos y promociones. En app los vendedores solo comparten; el administrador carga imágenes y configura.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div><div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div></div><br>
-    <div class="grid2"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div></div>{admin_block}</div><br>
+    <div class="catalog-admin-layout"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div></div>{admin_block}</div><br>
     <div class="panel"><div class="section-title">Productos publicados</div><div class="catalog-grid">{cards}</div></div>
     <script>function pickCatalog(n,c,p){{document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c;document.getElementById('cat_precio').value=p;window.scrollTo({{top:document.getElementById('cat_titulo').getBoundingClientRect().top+window.scrollY-120,behavior:'smooth'}});}}</script>
     """
@@ -1462,6 +1492,12 @@ def admin():
             if usuario and clave:
                 q_exec("INSERT OR REPLACE INTO usuarios(usuario,nombre,clave_hash,clave_plain,rol,activo,sucursal_id) VALUES(?,?,?,?,?,1,?)", (usuario, nombre, generate_password_hash(clave), clave, rol, sucursal_id))
                 flash("Usuario guardado y enlazado a sucursal.", "ok")
+        elif accion == "cambiar_clave":
+            usuario = clean(request.form.get("usuario"))
+            nueva = clean(request.form.get("nueva_clave"))
+            if usuario and nueva:
+                q_exec("UPDATE usuarios SET clave_hash=?, clave_plain=? WHERE usuario=?", (generate_password_hash(nueva), nueva, usuario))
+                flash("Clave actualizada correctamente.", "ok")
         elif accion == "desactivar_usuario":
             usuario = clean(request.form.get("usuario"))
             if usuario and usuario != session.get("user"):
@@ -1510,7 +1546,7 @@ def admin():
       <div class="food-card"><div class="thumb">🏪</div><b>Sucursales</b><small>Base para reportes por local y turnos.</small></div>
       <div class="food-card"><div class="thumb">📱</div><b>Celular</b><small>Botones grandes y navegación tipo app.</small></div>
     </div><br>
-    <div class="admin-table-grid">
+    <div class="panel user-pass-admin"><div class="section-title">🔑 Modificar clave de usuario</div><form method="post" class="clean-grid"><input type="hidden" name="accion" value="cambiar_clave"><div><label>Usuario</label><select name="usuario">{''.join(f'<option>{u["usuario"]}</option>' for u in usuarios)}</select></div><div><label>Nueva clave</label><input name="nueva_clave" type="password" required placeholder="Nueva clave"></div><button class="btn-warning">Actualizar clave</button></form></div><div class="admin-table-grid">
       <div class="panel"><div class="section-title">🏬 Sucursales creadas</div><div class="table-wrap small"><table><thead><tr><th>ID</th><th>Sucursal</th><th>Activo</th></tr></thead><tbody>{tr_s}</tbody></table></div></div>
       <div class="panel admin-users-panel"><div class="section-title">👥 Usuarios creados</div><div class="table-wrap small"><table><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Sucursal</th><th>Clave</th><th>Activo</th><th>Acción</th></tr></thead><tbody>{tr_u}</tbody></table></div></div>
     </div>
