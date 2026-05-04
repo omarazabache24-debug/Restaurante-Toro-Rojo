@@ -999,6 +999,10 @@ def pedidos():
     selected_first = rows[0]["id"] if rows else 0
     detalles = q_all("SELECT d.*,p.codigo,p.cliente FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 120")
     item_opts = '<option value="">Selecciona item a quitar</option>' + "".join(f'<option value="{r["id"]}">#{r["id"]} · {r["codigo"]} · {r["producto"]} · Cant. {int(float(r["cantidad"] or 0))}</option>' for r in detalles)
+    tr_items = "".join(
+        f'<tr><td>{r["id"]}</td><td>{r["codigo"]}</td><td><b>{r["producto"]}</b></td><td>{int(float(r["cantidad"] or 0))}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>'
+        for r in detalles
+    ) or '<tr><td colspan="6">Sin detalle de ítems.</td></tr>'
     total_abierto = sum(float(r["total"] or 0) for r in rows if r["pagado"] == "NO")
     pendientes = sum(1 for r in rows if r["estado"] not in ("PAGADO","ENTREGADO"))
     resumen_cards = f"<div class='pedido-resumen'><div class='pedido-card'><b>{len(rows)}</b><br>Pedidos encontrados</div><div class='pedido-card'><b>{pendientes}</b><br>Pendientes de cocina</div><div class='pedido-card'><b>{money(total_abierto)}</b><br>Importe abierto</div></div>"
