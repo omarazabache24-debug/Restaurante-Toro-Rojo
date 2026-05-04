@@ -1106,6 +1106,185 @@ body{
 .catalog-config-panel button{width:100%!important;min-height:58px!important;}
 @media(max-width:900px){.catalog-config-panel form.clean-grid{grid-template-columns:1fr!important;}}
 .venta-product-select option{color:#071827!important;background:#fff!important;}
+
+
+/* ==========================================================
+   FIX DEFINITIVO PANEL LATERAL - SIN SUPERPOSICIÓN
+   - El encabezado ya NO queda flotando encima de las pestañas.
+   - En PC: panel lateral fijo, ordenado y compacto.
+   - En celular/tablet: solo menú horizontal, sin logo encima.
+   ========================================================== */
+@media (min-width:1201px){
+  .app{display:block!important;min-height:100vh!important;}
+  .side{
+    position:fixed!important;
+    left:0!important;top:0!important;bottom:0!important;
+    width:285px!important;height:100vh!important;
+    overflow-y:auto!important;overflow-x:hidden!important;
+    z-index:999!important;
+    padding:0!important;
+    background:linear-gradient(180deg,#16000a,#2a0617,#12000a)!important;
+    box-shadow:18px 0 40px rgba(15,23,42,.18)!important;
+  }
+  .main{margin-left:285px!important;width:calc(100% - 285px)!important;min-width:0!important;}
+
+  .side .brand.brand-el-toro.next-level-brand,
+  .side .brand{
+    position:relative!important;
+    top:auto!important;
+    z-index:auto!important;
+    display:block!important;
+    min-height:auto!important;
+    height:auto!important;
+    padding:12px 12px 10px!important;
+    margin:0!important;
+    background:linear-gradient(180deg,#130009,#210413)!important;
+    border-bottom:1px solid rgba(255,255,255,.10)!important;
+    overflow:visible!important;
+    text-align:center!important;
+  }
+  .side .brand-hero-card{
+    position:relative!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:10px!important;
+    width:100%!important;
+    min-height:0!important;
+    height:auto!important;
+    padding:8px 10px!important;
+    margin:0!important;
+    border-radius:18px!important;
+    background:rgba(255,255,255,.055)!important;
+    box-shadow:none!important;
+    overflow:hidden!important;
+    text-align:left!important;
+  }
+  .side .brand-logo-img{
+    flex:0 0 48px!important;
+    width:48px!important;height:48px!important;
+    object-fit:contain!important;
+    margin:0!important;
+    padding:3px!important;
+    border-radius:12px!important;
+    background:#000!important;
+    box-shadow:0 8px 22px rgba(255,23,68,.22)!important;
+  }
+  .side .brand-hero-title{
+    display:block!important;
+    margin:0!important;
+    color:#fff!important;
+    font-size:17px!important;
+    line-height:1.05!important;
+    font-weight:950!important;
+    white-space:nowrap!important;
+    letter-spacing:-.3px!important;
+  }
+  .side .brand-hero-sub{display:none!important;}
+  .side .brand-user-card{
+    position:relative!important;
+    display:grid!important;
+    gap:2px!important;
+    margin:8px 0 0!important;
+    padding:8px 10px!important;
+    border-radius:16px!important;
+    background:rgba(255,255,255,.07)!important;
+    border:1px solid rgba(255,255,255,.08)!important;
+    color:#fff!important;
+    text-align:center!important;
+    white-space:normal!important;
+    overflow:hidden!important;
+  }
+  .side .brand-user-card span,
+  .side .brand-user-card small{
+    display:block!important;
+    font-size:12px!important;
+    line-height:1.18!important;
+    margin:0!important;
+    white-space:normal!important;
+    color:#ffe4e6!important;
+  }
+  .side .brand-user-card span{font-size:13px!important;color:#fff!important;}
+
+  .side .nav{
+    position:relative!important;
+    z-index:1!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:8px!important;
+    padding:10px 10px 24px!important;
+    margin:0!important;
+    overflow:visible!important;
+  }
+  .side .nav a{
+    width:100%!important;
+    min-height:50px!important;
+    margin:0!important;
+    padding:13px 15px!important;
+    border-radius:18px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    text-align:left!important;
+    white-space:normal!important;
+    font-size:15px!important;
+    line-height:1.15!important;
+    background:rgba(255,255,255,.055)!important;
+    color:#fff!important;
+    transform:none!important;
+  }
+  .side .nav a.on,
+  .side .nav a:hover{
+    background:linear-gradient(135deg,#b00017,#ff4b3e)!important;
+    color:#fff!important;
+    box-shadow:0 12px 26px rgba(255,23,68,.25)!important;
+  }
+}
+
+@media (max-width:1200px){
+  .side .brand.brand-el-toro.next-level-brand,
+  .side .brand{display:none!important;}
+  .side{
+    position:sticky!important;
+    top:0!important;
+    z-index:999!important;
+    height:auto!important;
+    width:100%!important;
+    overflow:visible!important;
+    padding:6px!important;
+    background:linear-gradient(180deg,#16000a,#260414)!important;
+  }
+  .side .nav{
+    display:flex!important;
+    flex-direction:row!important;
+    flex-wrap:nowrap!important;
+    gap:8px!important;
+    padding:4px!important;
+    margin:0!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  .side .nav a{
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:92px!important;
+    min-height:48px!important;
+    margin:0!important;
+    border-radius:16px!important;
+    justify-content:center!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    padding:10px 12px!important;
+    font-size:12px!important;
+    background:#1c0712!important;
+    color:#fff!important;
+  }
+  .side .nav a.on,
+  .side .nav a:hover{background:linear-gradient(100deg,#ff1744,#ff5a3c)!important;color:#fff!important;}
+  .main{margin-left:0!important;width:100%!important;}
+}
+
 </style>
 </head>
 <body>
