@@ -1,0 +1,15 @@
+SIGUIENTE NIVEL - EL TORO RESTAURANT GRILL
+
+Incluye:
+- API interna en vivo: /api/live/resumen y /api/live/pedidos.
+- Base multi-sucursal y roles: ADMIN / VENDEDOR.
+- Admin controla todo; vendedores trabajan ventas, pedidos, catálogo, cierre y salir.
+- Panel vertical fijo para web y navegación inferior para celular.
+- Catálogo/QR, POS rápido, carga de productos y control de inventario.
+- Preparado para Render: app.py, requirements.txt, Procfile, runtime.txt.
+
+Para subir a Render/GitHub:
+1. Descomprime el ZIP.
+2. Sube TODO a la raíz del repositorio.
+3. Verifica que estén: app.py, requirements.txt, Procfile, runtime.txt, static/.
+4. En Render usa Start Command: gunicorn app:app

@@ -1562,6 +1562,37 @@ Base actual: {DB_PATH}</textarea></div>
     """
     return page(html, "admin")
 
+
+# =========================
+# SIGUIENTE NIVEL: ENDPOINTS EN VIVO / API SIMPLE
+# =========================
+@app.route('/api/live/resumen')
+@login_required
+def api_live_resumen():
+    """Resumen ligero para refresco en vivo desde web/app."""
+    f = today()
+    sucid = session.get('sucursal_id', 1)
+    where_suc = " AND COALESCE(sucursal_id,1)=?" if not is_admin() else ""
+    params = (f, sucid) if not is_admin() else (f,)
+    try:
+        pedidos_dia = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=?" + where_suc, params)['c']
+        pendientes = q_one("SELECT COUNT(*) c FROM pedidos WHERE fecha=? AND estado NOT IN ('PAGADO','ENTREGADO')" + where_suc, params)['c']
+        ventas = q_one("SELECT COALESCE(SUM(total),0) t FROM pedidos WHERE fecha=? AND pagado='SI'" + where_suc, params)['t']
+        return jsonify({'ok': True, 'fecha': f, 'pedidos': pedidos_dia, 'pendientes': pendientes, 'ventas': float(ventas or 0)})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+@app.route('/api/live/pedidos')
+@login_required
+def api_live_pedidos():
+    """Pedidos en vivo. Admin ve todo; vendedor ve su sucursal."""
+    sucid = session.get('sucursal_id', 1)
+    if is_admin():
+        rows = q_all("SELECT id,codigo,fecha,hora,cliente,servicio,estado,total,pagado FROM pedidos ORDER BY id DESC LIMIT 50")
+    else:
+        rows = q_all("SELECT id,codigo,fecha,hora,cliente,servicio,estado,total,pagado FROM pedidos WHERE COALESCE(sucursal_id,1)=? ORDER BY id DESC LIMIT 50", (sucid,))
+    return jsonify({'ok': True, 'pedidos': [dict(r) for r in rows]})
+
 @app.route("/logs")
 @login_required
 @admin_required
