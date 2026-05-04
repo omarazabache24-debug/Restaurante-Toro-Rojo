@@ -1424,6 +1424,8 @@ body{
 .locked-sucursal-card .badge{font-size:14px!important;padding:8px 14px!important;margin-bottom:8px!important;}
 .flash.error{border-radius:20px!important;background:#fff1f2!important;border:1px solid #fecaca!important;color:#991b1b!important;font-weight:950!important;}
 
+
+.edit-box{margin-top:8px;background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:6px}.edit-box summary{cursor:pointer;font-weight:900;color:#7c2d12}.mini-edit-form{display:grid;grid-template-columns:1fr;gap:6px;margin-top:8px}.mini-edit-form input,.mini-edit-form select{min-height:34px;border-radius:10px}.btn-mini{padding:7px 10px;border-radius:10px;font-size:12px}.btn-success{background:#16a34a!important;color:#fff!important}.btn-danger{background:#dc2626!important;color:#fff!important}
 </style>
 </head>
 <body>
@@ -3222,6 +3224,62 @@ def admin():
                 q_exec("UPDATE sucursales SET activo=0, abierta=0 WHERE id=?", (sid,))
                 log_event("SUCURSAL DESACTIVADA", nom)
                 flash(f"{nom} desactivada.", "ok")
+        elif accion == "modificar_sucursal":
+            sid = int(request.form.get("sucursal_id_estado") or 0)
+            actual = q_one("SELECT * FROM sucursales WHERE id=?", (sid,))
+            nombre = up(request.form.get("nombre_edit"))
+            direccion = clean(request.form.get("direccion_edit"))
+            responsable = up(request.form.get("responsable_edit"))
+            telefono = clean(request.form.get("telefono_edit"))
+            if not actual:
+                flash("Sucursal no encontrada.", "error")
+            elif not nombre:
+                flash("El nombre de la sucursal es obligatorio.", "error")
+            else:
+                duplicado = q_one("SELECT id FROM sucursales WHERE UPPER(nombre)=UPPER(?) AND id<>?", (nombre, sid))
+                if duplicado:
+                    flash("Ya existe otra sucursal con ese nombre.", "error")
+                else:
+                    q_exec("UPDATE sucursales SET nombre=?, direccion=?, responsable=?, telefono=? WHERE id=?", (nombre, direccion, responsable, telefono, sid))
+                    log_event("SUCURSAL MODIFICADA", f"{actual['nombre']} -> {nombre}")
+                    flash("Sucursal modificada correctamente.", "ok")
+        elif accion == "eliminar_sucursal":
+            sid = int(request.form.get("sucursal_id_estado") or 0)
+            actual = q_one("SELECT * FROM sucursales WHERE id=?", (sid,))
+            if not actual:
+                flash("Sucursal no encontrada.", "error")
+            elif sid == 1 or str(actual['nombre']).upper() == "SUCURSAL PRINCIPAL":
+                flash("La Sucursal Principal no se puede eliminar.", "error")
+            else:
+                tablas = ["usuarios", "pedidos", "caja", "cierres", "movimientos_inventario"]
+                vinculados = 0
+                for _tbl in tablas:
+                    try:
+                        vinculados += int(q_one(f"SELECT COUNT(*) c FROM {_tbl} WHERE COALESCE(sucursal_id,1)=?", (sid,))["c"] or 0)
+                    except Exception:
+                        pass
+                if vinculados > 0:
+                    q_exec("UPDATE sucursales SET activo=0, abierta=0 WHERE id=?", (sid,))
+                    log_event("SUCURSAL DESACTIVADA POR HISTORIAL", f"{actual['nombre']} tenía {vinculados} registros vinculados")
+                    flash(f"La sucursal tiene historial ({vinculados} registros). Por seguridad no se borra; quedó INACTIVA.", "error")
+                else:
+                    q_exec("DELETE FROM sucursales WHERE id=?", (sid,))
+                    log_event("SUCURSAL ELIMINADA", actual['nombre'])
+                    flash("Sucursal eliminada definitivamente.", "ok")
+        elif accion == "modificar_usuario_nombre":
+            uid = int(request.form.get("usuario_id") or 0)
+            usuario_row = q_one("SELECT * FROM usuarios WHERE id=?", (uid,))
+            nombre = up(request.form.get("nombre_usuario_edit"))
+            rol = request.form.get("rol_usuario_edit", "VENDEDOR")
+            sucursal_id = int(request.form.get("sucursal_usuario_edit") or 1)
+            if rol not in ("ADMIN", "VENDEDOR"):
+                rol = "VENDEDOR"
+            if not usuario_row:
+                flash("Usuario no encontrado.", "error")
+            else:
+                q_exec("UPDATE usuarios SET nombre=?, rol=?, sucursal_id=? WHERE id=?", (nombre, rol, sucursal_id, uid))
+                log_event("USUARIO MODIFICADO", usuario_row['usuario'])
+                flash("Usuario modificado correctamente.", "ok")
         return redirect(url_for("admin"))
     sucursales = q_all("SELECT * FROM sucursales ORDER BY activo DESC, id ASC")
     usuarios = q_all("SELECT u.id,u.usuario,u.nombre,u.rol,u.activo,u.clave_plain,COALESCE(s.nombre,'Sucursal Principal') sucursal FROM usuarios u LEFT JOIN sucursales s ON s.id=u.sucursal_id ORDER BY u.usuario")
@@ -3236,8 +3294,21 @@ def admin():
         btn_accion = "cerrar_sucursal" if abierta and activo else "abrir_sucursal"
         btn_txt = "Cerrar" if abierta and activo else "Abrir"
         btn_cls = "btn-danger" if abierta and activo else "btn-success"
+        editar = f"""
+        <details class='edit-box'><summary>✏️ Modificar</summary>
+          <form method='post' class='mini-edit-form'>
+            <input type='hidden' name='accion' value='modificar_sucursal'>
+            <input type='hidden' name='sucursal_id_estado' value='{sid}'>
+            <label>Nombre</label><input name='nombre_edit' value='{str(nom).replace("'", "&#39;")}' required>
+            <label>Responsable</label><input name='responsable_edit' value='{str(s['responsable'] if 'responsable' in s.keys() else '').replace("'", "&#39;")}'>
+            <label>Dirección</label><input name='direccion_edit' value='{str(s['direccion'] if 'direccion' in s.keys() else '').replace("'", "&#39;")}'>
+            <label>Teléfono</label><input name='telefono_edit' value='{str(s['telefono'] if 'telefono' in s.keys() else '').replace("'", "&#39;")}'>
+            <button class='btn-mini btn-success'>Guardar cambios</button>
+          </form>
+        </details>"""
         desactivar = "" if nom.upper()=="SUCURSAL PRINCIPAL" else f"""<button name='accion' value='desactivar_sucursal' class='btn-delete btn-mini' onclick="return confirm('¿Desactivar esta sucursal?')">Desactivar</button>"""
-        tr_s += f"""<tr><td>{sid}</td><td><b>{nom}</b><br><small>{s['direccion'] if 'direccion' in s.keys() else ''}</small></td><td>{s['responsable'] if 'responsable' in s.keys() else ''}</td><td>{s['telefono'] if 'telefono' in s.keys() else ''}</td><td>{'ACTIVA' if activo else 'INACTIVA'}</td><td><span class='badge {'ok' if abierta and activo else 'off'}'>{badge_estado}</span></td><td><form method='post' class='admin-action-stack'><input type='hidden' name='sucursal_id_estado' value='{sid}'><button name='accion' value='{btn_accion}' class='{btn_cls} btn-mini'>{btn_txt}</button>{desactivar}</form></td></tr>"""
+        eliminar = "" if nom.upper()=="SUCURSAL PRINCIPAL" else f"""<button name='accion' value='eliminar_sucursal' class='btn-delete btn-mini' onclick="return confirm('¿Eliminar definitivamente esta sucursal? Si tiene historial, el sistema la desactivará por seguridad.')">Eliminar</button>"""
+        tr_s += f"""<tr><td>{sid}</td><td><b>{nom}</b><br><small>{s['direccion'] if 'direccion' in s.keys() else ''}</small>{editar}</td><td>{s['responsable'] if 'responsable' in s.keys() else ''}</td><td>{s['telefono'] if 'telefono' in s.keys() else ''}</td><td>{'ACTIVA' if activo else 'INACTIVA'}</td><td><span class='badge {'ok' if abierta and activo else 'off'}'>{badge_estado}</span></td><td><form method='post' class='admin-action-stack'><input type='hidden' name='sucursal_id_estado' value='{sid}'><button name='accion' value='{btn_accion}' class='{btn_cls} btn-mini'>{btn_txt}</button>{desactivar}{eliminar}</form></td></tr>"""
     tr_u = ""
     for u in usuarios:
         clave_visible = u["clave_plain"] or ""
@@ -3253,7 +3324,7 @@ def admin():
             accion = "<div class='admin-action-stack'>" + estado_btn + borrar_btn + "</div>"
         tr_u += f"""
         <tr>
-          <td>{u['usuario']}</td><td>{u['nombre']}</td><td>{u['rol']}</td><td>{u['sucursal']}</td>
+          <td>{u['usuario']}</td><td>{u['nombre']}<details class='edit-box'><summary>✏️ Modificar</summary><form method='post' class='mini-edit-form'><input type='hidden' name='accion' value='modificar_usuario_nombre'><input type='hidden' name='usuario_id' value='{u['id']}'><label>Nombre</label><input name='nombre_usuario_edit' value='{str(u['nombre']).replace("'", "&#39;")}'><label>Rol</label><select name='rol_usuario_edit'><option {'selected' if u['rol']=='VENDEDOR' else ''}>VENDEDOR</option><option {'selected' if u['rol']=='ADMIN' else ''}>ADMIN</option></select><label>Sucursal</label><select name='sucursal_usuario_edit'>{''.join(f'<option value="{s["id"]}" {"selected" if s["nombre"]==u["sucursal"] else ""}>{s["nombre"]}</option>' for s in sucursales if int(s["activo"] or 0)==1)}</select><button class='btn-mini btn-success'>Guardar cambios</button></form></details></td><td>{u['rol']}</td><td>{u['sucursal']}</td>
           <td><div class='pass-box'><input id='pass_{u['id']}' type='password' value='{clave_visible}' readonly><button type='button' onclick='togglePass({u['id']})'>👁</button></div></td>
           <td>{'ACTIVO' if int(u['activo'] or 0)==1 else 'INACTIVO'}</td><td>{accion}</td>
         </tr>"""
