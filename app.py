@@ -378,6 +378,25 @@ def init_db():
         ]:
             q_exec("INSERT INTO catalogo_publico(titulo,descripcion,precio,categoria,imagen,destacado,activo) VALUES(?,?,?,?,?,?,1)", (titulo, descripcion, precio, categoria, "toro_logo.png", 1))
 
+
+    # DEMO INVENTARIO: garantiza 100 productos para pruebas comerciales.
+    # Si el inventario ya tiene productos reales, solo completa los códigos faltantes sin duplicar.
+    demo_categorias = ["PLATOS", "BEBIDAS", "ADICIONALES", "PARRILLAS", "COMBOS", "POSTRES", "INSUMOS"]
+    demo_unidades = {"BEBIDAS":"UND", "ADICIONALES":"UND", "INSUMOS":"UND", "POSTRES":"UND", "PLATOS":"PLATO", "PARRILLAS":"PLATO", "COMBOS":"COMBO"}
+    for n in range(1, 101):
+        codigo = f"D{n:03d}"
+        if not q_one("SELECT id FROM productos WHERE codigo=?", (codigo,)):
+            categoria = demo_categorias[(n - 1) % len(demo_categorias)]
+            precio = round(3 + (n % 35) * 1.5, 2)
+            costo = round(precio * 0.45, 2)
+            stock = 10 + (n * 3) % 90
+            stock_min = 5 if categoria in ("BEBIDAS", "INSUMOS", "ADICIONALES") else 2
+            nombre = f"DEMO {categoria} {n:03d}"
+            q_exec(
+                "INSERT INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)",
+                (codigo, nombre, categoria, "VENTA", demo_unidades.get(categoria, "UND"), precio, costo, stock, stock_min),
+            )
+
     if not q_one("SELECT id FROM insumos LIMIT 1"):
         for nombre, unidad, stock, stock_min, costo in [
             ("POLLO ENTERO", "UND", 20, 3, 20),
@@ -868,6 +887,40 @@ body{
 @media(max-width:1080px){.side{display:block!important;position:relative!important;width:100%!important;height:auto!important}.app{display:block!important}.main{margin-left:0!important}.nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}.brand-hero-card{max-width:420px!important;margin:auto!important}.clean-grid-4{grid-template-columns:repeat(2,minmax(0,1fr))!important}.catalog-config-panel form.clean-grid{grid-template-columns:1fr!important}.el-toro-web-status{display:none!important}}
 @media(max-width:640px){.nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}.clean-grid-4,.clean-grid{grid-template-columns:1fr!important}.el-toro-web-header{padding:12px!important;min-height:82px!important}.el-toro-web-logo{width:56px!important;height:56px!important}.el-toro-web-title{font-size:18px!important}.el-toro-web-subtitle{font-size:12px!important}.catalog-config-panel .section-title{font-size:24px!important}}
 
+
+
+/* ===== AJUSTE FINAL: ADMIN HORIZONTAL + CATÁLOGO DINÁMICO + SIN ENCABEZADO EXTRA ===== */
+.app{display:block!important;min-height:100vh!important;background:transparent!important;}
+.side{position:sticky!important;top:0!important;z-index:300!important;width:100%!important;height:auto!important;min-height:0!important;overflow:visible!important;padding:8px 10px!important;background:linear-gradient(90deg,#08070d,#190816 55%,#2a0811)!important;border-right:0!important;border-bottom:1px solid rgba(255,255,255,.12)!important;box-shadow:0 14px 35px rgba(15,23,42,.18)!important;}
+.main{margin-left:0!important;min-height:100vh!important;}
+.side .brand.brand-el-toro.next-level-brand{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:0!important;margin:0 0 8px!important;min-height:0!important;background:transparent!important;border:0!important;}
+.side .brand-hero-card{display:flex!important;align-items:center!important;gap:10px!important;width:auto!important;min-height:0!important;padding:8px 12px!important;border-radius:18px!important;background:rgba(255,255,255,.055)!important;box-shadow:none!important;}
+.side .brand-logo-img{width:42px!important;height:42px!important;margin:0!important;border-radius:10px!important;padding:3px!important;}
+.side .brand-hero-title{font-size:16px!important;line-height:1!important;white-space:nowrap!important;}
+.side .brand-hero-sub{display:none!important;}
+.side .brand-user-card{display:flex!important;align-items:center!important;gap:10px!important;margin:0!important;padding:8px 12px!important;border-radius:999px!important;white-space:nowrap!important;}
+.side .brand-user-card span{display:inline!important;}
+.side .brand-user-card small{display:inline!important;}
+.nav{display:flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important;margin:0!important;padding:0 2px 4px!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:thin!important;}
+.nav a{flex:0 0 auto!important;min-height:46px!important;margin:0!important;padding:10px 14px!important;border-radius:16px!important;font-size:13px!important;white-space:nowrap!important;justify-content:center!important;background:rgba(255,255,255,.055)!important;color:#fff!important;}
+.nav a:hover{transform:translateY(-1px)!important;}
+.nav a.on{background:linear-gradient(135deg,#ff1744,#ff6a3d)!important;box-shadow:0 12px 26px rgba(255,23,68,.28)!important;}
+.tabs-shell-header{display:none!important;}
+.tabs{position:sticky!important;top:118px!important;z-index:180!important;display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;background:rgba(255,255,255,.94)!important;border-radius:20px!important;box-shadow:0 12px 30px rgba(15,23,42,.08)!important;}
+.tabs a{flex:0 0 auto!important;white-space:nowrap!important;}
+.catalog-admin-clean{display:grid!important;grid-template-columns:minmax(300px,390px) minmax(0,1fr)!important;gap:18px!important;align-items:start!important;}
+.catalog-tool-row{display:grid!important;grid-template-columns:minmax(220px,1fr) 220px!important;gap:10px!important;margin:12px 0!important;}
+.catalog-pick-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(135px,1fr))!important;gap:10px!important;max-height:320px!important;overflow:auto!important;padding:4px!important;background:#fff7f8!important;border:1px solid #ffe1e6!important;border-radius:20px!important;}
+.catalog-pick{display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;min-height:68px!important;border-radius:18px!important;white-space:normal!important;overflow-wrap:anywhere!important;}
+.catalog-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))!important;gap:14px!important;}
+.catalog-card{min-height:0!important;border-radius:22px!important;}
+.catalog-card img{height:105px!important;object-fit:contain!important;background:#050505!important;}
+.catalog-config-panel form.clean-grid{grid-template-columns:minmax(220px,1fr) minmax(190px,.7fr) minmax(220px,.8fr)!important;}
+.commercial-fab{z-index:250!important;}
+.mobile-bottom{display:none!important;}
+@media(max-width:900px){.side{position:sticky!important;top:0!important;display:block!important;padding:8px!important;}.side .brand.brand-el-toro.next-level-brand{display:none!important}.nav{display:flex!important;}.nav a{font-size:12px!important;min-height:42px!important;padding:9px 11px!important}.content{padding:10px 10px 86px!important;background:transparent!important}.tabs{top:54px!important}.catalog-admin-clean{grid-template-columns:1fr!important}.catalog-tool-row{grid-template-columns:1fr!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.mobile-bottom.admin-mobile{display:flex!important;overflow-x:auto!important}.mobile-bottom.seller-mobile{display:flex!important}}
+@media(max-width:520px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.catalog-card img{height:82px!important}.catalog-pick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.el-toro-web-header{margin-top:8px!important}}
+
 </style>
 </head>
 <body>
@@ -925,13 +978,6 @@ body{
         </div>
       </section>
       {% if tabs %}
-      <section class="tabs-shell-header">
-        <img class="tabs-shell-logo" src="/static/toro_logo.png" alt="EL TORO Restaurant Grill">
-        <div>
-          <h2 class="tabs-shell-title">Restaurant Grill</h2>
-          <p class="tabs-shell-sub">Restaurante · Pizzería · Parrillas ·<br>Delivery · Caja</p>
-        </div>
-      </section>
       <div class="tabs">
         {% for key,label,endpoint in tabs %}<a class="{{'on' if active==key else ''}}" href="{{url_for(endpoint)}}">{{label}}</a>{% endfor %}
       </div>{% endif %}
@@ -1933,7 +1979,7 @@ def catalogo_admin():
     productos = q_all("SELECT * FROM productos WHERE activo=1 ORDER BY categoria,nombre")
 
     pickers = ""
-    for p in productos[:60]:
+    for p in productos:
         pn = str(p['nombre']).replace("'", "").replace('"','')
         pc = str(p['categoria']).replace("'", "").replace('"','')
         pp = int(float(p['precio'] or 0))
@@ -1966,6 +2012,7 @@ def catalogo_admin():
         admin_block = f"""
         <div class="panel upload-drop"><div class="section-title">Cargar imagen de producto</div>
           <div class="hint-card">Haz clic en un producto para cargar sus datos automáticamente y abrir el selector de imagen. También puedes hacer clic en una tarjeta publicada para actualizar datos o cambiar imagen.</div>
+          <div class="catalog-tool-row"><input type="search" id="buscar_catalog_picker" placeholder="Buscar producto por nombre, código o categoría" oninput="filterCatalogPicker()"><select id="filtro_catalog_picker" onchange="filterCatalogPicker()"><option value="">Todas las categorías</option><option>PLATOS</option><option>BEBIDAS</option><option>ADICIONALES</option><option>PARRILLAS</option><option>COMBOS</option><option>POSTRES</option><option>INSUMOS</option></select></div>
           <div class="catalog-pick-grid">{pickers}</div>
           <form method="post" enctype="multipart/form-data" class="clean-grid" id="catalog_form"><input type="hidden" id="cat_accion" name="accion" value="crear_item"><input type="hidden" id="cat_item_id" name="item_id" value="">
             <div style="grid-column:1/-1"><span id="cat_mode" class="catalog-edit-id">Nuevo producto</span></div>
@@ -1991,6 +2038,7 @@ def catalogo_admin():
     function openImagePicker(){{const file=document.getElementById('cat_imagen'); if(file) file.click();}}
     function pickCatalog(n,c,p){{resetCatalogForm(false);document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c;document.getElementById('cat_precio').value=p;goCatForm();setTimeout(openImagePicker,250);}}
     function editCatalog(id,n,c,p,d,star){{document.getElementById('cat_accion').value='actualizar_item';document.getElementById('cat_item_id').value=id;document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c||'PLATOS';document.getElementById('cat_precio').value=p||0;document.getElementById('cat_descripcion').value=d||'';document.getElementById('cat_destacado').checked=(String(star)==='1');document.getElementById('cat_mode').textContent='Editando producto #' + id + ' · puedes cambiar la imagen';document.getElementById('cat_submit').textContent='Actualizar producto';goCatForm();setTimeout(openImagePicker,250);}}
+    function filterCatalogPicker(){{const q=(document.getElementById('buscar_catalog_picker')?.value||'').toUpperCase();const c=(document.getElementById('filtro_catalog_picker')?.value||'').toUpperCase();document.querySelectorAll('.catalog-pick').forEach(b=>{{const name=(b.dataset.name||b.textContent||'').toUpperCase();const cat=(b.dataset.cat||'').toUpperCase();b.style.display=(!q||name.includes(q)||cat.includes(q))&&(!c||cat===c)?'flex':'none';}});}}
     function resetCatalogForm(clear){{const f=document.getElementById('catalog_form'); if(clear!==false && f) f.reset();document.getElementById('cat_accion').value='crear_item';document.getElementById('cat_item_id').value='';document.getElementById('cat_mode').textContent='Nuevo producto';document.getElementById('cat_submit').textContent='Agregar al catálogo';}}
     </script>
     """
