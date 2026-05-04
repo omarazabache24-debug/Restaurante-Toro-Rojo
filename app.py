@@ -838,6 +838,36 @@ body{
 .venta-product-select option[disabled]{color:#94a3b8}.pedido-operaciones-grid{display:grid;grid-template-columns:repeat(3,minmax(280px,1fr));gap:18px;margin-top:16px}.pedido-op-card{background:linear-gradient(180deg,#ffffff,#fff7f8);border:1px solid #ffd7dd;border-radius:28px;padding:18px;box-shadow:0 18px 42px rgba(15,23,42,.08);display:grid;gap:12px;align-content:start}.pedido-op-title{font-size:20px;font-weight:950;color:#071827;border-bottom:1px solid #ffe1e6;padding-bottom:10px}.pedido-op-card .actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pedido-bloques{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px}.pedido-bloque{border:1px solid #ffd7dd!important;background:linear-gradient(180deg,#fff,#fff5f7)!important;border-radius:28px!important;padding:18px!important;box-shadow:0 18px 45px rgba(15,23,42,.08)!important}.pedido-bloque-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #ffe1e6;padding-bottom:12px;margin-bottom:12px}.pedido-bloque h3{margin:0;font-size:20px;color:#071827}.pedido-code{font-weight:900;color:#64748b}.pedido-products{background:white;border:1px solid #e5eaf2;border-radius:18px;padding:14px;font-weight:900;color:#0f172a;min-height:58px}.pedido-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;color:#64748b;font-weight:800}.pedido-total{font-size:28px;font-weight:950;color:#e11d48;margin-bottom:12px}.pedido-bloque-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pedido-bloque-actions .full{grid-column:1/-1;text-align:center}.catalog-pick{cursor:pointer;transition:.15s}.catalog-pick:hover,.catalog-card:hover{transform:translateY(-2px);box-shadow:0 18px 38px rgba(255,23,68,.20)!important}.edit-hint{display:block;margin-top:10px;font-weight:950;color:#fff;background:linear-gradient(90deg,#ff1744,#ff5b00);border-radius:999px;padding:8px 12px;text-align:center}.catalog-edit-id{display:inline-flex;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;border-radius:999px;padding:8px 12px;font-weight:950}
 @media(max-width:1200px){.pedido-operaciones-grid{grid-template-columns:1fr}.pedido-op-card .actions{grid-template-columns:1fr}}@media(max-width:900px){.pedido-operaciones-grid,.pedido-bloques{grid-template-columns:1fr}.pedido-op-card,.pedido-bloque{background:#202020!important;border-color:#444!important}.pedido-op-title,.pedido-bloque h3{color:#fff!important}.pedido-products{background:#111!important;color:#fff!important;border-color:#444!important}.pedido-meta{grid-template-columns:1fr;color:#d1d5db!important}.pedido-total{color:#fb7185!important}.pedido-bloque-actions{grid-template-columns:1fr}.catalog-edit-id{background:#2d1118;color:#fecdd3;border-color:#7f1d1d}}
 
+
+
+/* ===== AJUSTE FINAL SOLICITADO: CONFIGURACIÓN, ENCABEZADO Y CONEXIÓN CATEGORÍA/PRODUCTO ===== */
+.side .brand.brand-el-toro.next-level-brand{display:block!important;height:auto!important;min-height:auto!important;padding:0 0 12px!important;margin:0!important;overflow:visible!important}
+.side .brand-hero-card{display:block!important;height:auto!important;min-height:auto!important;margin:0!important;overflow:visible!important}
+.side .brand-logo-img{display:block!important;width:136px!important;height:136px!important;object-fit:contain!important;background:#000!important;border-radius:14px!important;padding:8px!important;margin:0 auto 12px!important}
+.side .brand-hero-title,.side .brand-hero-sub,.side .brand-user-card{display:block!important;height:auto!important;overflow:visible!important}
+.el-toro-web-header{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;padding:14px 20px!important;min-height:96px!important;border-radius:24px!important;background:linear-gradient(135deg,#07070d 0%,#160916 55%,#2b0711 100%)!important;border-bottom:5px solid #ff0037!important;box-shadow:0 16px 38px rgba(15,23,42,.14)!important}
+.el-toro-web-left{display:flex!important;align-items:center!important;gap:16px!important;min-width:0!important}
+.el-toro-web-logo{display:block!important;width:70px!important;height:70px!important;object-fit:contain!important;background:#000!important;border-radius:12px!important;padding:5px!important;box-shadow:0 10px 28px rgba(255,0,55,.22)!important}
+.el-toro-web-title{margin:0!important;color:white!important;font-size:27px!important;line-height:1!important;letter-spacing:.2px!important}
+.el-toro-web-subtitle{margin:6px 0 0!important;color:#f8fafc!important;font-weight:850!important;font-size:14px!important}
+.el-toro-web-pill{display:inline-flex!important;align-items:center!important;gap:6px!important;border-radius:999px!important;padding:10px 13px!important;background:rgba(255,255,255,.10)!important;color:white!important;font-weight:900!important;border:1px solid rgba(255,255,255,.14)!important}
+.catalog-config-panel{padding:22px!important;max-width:100%!important;overflow:visible!important}
+.catalog-config-panel .section-title{font-size:30px!important;margin-bottom:16px!important}
+.catalog-config-panel form.clean-grid{display:grid!important;grid-template-columns:minmax(220px,1.1fr) minmax(180px,.75fr) minmax(220px,.9fr)!important;gap:16px!important;align-items:end!important}
+.catalog-config-panel label{display:block!important;white-space:normal!important;line-height:1.15!important;font-size:16px!important}
+.catalog-config-panel input{min-height:58px!important;font-size:18px!important;padding:0 18px!important;border-radius:22px!important;width:100%!important}
+.catalog-config-panel button{min-height:64px!important;border-radius:24px!important;font-size:18px!important;white-space:normal!important;padding:12px 20px!important}
+.venta-cat-filter{border:2px solid #ffb4bd!important;background:#fff7f8!important;font-weight:900!important}
+.venta-product-select{border:2px solid #dbe3ef!important;font-weight:850!important}
+.venta-product-select:disabled{background:#f1f5f9!important;color:#94a3b8!important}
+.catalog-card{cursor:pointer!important;position:relative!important}
+.catalog-card:after{content:'Click para editar / cargar imagen';position:absolute;left:8px;right:8px;bottom:8px;background:linear-gradient(90deg,#ff1744,#ff7a18);color:white;border-radius:999px;padding:6px 8px;font-size:10px;font-weight:950;text-align:center;opacity:0;transition:.15s}
+.catalog-card:hover:after{opacity:1}
+.clean-grid-4{display:grid!important;grid-template-columns:repeat(4,minmax(180px,1fr))!important;gap:18px!important;align-items:end!important}
+.clean-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important;gap:16px!important;align-items:end!important}
+@media(max-width:1080px){.side{display:block!important;position:relative!important;width:100%!important;height:auto!important}.app{display:block!important}.main{margin-left:0!important}.nav{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}.brand-hero-card{max-width:420px!important;margin:auto!important}.clean-grid-4{grid-template-columns:repeat(2,minmax(0,1fr))!important}.catalog-config-panel form.clean-grid{grid-template-columns:1fr!important}.el-toro-web-status{display:none!important}}
+@media(max-width:640px){.nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}.clean-grid-4,.clean-grid{grid-template-columns:1fr!important}.el-toro-web-header{padding:12px!important;min-height:82px!important}.el-toro-web-logo{width:56px!important;height:56px!important}.el-toro-web-title{font-size:18px!important}.el-toro-web-subtitle{font-size:12px!important}.catalog-config-panel .section-title{font-size:24px!important}}
+
 </style>
 </head>
 <body>
@@ -956,6 +986,34 @@ function togglePass(id){const el=document.getElementById('pass_'+id); if(!el) re
   },true);
 })();
 
+</script>
+
+<script>
+(function(){
+  function applyCategoryProductBinding(){
+    document.querySelectorAll('.venta-cat-filter').forEach(function(sel){
+      const target=document.getElementById(sel.dataset.target);
+      if(!target || target.dataset.boundFinal==='1') return;
+      target.dataset.boundFinal='1';
+      const original=[...target.options].map(o=>({value:o.value,text:o.text,cat:(o.dataset.cat||'').toUpperCase()}));
+      function filtrar(){
+        const cat=(sel.value||'').toUpperCase();
+        target.innerHTML='';
+        if(!cat){
+          const opt=document.createElement('option'); opt.value=''; opt.text='Primero selecciona una categoría'; opt.dataset.cat=''; target.appendChild(opt);
+          target.disabled=true; return;
+        }
+        target.disabled=false;
+        const start=document.createElement('option'); start.value=''; start.text='Selecciona producto'; start.dataset.cat=''; target.appendChild(start);
+        original.forEach(function(o){ if(o.value && o.cat===cat){ const opt=document.createElement('option'); opt.value=o.value; opt.text=o.text; opt.dataset.cat=o.cat; target.appendChild(opt); } });
+      }
+      sel.addEventListener('change',filtrar);
+      filtrar();
+    });
+  }
+  document.addEventListener('DOMContentLoaded',applyCategoryProductBinding);
+  applyCategoryProductBinding();
+})();
 </script>
 </body>
 </html>
@@ -1379,7 +1437,7 @@ def pos_rapido():
     feature_cards = ""
     for p in productos[:6]:
         img = product_image(p)
-        feature_cards += f"""<form method='post' class='keep-pos-form'>
+        feature_cards += f"""<form method='post' class='keep-pos-form' onclick='event.stopPropagation()'>
           <input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'>
           <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
           <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
@@ -1918,7 +1976,7 @@ def catalogo_admin():
             <div style="grid-column:1/-1"><label>Descripción</label><textarea id="cat_descripcion" name="descripcion" placeholder="Ingredientes, tamaño, promoción, etc."></textarea></div>
             <label style="display:flex;gap:8px;align-items:center"><input id="cat_destacado" type="checkbox" name="destacado" style="width:auto"> Destacar</label><button id="cat_submit" class="btn-success">Agregar al catálogo</button><button type="button" class="btn-warning" onclick="resetCatalogForm()">Nuevo / limpiar</button>
           </form></div>
-        <div class="panel catalog-config-panel"><div class="section-title">Configuración</div><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}"></div><button class="btn-warning">Guardar configuración</button></form></div>
+        <div class="panel catalog-config-panel"><div class="section-title">⚙️ Configuración del catálogo</div><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config"><div><label>Nombre del negocio</label><input name="negocio_nombre" value="{negocio}" placeholder="EL TORO RESTAURANT GRILL"></div><div><label>Enlace corto</label><input name="catalogo_slug" value="{slug}" placeholder="el-toro"></div><button class="btn-warning">Guardar configuración</button></form><div class="keep-position-note">Este dato controla el nombre y link público del catálogo.</div></div>
         """
     else:
         admin_block = """<div class="panel"><div class="section-title">Catálogo para vendedor</div><div class="role-note">Puedes abrir, copiar y compartir el catálogo. La carga de imágenes y configuración la maneja el administrador.</div></div>"""
