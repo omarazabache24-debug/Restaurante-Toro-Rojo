@@ -592,6 +592,19 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
 .catalog-hero{padding:22px!important;min-height:0!important;align-items:center!important;gap:18px!important}.catalog-hero h2{margin:0 0 6px!important;font-size:34px!important}.catalog-hero p{margin:0 0 14px!important}.catalog-phone{transform:scale(.92);transform-origin:center right}.catalog-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important;gap:16px!important}.catalog-card{padding:14px!important;min-height:0!important}.catalog-card img{height:150px!important;object-fit:cover!important;border-radius:18px!important}.catalog-card h3{font-size:18px!important;margin:10px 0 6px!important}.catalog-card p{min-height:38px!important;margin:0 0 10px!important}.qr-box{gap:16px!important}.upload-drop{padding:16px!important}.catalog-pick-grid{max-height:220px;overflow:auto;padding-right:4px}.admin-action-stack{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}.admin-action-stack form{margin:0!important}.btn-delete,.btn-danger{background:linear-gradient(135deg,#b00012,#ff002b)!important;color:#fff!important}.btn-disable{background:#fff1f2!important;color:#991b1b!important;border:1px solid #fecaca!important}.btn-restore{background:#ecfdf5!important;color:#166534!important;border:1px solid #bbf7d0!important}.keep-position-note{font-size:12px;color:#64748b;margin-top:8px;font-weight:800}.same-place-anchor{scroll-margin-top:110px}
 @media(max-width:900px){.catalog-hero{padding:16px!important}.catalog-hero h2{font-size:24px!important}.catalog-grid{grid-template-columns:1fr!important}.catalog-card img{height:130px!important}.admin-action-stack{display:grid;grid-template-columns:1fr;gap:8px}.catalog-pick-grid{max-height:180px}.qr-box{grid-template-columns:1fr!important}.admin-users-panel .table-wrap table{min-width:980px!important}}
 
+
+
+/* ===== FIX FINAL: POS SEPARADO + CATÁLOGO RESPONSIVE ===== */
+.nav a.pos-link,.mobile-bottom a.pos-link{font-weight:1000!important}
+.pos-client-panel{background:linear-gradient(135deg,#fff,#fff7f8)!important;border:1px solid #fecdd3!important}
+.pos-client-grid{display:grid;grid-template-columns:1.2fr .8fr .8fr .8fr auto;gap:12px;align-items:end}
+.pos-only-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))!important;gap:16px!important}
+.pos-product{width:100%!important;min-height:150px!important;text-align:left!important;background:#070b16!important;color:#fff!important;border-radius:22px!important;box-shadow:0 18px 42px rgba(255,23,68,.16)!important;display:flex!important;flex-direction:column!important;justify-content:center!important;gap:5px!important}
+.pos-product img{width:100%;height:82px;object-fit:contain;border-radius:16px;background:#000;margin-bottom:4px}.pos-product b{font-size:18px!important;line-height:1.18!important}.pos-product span{color:#ffd1d8!important;font-weight:1000!important}.pos-product small{font-weight:900!important;color:#fff!important}
+.catalog-hero{padding:18px 22px!important;grid-template-columns:1fr auto!important;min-height:auto!important}.catalog-hero h2{font-size:30px!important;line-height:1.05!important}.catalog-hero p{font-size:15px!important;max-width:720px}.catalog-phone{width:420px!important;transform:none!important}.phone-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.phone-food{padding:8px!important}.phone-food img{height:74px!important;object-fit:contain!important;background:#000!important}.catalog-admin-clean{display:grid!important;grid-template-columns:minmax(320px,.75fr) minmax(360px,1.25fr)!important;gap:18px!important;align-items:start!important}.qr-box{grid-template-columns:150px minmax(0,1fr)!important;padding:14px!important}.qr-img{width:130px!important;height:130px!important;border-width:7px!important}.upload-drop .section-title{font-size:24px!important}.catalog-pick-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important;gap:10px!important;max-height:190px!important;overflow:auto!important}.catalog-pick{min-height:78px!important;padding:10px!important;border-radius:18px!important;background:linear-gradient(135deg,#ff1744,#ff5b4f)!important;color:#fff!important}.catalog-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))!important;gap:14px!important}.catalog-card{border-radius:22px!important;padding:10px!important}.catalog-card img{height:118px!important;object-fit:contain!important;background:#05050a!important}.catalog-card h3{font-size:16px!important}.catalog-card p{font-size:12px!important;min-height:28px!important}.price-pill{padding:7px 10px!important;font-size:13px!important}
+@media(max-width:1180px){.pos-client-grid{grid-template-columns:1fr 1fr}.catalog-hero,.catalog-admin-clean{grid-template-columns:1fr!important}.catalog-phone{width:100%!important}.qr-box{grid-template-columns:1fr!important}.qr-img{margin:auto}}
+@media(max-width:640px){.pos-client-grid{grid-template-columns:1fr}.pos-only-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.pos-product{min-height:126px!important;padding:12px!important}.pos-product b{font-size:14px!important}.pos-product img{height:58px!important}.catalog-hero{padding:16px!important}.catalog-hero h2{font-size:22px!important}.catalog-phone{display:none!important}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.catalog-card img{height:88px!important}.catalog-card h3{font-size:13px!important}.catalog-card p{display:none}.qr-img{width:120px!important;height:120px!important}.catalog-pick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
 </style>
 </head>
 <body>
@@ -604,6 +617,7 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
       <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊 Panel principal</a>
       {% endif %}
       <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾 Venta</a>
+      <a class="pos-link {{'on' if active=='pos' else ''}}" href="{{url_for('pos_rapido')}}">⚡ POS rápido</a>
       <a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚 Pedido</a>
       <a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️ Catálogo / QR</a>
       <a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒 Cierre</a>
@@ -630,9 +644,9 @@ button,.btn,.btn-success,.btn-primary,.primary{background:linear-gradient(135deg
       {{content|safe}}
       <div class="mobile-bottom {{'admin-mobile' if session.get('rol') == 'ADMIN' else 'seller-mobile'}}">
         {% if session.get('rol') == 'ADMIN' %}
-        <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊<br>Panel</a><a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒<br>Cierre</a><a class="{{'on' if active=='inventario' else ''}}" href="{{url_for('inventario')}}">📦<br>Inventario</a><a class="{{'on' if active=='recetas' else ''}}" href="{{url_for('recetas')}}">🍽️<br>Recetas</a><a class="{{'on' if active=='caja' else ''}}" href="{{url_for('caja')}}">💵<br>Caja</a><a class="{{'on' if active=='delivery' else ''}}" href="{{url_for('delivery')}}">🛵<br>Delivery</a><a class="{{'on' if active=='indicadores' else ''}}" href="{{url_for('indicadores')}}">📈<br>Indic.</a><a class="{{'on' if active=='reportes' else ''}}" href="{{url_for('reportes')}}">📄<br>Reportes</a><a class="{{'on' if active=='admin' else ''}}" href="{{url_for('admin')}}">⚙️<br>Admin</a><a href="{{url_for('logout')}}">🚪<br>Salir</a>
+        <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊<br>Panel</a><a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="pos-link {{'on' if active=='pos' else ''}}" href="{{url_for('pos_rapido')}}">⚡<br>POS</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒<br>Cierre</a><a class="{{'on' if active=='inventario' else ''}}" href="{{url_for('inventario')}}">📦<br>Inventario</a><a class="{{'on' if active=='recetas' else ''}}" href="{{url_for('recetas')}}">🍽️<br>Recetas</a><a class="{{'on' if active=='caja' else ''}}" href="{{url_for('caja')}}">💵<br>Caja</a><a class="{{'on' if active=='delivery' else ''}}" href="{{url_for('delivery')}}">🛵<br>Delivery</a><a class="{{'on' if active=='indicadores' else ''}}" href="{{url_for('indicadores')}}">📈<br>Indic.</a><a class="{{'on' if active=='reportes' else ''}}" href="{{url_for('reportes')}}">📄<br>Reportes</a><a class="{{'on' if active=='admin' else ''}}" href="{{url_for('admin')}}">⚙️<br>Admin</a><a href="{{url_for('logout')}}">🚪<br>Salir</a>
         {% else %}
-        <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒<br>Cierre</a><a href="{{url_for('logout')}}">🚪<br>Salir</a>
+        <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="pos-link {{'on' if active=='pos' else ''}}" href="{{url_for('pos_rapido')}}">⚡<br>POS</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒<br>Cierre</a><a href="{{url_for('logout')}}">🚪<br>Salir</a>
         {% endif %}
       </div>
     </div>
@@ -674,6 +688,7 @@ def tabs():
         return []
     return [
         ("ventas", "Venta", "ventas"),
+        ("pos", "POS rápido", "pos_rapido"),
         ("pedidos", "Pedido", "pedidos"),
         ("catalogo", "Catálogo", "catalogo_admin"),
         ("cierre", "Cierre", "cierre"),
@@ -921,7 +936,7 @@ def ventas():
             descontar_producto(producto_id, cantidad)
             log_event("PEDIDO", f"Creado {codigo} - {prod['nombre']}")
             flash(f"Pedido guardado: {prod['nombre']} x {cantidad}.", "ok")
-            return redirect(url_for("ventas"))
+            return redirect(url_for("pos_rapido") if accion == "pos_rapido" else url_for("ventas"))
         if accion == "cobrar_ticket":
             pedido_id = int(request.form.get("pedido_id") or 0)
             metodo = request.form.get("metodo_pago", "EFECTIVO")
@@ -965,7 +980,6 @@ def ventas():
     if is_admin():
         load_day_html = f"""<div class='panel load-day-panel'><div class='section-title'>📥 Carga de inicio de día</div><div class='hint-card'>Solo ADMIN: importa Excel/CSV para actualizar productos, precios y stock antes de iniciar ventas.</div><br><form method='post' enctype='multipart/form-data' class='actions'><input type='hidden' name='accion' value='importar_productos'><input type='file' name='archivo' accept='.xlsx,.csv' style='max-width:420px'><button class='btn-warning'>📥 Cargar día / importar Excel productos</button><a class='btn' href='{url_for('plantilla_inventario')}'>📄 Descargar plantilla</a></form></div>"""
     html = f"""
-    <div class='panel'><div class='section-title'>⚡ POS rápido: toca producto y agrega</div><div class='hint-card'>Botones grandes para ventas rápidas sin selector. Filtra por categoría para trabajar como carta: bebidas, pizzas, platos, combos.</div>{cat_links}<div class='pos-grid'>{pos_cards}</div></div>
     <div class='panel'><div class='section-title'>➕ Agregar producto a pedido inicial</div><div class='hint-card'>Busca el pedido abierto del cliente y agrega gaseosa, pollo, pizza u otro producto. El importe sube en el mismo pedido y el detalle queda disgregado por ítem.</div><form method='post' class='clean-grid'><input type='hidden' name='accion' value='agregar_a_pedido'><div><label>Pedido inicial / cliente</label><select name='pedido_existente_id' required>{opts_ped}</select></div><div><label>Producto a agregar</label><select name='producto_id' required>{opts_prod}</select></div><div><label>Cantidad</label><input name='cantidad' type='number' min='1' step='1' value='1'></div><button class='btn-success'>Agregar al mismo pedido</button></form></div>
     <div class='panel'><div class='section-title'>🧾 Nueva venta / pedido</div><br><form method='post'><input type='hidden' name='accion' value='guardar_pedido'><datalist id='clientes_list'>{cliente_options}</datalist><div class='clean-grid-4'><div><label>Mesa</label><select name='mesa'><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option><option>MESA 5</option><option>MESA 6</option></select></div><div><label>Tipo servicio</label><select name='servicio'><option>SALÓN</option><option>DELIVERY</option><option>RECOJO</option></select></div><div><label>Cliente</label><input name='cliente' list='clientes_list' placeholder='Buscar o escribir cliente'></div><div><label>Teléfono</label><input name='telefono' placeholder='Celular'></div><div><label>Dirección</label><input name='direccion' placeholder='Solo para delivery'></div><div><label>Referencia</label><input name='referencia' placeholder='Referencia'></div><div><label>Producto</label><select name='producto_id'>{opts_prod}</select></div><div><label>Cantidad</label><input name='cantidad' type='number' min='1' step='1' value='1'></div><div><label>Método pago</label><select name='metodo_pago'><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div><div><label>Descuento</label><input name='descuento' type='number' min='0' step='1' value='0'></div></div><br><div class='actions'><button class='primary'>Guardar pedido</button><button type='reset'>Limpiar venta</button><a class='btn' href='{url_for('inventario') if is_admin() else url_for('catalogo_admin')}'>Nuevo producto</a><a class='btn' href='{url_for('pedidos')}'>Ver pedidos</a></div></form></div>
     <div class='panel'><div class='box-title'>Cobro rápido</div><br><form method='post' class='actions'><input type='hidden' name='accion' value='cobrar_ticket'><select name='pedido_id' style='max-width:680px'>{opts_ped}</select><select name='metodo_pago' style='max-width:220px'><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select><button class='btn-success'>Cobrar y ticket / QR</button></form></div>
@@ -973,6 +987,105 @@ def ventas():
     <div class='panel' id='catalogo-productos'><div class='section-title'>🍽️ Catálogo de productos</div><div class='table-wrap small'><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div>{load_day_html}
     <div class='panel'><div class='section-title'>🧩 Últimos ítems registrados</div><div class='table-wrap small'><table><thead><tr><th>Pedido</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{tr_det}</tbody></table></div></div>"""
     return page(html, "ventas")
+
+
+@app.route("/pos_rapido", methods=["GET", "POST"])
+@login_required
+def pos_rapido():
+    if request.method == "POST":
+        producto_id = int(request.form.get("producto_id") or 0)
+        cantidad = int(float(request.form.get("cantidad") or 1))
+        prod = q_one("SELECT * FROM productos WHERE id=? AND activo=1", (producto_id,))
+        if not prod:
+            flash("Selecciona un producto válido.", "error")
+            return redirect(url_for("pos_rapido"))
+        descuento = float(request.form.get("descuento") or 0)
+        precio = float(prod["precio"] or 0)
+        subtotal = precio * cantidad
+        total = max(subtotal - descuento, 0)
+        codigo = "PED-" + now().strftime("%Y%m%d-%H%M%S")
+        cliente = up(request.form.get("cliente") or "CLIENTE GENERAL")
+        telefono = clean(request.form.get("telefono"))
+        direccion = up(request.form.get("direccion"))
+        referencia = up(request.form.get("referencia"))
+        servicio = request.form.get("servicio", "SALÓN")
+        metodo = request.form.get("metodo_pago", "EFECTIVO")
+        asegurar_cliente(cliente, telefono, direccion, referencia)
+        pedido_id = q_exec("INSERT INTO pedidos(codigo,fecha,hora,mesa,cliente,telefono,direccion,referencia,servicio,metodo_pago,subtotal,descuento,total,estado,pagado,usuario,observacion,sucursal_id) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (codigo, today(), hour(), request.form.get("mesa", ""), cliente, telefono, direccion, referencia, servicio, metodo, subtotal, descuento, total, "PENDIENTE", "NO", session.get("user"), "POS RÁPIDO", session.get("sucursal_id",1)))
+        q_exec("INSERT INTO pedido_detalle(pedido_id,producto_id,producto,cantidad,precio,total) VALUES(?,?,?,?,?,?)", (pedido_id, producto_id, prod["nombre"], cantidad, precio, total))
+        descontar_producto(producto_id, cantidad)
+        log_event("POS", f"POS rápido {codigo} - {cliente} - {prod['nombre']}")
+        flash(f"POS guardado: {cliente} · {prod['nombre']} x {cantidad}.", "ok")
+        return redirect(url_for("pos_rapido"))
+
+    buscar_prod = clean(request.args.get("buscar", ""))
+    cat_filtro = clean(request.args.get("categoria", ""))
+    where = ["activo=1"]
+    params = []
+    if buscar_prod:
+        like = f"%{buscar_prod.upper()}%"
+        where.append("(UPPER(nombre) LIKE ? OR UPPER(categoria) LIKE ? OR UPPER(codigo) LIKE ?)")
+        params += [like, like, like]
+    if cat_filtro:
+        where.append("UPPER(categoria)=UPPER(?)")
+        params.append(cat_filtro)
+    productos = q_all("SELECT * FROM productos WHERE " + " AND ".join(where) + " ORDER BY categoria, CASE WHEN stock>0 THEN 0 ELSE 1 END, nombre", tuple(params))
+    categorias = q_all("SELECT DISTINCT categoria FROM productos WHERE activo=1 AND COALESCE(categoria,'')<>'' ORDER BY categoria")
+    clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY nombre LIMIT 250")
+    cliente_options = "".join(f'<option value="{c["nombre"]}">{c["telefono"]} {c["direccion"]}</option>' for c in clientes)
+    cat_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}" {"selected" if cat_filtro==c["categoria"] else ""}>{c["categoria"]}</option>' for c in categorias)
+    cards = ""
+    for p in productos[:80]:
+        # POS rápido sin imágenes para que no se repita el logo dentro de los botones.
+        img_html = ""
+        cards += f"""<form method='post' class='pos-card-form keep-pos-form'>
+          <input type='hidden' name='producto_id' value='{p['id']}'>
+          <input type='hidden' name='cantidad' value='1'>
+          <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'>
+          <input type='hidden' name='telefono' class='pos_telefono_hidden' value=''>
+          <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''>
+          <input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'>
+          <input type='hidden' name='metodo_pago' class='pos_pago_hidden' value='EFECTIVO'>
+          <button class='pos-product' type='submit'>{img_html}<b>{p['nombre']}</b><span>{money(p['precio'])}</span><small>SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small></button>
+        </form>"""
+    if not cards:
+        cards = "<div class='hint-card'>No hay productos para la búsqueda.</div>"
+    cat_links = '<div class="category-bar"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('pos_rapido') + '">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("pos_rapido", categoria=c["categoria"])}">{c["categoria"]}</a>' for c in categorias) + '</div>'
+    html = f"""
+    <div class="mobile-active-title">⚡ POS rápido</div>
+    <div class="panel pos-client-panel"><div class="section-title">⚡ POS rápido con cliente identificado</div>
+      <div class="hint-card">Digita o selecciona el cliente una sola vez; luego toca el producto y se registra el pedido rápido con ese cliente.</div><br>
+      <datalist id="clientes_pos_list">{cliente_options}</datalist>
+      <form method="get" class="pos-client-grid">
+        <div><label>Cliente</label><input id="pos_cliente" list="clientes_pos_list" placeholder="CLIENTE GENERAL / nombre del cliente"></div>
+        <div><label>Teléfono / DNI</label><input id="pos_telefono" placeholder="Celular o DNI"></div>
+        <div><label>Mesa</label><select id="pos_mesa"><option></option><option>MESA 1</option><option>MESA 2</option><option>MESA 3</option><option>MESA 4</option><option>MESA 5</option><option>MESA 6</option></select></div>
+        <div><label>Servicio</label><select id="pos_servicio"><option>SALÓN</option><option>RECOJO</option><option>DELIVERY</option></select></div>
+        <div><label>Pago</label><select id="pos_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select></div>
+      </form>
+    </div>
+    <div class="panel filter-sticky"><form method="get" action="{url_for('pos_rapido')}" class="catalog-filter-actions"><div><label>Buscar producto</label><input name="buscar" value="{buscar_prod}" placeholder="Buscar plato, bebida, código o categoría"></div><div><label>Categoría</label><select name="categoria" onchange="this.form.submit()">{cat_opts}</select></div><button class="btn-success">Buscar</button><a class="btn" href="{url_for('pos_rapido')}">Limpiar</a></form></div>
+    <div class="panel"><div class="section-title">🍽️ Toca un producto para vender</div>{cat_links}<div class="pos-only-grid">{cards}</div></div>
+    <script>
+      function syncPOSClient(){{
+        const cliente=(document.getElementById('pos_cliente').value||'CLIENTE GENERAL').trim() || 'CLIENTE GENERAL';
+        const telefono=(document.getElementById('pos_telefono').value||'').trim();
+        const mesa=document.getElementById('pos_mesa').value||'';
+        const servicio=document.getElementById('pos_servicio').value||'SALÓN';
+        const pago=document.getElementById('pos_pago').value||'EFECTIVO';
+        document.querySelectorAll('.pos_cliente_hidden').forEach(e=>e.value=cliente);
+        document.querySelectorAll('.pos_telefono_hidden').forEach(e=>e.value=telefono);
+        document.querySelectorAll('.pos_mesa_hidden').forEach(e=>e.value=mesa);
+        document.querySelectorAll('.pos_servicio_hidden').forEach(e=>e.value=servicio);
+        document.querySelectorAll('.pos_pago_hidden').forEach(e=>e.value=pago);
+        try{{sessionStorage.setItem('pos_cliente',cliente);sessionStorage.setItem('pos_telefono',telefono);sessionStorage.setItem('pos_mesa',mesa);sessionStorage.setItem('pos_servicio',servicio);sessionStorage.setItem('pos_pago',pago);}}catch(e){{}}
+      }}
+      ['pos_cliente','pos_telefono','pos_mesa','pos_servicio','pos_pago'].forEach(id=>{{const el=document.getElementById(id); if(el) el.addEventListener('input',syncPOSClient); if(el) el.addEventListener('change',syncPOSClient);}});
+      window.addEventListener('load',function(){{try{{document.getElementById('pos_cliente').value=sessionStorage.getItem('pos_cliente')||'';document.getElementById('pos_telefono').value=sessionStorage.getItem('pos_telefono')||'';document.getElementById('pos_mesa').value=sessionStorage.getItem('pos_mesa')||'';document.getElementById('pos_servicio').value=sessionStorage.getItem('pos_servicio')||'SALÓN';document.getElementById('pos_pago').value=sessionStorage.getItem('pos_pago')||'EFECTIVO';}}catch(e){{}} syncPOSClient();}});
+      document.querySelectorAll('.keep-pos-form').forEach(f=>f.addEventListener('submit',syncPOSClient));
+    </script>
+    """
+    return page(html, "pos")
 
 @app.route("/pedidos", methods=["GET", "POST"])
 @login_required
@@ -1359,7 +1472,7 @@ def catalogo_admin():
 
     html = f"""
     <div class="mobile-active-title">🖼️ Catálogo</div>
-    <div class="catalog-hero same-place-anchor" id="catalogo-top"><div><h2>Catálogo online con imágenes y QR</h2><p>Vista más compacta: comparte QR, publica imágenes y administra productos sin espacios grandes.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div><div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div></div><br>
+    <div class="catalog-hero same-place-anchor" id="catalogo-top"><div><h2>Catálogo online con imágenes y QR</h2><p>Catálogo ajustado y dinámico: QR, link público e imágenes de productos en diseño compacto.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo público</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button></div></div><div class="catalog-phone"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b>{negocio}</b><span>☰</span></div><div class="phone-grid">{phone_items}</div></div></div><br>
     <div class="grid2 catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">Compartir por WhatsApp</a></div></div></div>{admin_block}</div><br>
     <div class="panel same-place-anchor" id="productos-catalogo"><div class="section-title">Productos publicados</div><div class="keep-position-note">Al retirar o agregar productos, la pantalla conserva la misma posición.</div><div class="catalog-grid">{cards}</div></div>
     <script>function pickCatalog(n,c,p){{document.getElementById('cat_titulo').value=n;document.getElementById('cat_categoria').value=c;document.getElementById('cat_precio').value=p;window.scrollTo({{top:document.getElementById('cat_titulo').getBoundingClientRect().top+window.scrollY-120,behavior:'smooth'}});}}</script>
