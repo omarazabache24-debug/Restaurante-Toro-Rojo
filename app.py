@@ -785,6 +785,120 @@ body{
 .catalog-card{background:linear-gradient(180deg,#171b2a,#111827)!important;}
 .catalog-phone{background:linear-gradient(180deg,#1f2638,#111827)!important;}
 
+
+
+/* ===== AJUSTE FINAL: FONDO CLARO PREMIUM + POS RAPIDO LEGIBLE ===== */
+body{
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255,122,24,.16), transparent 26%),
+    radial-gradient(circle at 92% 4%, rgba(14,165,233,.18), transparent 28%),
+    linear-gradient(135deg,#f8fafc 0%,#eef4ff 46%,#fff1f2 100%)!important;
+  color:#0f172a!important;
+}
+.app{
+  background:
+    radial-gradient(circle at 15% 0%, rgba(255,23,68,.12), transparent 26%),
+    radial-gradient(circle at 85% 6%, rgba(56,189,248,.14), transparent 30%),
+    linear-gradient(135deg,#f8fafc 0%,#eaf3ff 52%,#fff7ed 100%)!important;
+}
+.main,.content{background:transparent!important;color:#0f172a!important;}
+.topbar{background:rgba(255,255,255,.78)!important;color:#0f172a!important;border-bottom:1px solid rgba(15,23,42,.08)!important;backdrop-filter:blur(14px)!important;box-shadow:0 10px 30px rgba(15,23,42,.08)!important;}
+.topbar h1,.topbar p{color:#0f172a!important;}
+.panel,.kpi,.analytics-card,.pedido-card{
+  background:rgba(255,255,255,.88)!important;
+  color:#0f172a!important;
+  border:1px solid rgba(148,163,184,.28)!important;
+  box-shadow:0 18px 45px rgba(15,23,42,.10)!important;
+}
+.panel:nth-of-type(2n),.panel:nth-of-type(3n){background:rgba(255,255,255,.92)!important;}
+.section-title,.box-title,.panel h1,.panel h2,.panel h3,label{color:#0f172a!important;}
+.hint-card,.muted{background:#fff7ed!important;color:#7c2d12!important;border-color:#fed7aa!important;}
+input,select,textarea{background:#fff!important;color:#0f172a!important;border:1px solid #cbd5e1!important;box-shadow:0 6px 16px rgba(15,23,42,.05)!important;}
+input::placeholder,textarea::placeholder{color:#64748b!important;}
+.table-wrap{background:#fff!important;border-color:#e2e8f0!important;}
+td{background:#fff!important;color:#0f172a!important;border-color:#e2e8f0!important;}
+th{background:#0f172a!important;color:#fff!important;border-color:#1e293b!important;}
+.tabs{background:rgba(255,255,255,.78)!important;border-color:#e2e8f0!important;box-shadow:0 12px 30px rgba(15,23,42,.07)!important;}
+.tabs a{background:#fff!important;color:#0f172a!important;border-color:#e2e8f0!important;}
+.tabs a.on{background:linear-gradient(135deg,#ff1744,#ff7a00)!important;color:#fff!important;}
+.side{background:linear-gradient(180deg,#080711,#260817 52%,#0f172a)!important;}
+
+.pos-app-shell{
+  max-width:1320px!important;
+  margin:0 auto!important;
+  padding:22px!important;
+  border-radius:34px!important;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255,23,68,.12), transparent 30%),
+    radial-gradient(circle at 96% 0%, rgba(14,165,233,.16), transparent 30%),
+    linear-gradient(135deg,#ffffff 0%,#f1f7ff 56%,#fff1f2 100%)!important;
+  border:1px solid rgba(148,163,184,.28)!important;
+  box-shadow:0 28px 70px rgba(15,23,42,.16)!important;
+  color:#0f172a!important;
+}
+.pos-app-header{background:transparent!important;margin-bottom:14px!important;}
+.pos-app-header h2{color:#0f172a!important;font-size:34px!important;}
+.pos-app-header p{color:#475569!important;}
+.pos-app-header > div:last-child{color:#475569!important;}
+.pos-client-panel-dark{
+  background:rgba(255,255,255,.82)!important;
+  border:1px solid rgba(148,163,184,.28)!important;
+  box-shadow:0 15px 34px rgba(15,23,42,.08)!important;
+}
+.pos-client-grid{display:grid!important;grid-template-columns:1.25fr .9fr .6fr .75fr .75fr!important;gap:12px!important;}
+.pos-client-grid label{color:#0f172a!important;}
+.pos-phone-layout{display:grid!important;grid-template-columns:390px minmax(0,1fr)!important;gap:22px!important;align-items:start!important;}
+.pos-phone{
+  background:#ffffff!important;
+  color:#0f172a!important;
+  border:1px solid rgba(148,163,184,.28)!important;
+  box-shadow:0 22px 50px rgba(15,23,42,.12)!important;
+}
+.phone-top{color:#64748b!important;}
+.pos-hero-food{
+  background:
+    linear-gradient(135deg,rgba(0,0,0,.24),rgba(0,0,0,.15)),
+    radial-gradient(circle at 20% 10%,rgba(255,255,255,.22),transparent 24%),
+    linear-gradient(135deg,#fb923c 0%,#ef4444 46%,#0f172a 100%)!important;
+}
+.pos-hero-food h1{color:#fff!important;}
+.pos-category-title{color:#0f172a!important;border-color:#cbd5e1!important;}
+.pos-mini-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;max-height:none!important;overflow:visible!important;}
+.pos-mini-card{
+  background:linear-gradient(135deg,#ff1744,#ff4d4d)!important;
+  color:#fff!important;
+  border:0!important;
+  border-radius:22px!important;
+  min-height:178px!important;
+  padding:12px!important;
+  box-shadow:0 16px 30px rgba(255,23,68,.22)!important;
+}
+.pos-mini-card b{color:#fff!important;font-size:13px!important;line-height:1.08!important;}
+.pos-mini-card span{color:#fff!important;font-size:12px!important;}
+.pos-mini-card small{background:rgba(255,255,255,.18)!important;color:#fff!important;}
+.pos-mini-img{height:86px!important;background:#fff!important;border-radius:16px!important;}
+.pos-mini-img img,.pos-list-img img{object-fit:cover!important;border-radius:14px!important;}
+.pos-search-bar{grid-template-columns:minmax(220px,1fr) 220px 58px 58px!important;gap:10px!important;}
+.pos-app-shell .category-bar a,.category-bar a{background:#fff!important;color:#0f172a!important;border:1px solid #e2e8f0!important;box-shadow:0 8px 18px rgba(15,23,42,.06)!important;}
+.pos-app-shell .category-bar a.on,.category-bar a.on,.category-bar a:hover{background:linear-gradient(135deg,#ff1744,#ff7a00)!important;color:#fff!important;}
+.pos-food-list{display:grid!important;grid-template-columns:1fr!important;gap:14px!important;}
+.pos-list-card{
+  background:#fff!important;
+  color:#0f172a!important;
+  border:1px solid #e2e8f0!important;
+  border-radius:22px!important;
+  box-shadow:0 14px 30px rgba(15,23,42,.08)!important;
+  min-height:112px!important;
+}
+.pos-list-card b{color:#0f172a!important;}
+.pos-list-card p{color:#64748b!important;}
+.pos-list-card span{color:#0f172a!important;}
+.pos-list-img{background:#fff7ed!important;border:1px solid #fed7aa!important;}
+.heart{background:#fff!important;color:#ff1744!important;box-shadow:0 5px 12px rgba(15,23,42,.12)!important;}
+.add-pill{background:linear-gradient(135deg,#ff1744,#ff6b35)!important;color:#fff!important;}
+@media(max-width:1100px){.pos-phone-layout{grid-template-columns:1fr!important}.pos-phone-left{max-width:none!important}.pos-client-grid{grid-template-columns:1fr 1fr!important}.pos-search-bar{grid-template-columns:1fr!important}}
+@media(max-width:650px){.pos-app-shell{padding:12px!important;border-radius:0!important}.pos-client-grid{grid-template-columns:1fr!important}.pos-mini-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.pos-mini-card{min-height:165px!important}.pos-search-bar{grid-template-columns:1fr!important}.pos-list-card{grid-template-columns:82px 1fr!important}.pos-list-card .add-pill{grid-column:1/-1;text-align:center}.pos-app-header h2{font-size:25px!important}}
+
 </style>
 </head>
 <body>
@@ -1268,7 +1382,7 @@ def pos_rapido():
     <div class="mobile-active-title">⚡ POS rápido</div>
     <div class="pos-app-shell">
       <div class="pos-app-header">
-        <div style="display:flex;align-items:center;gap:14px"><img src="{url_for('static', filename='toro_logo.png')}" alt="EL TORO"><div><h2>POS rápido</h2><p>Diseño oscuro tipo app: busca, toca y vende al instante</p></div></div>
+        <div style="display:flex;align-items:center;gap:14px"><img src="{url_for('static', filename='toro_logo.png')}" alt="EL TORO"><div><h2>POS rápido</h2><p>Diseño claro premium: busca, toca y vende al instante</p></div></div>
         <div style="font-size:26px;color:#94a3b8">☰</div>
       </div>
       <div class="pos-client-panel-dark">
@@ -1284,7 +1398,7 @@ def pos_rapido():
       <div class="pos-phone-layout">
         <div class="pos-phone pos-phone-left">
           <div class="phone-top"><span>←</span><span>☰</span></div>
-          <div class="pos-hero-food"><h1>Different<br>Kind of Food</h1></div>
+          <div class="pos-hero-food"><h1>El Toro<br>POS Rápido</h1></div>
           <div class="pos-category-title">Food Category</div>
           <div class="pos-mini-grid">{mini_cards[:999999]}</div>
           <div class="pos-category-title">Food Category</div>
