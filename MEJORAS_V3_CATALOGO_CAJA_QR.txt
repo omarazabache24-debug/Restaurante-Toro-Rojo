@@ -1,0 +1,9 @@
+MEJORAS V3 APLICADAS
+1. Catálogo publicado con tarjetas más grandes e imágenes más visibles.
+2. Botón rápido “Ver catálogo publicado”.
+3. Bloqueo de ventas/POS/cobros si la caja no está abierta.
+4. Aviso visible de Caja ABIERTA / SIN ABRIR con acceso a abrir caja.
+5. QR del catálogo generado en PNG de alto contraste con corrección alta para mejorar lectura por cámara.
+6. Lector QR mantiene BarcodeDetector y respaldo jsQR; video visible al activar cámara.
+7. Catálogo de productos con indicador de cantidad visible.
+8. Se mejoró y centró la vista de Sucursales creadas y Usuarios creados.
