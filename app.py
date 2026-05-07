@@ -480,7 +480,7 @@ def safe_home():
     return "dashboard" if is_admin() else "ventas"
 
 def admin_only_redirect():
-    flash("Acceso restringido: tu usuario solo tiene Venta, Pedido, Cierre y Salir.", "error")
+    flash("Acceso restringido: tu usuario solo tiene Venta, POS rápido, Pedido, Catálogo y Salir.", "error")
     return redirect(url_for("ventas"))
 
 # =========================
@@ -1441,6 +1441,24 @@ body{
 .chart-hbar .hbar{height:26px;border-radius:999px;background:linear-gradient(90deg,#ff1744,#ff9f00);min-width:24px}
 .qr-camera-box{margin-top:12px;padding:14px;border:1px dashed #ff9f9f;border-radius:18px;background:#fff7f7}
 .qr-camera-box video{width:100%;max-width:360px;border-radius:18px;display:none;margin-top:10px}
+
+
+/* ===== AJUSTES 2026-05-07: catálogo compacto, QR cámara, usuarios PRO ===== */
+.catalog-admin-clean{display:grid!important;grid-template-columns:minmax(320px,520px) 1fr!important;align-items:start!important;gap:18px!important;min-height:0!important}
+.catalog-admin-clean>.panel{height:auto!important;min-height:0!important;margin-bottom:0!important}
+.catalog-admin-clean .panel:first-child{max-width:520px!important}
+.catalog-indicator,.inventory-indicator{display:grid!important;grid-template-columns:repeat(3,minmax(120px,1fr))!important;gap:12px!important;margin:12px 0!important}
+.metric{background:linear-gradient(135deg,#fff,#f8fafc)!important;border:1px solid #dbe5ef!important;border-radius:18px!important;padding:14px!important;text-align:center!important;box-shadow:0 10px 24px rgba(15,35,55,.07)!important}
+.metric b{display:block!important;font-size:30px!important;color:#ff1744!important;line-height:1!important}.metric span{display:block!important;color:#64748b!important;font-weight:900!important;margin-top:5px!important}
+.product-count-hero{display:grid;grid-template-columns:90px 1fr;gap:16px;align-items:center;background:linear-gradient(135deg,#071827,#0B2D4A)!important;color:#fff!important;border-radius:24px!important;padding:18px!important;margin-bottom:18px!important;box-shadow:0 18px 40px rgba(8,34,56,.18)!important}
+.product-count-hero .count-icon{width:78px;height:78px;border-radius:22px;background:linear-gradient(135deg,#ff1744,#ff9f00);display:grid;place-items:center;font-size:36px;box-shadow:0 14px 32px rgba(255,23,68,.22)}
+.product-count-hero b{font-size:42px;color:#fff}.product-count-hero span{display:block;font-weight:900;color:#dbeafe}.product-count-hero small{color:#b6c7d8;font-weight:800}
+.catalog-collapsible{transition:.25s ease;overflow:hidden}.catalog-collapsible.collapsed .catalog-collapsible-body{display:none}.catalog-toggle-btn{float:right;width:auto!important;padding:9px 14px!important;background:linear-gradient(90deg,#ff1744,#ff9f00)!important;color:#fff!important}
+.qr-box{display:grid!important;grid-template-columns:150px minmax(220px,1fr)!important;gap:18px!important;align-items:center!important}.qr-img{width:140px!important;height:140px!important;object-fit:contain!important;background:#fff!important;border-radius:18px!important;padding:12px!important;box-shadow:0 10px 26px rgba(15,35,55,.12)!important}
+.qr-camera-box{margin-top:16px!important;padding:18px!important;border:1px dashed #ff6b7c!important;border-radius:20px!important;background:linear-gradient(135deg,#fff7f7,#fff)!important}.qr-camera-box video{width:100%!important;max-width:420px!important;border-radius:18px!important;display:none!important;margin-top:12px!important;border:3px solid #ff1744}.qr-camera-box video.on{display:block!important}
+.admin-table-grid{display:grid!important;grid-template-columns:1fr 1.25fr!important;gap:20px!important;align-items:start!important}.admin-table-grid .panel{overflow:hidden!important}.admin-table-grid .table-wrap.small{max-height:none!important;overflow:visible!important;border:0!important}.admin-table-grid table{min-width:0!important;width:100%!important;border-collapse:separate!important;border-spacing:0 10px!important}.admin-table-grid thead th{border:0!important;border-radius:0!important}.admin-table-grid tbody tr{background:#fff!important;box-shadow:0 8px 18px rgba(15,35,55,.08)!important}.admin-table-grid tbody td{white-space:normal!important;background:#fff!important;border-top:1px solid #e2e8f0!important;border-bottom:1px solid #e2e8f0!important}.admin-action-stack{display:flex!important;gap:8px!important;flex-wrap:wrap!important;justify-content:center!important}.admin-action-stack form{display:inline-block}.btn-mini{width:auto!important;padding:8px 12px!important;font-size:12px!important}.pass-box{display:flex;gap:8px;align-items:center}.pass-box input{min-width:120px!important}.pass-box button{width:auto!important;padding:8px!important}
+@media(max-width:900px){.catalog-admin-clean,.admin-table-grid{grid-template-columns:1fr!important}.catalog-admin-clean .panel:first-child{max-width:none!important}.qr-box{grid-template-columns:1fr!important;text-align:center}.qr-img{margin:auto}.catalog-indicator,.inventory-indicator{grid-template-columns:1fr!important}.product-count-hero{grid-template-columns:1fr!important;text-align:center}.product-count-hero .count-icon{margin:auto}.admin-table-grid .table-wrap.small{overflow:auto!important}.admin-table-grid table{min-width:720px!important;border-spacing:0!important}.admin-table-grid tbody td{white-space:nowrap!important}}
+
 </style>
 </head>
 <body>
@@ -1467,8 +1485,8 @@ body{
       <a class="pos-link {{'on' if active=='pos' else ''}}" href="{{url_for('pos_rapido')}}">⚡ POS rápido</a>
       <a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚 Pedido</a>
       <a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️ Catálogo / QR</a>
-      <a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒 Cierre</a>
       {% if session.get('rol') == 'ADMIN' %}
+      <a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒 Cierre</a>
       <a class="{{'on' if active=='inventario' else ''}}" href="{{url_for('inventario')}}">📦 Inventario</a>
       <a class="{{'on' if active=='recetas' else ''}}" href="{{url_for('recetas')}}">🍽️ Recetas</a>
       <a class="{{'on' if active=='caja' else ''}}" href="{{url_for('caja')}}">💵 Caja</a>
@@ -1507,7 +1525,7 @@ body{
         {% if session.get('rol') == 'ADMIN' %}
         <a class="{{'on' if active=='dashboard' else ''}}" href="{{url_for('dashboard')}}">📊<br>Panel</a><a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="pos-link {{'on' if active=='pos' else ''}}" href="{{url_for('pos_rapido')}}">⚡<br>POS</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒<br>Cierre</a><a class="{{'on' if active=='inventario' else ''}}" href="{{url_for('inventario')}}">📦<br>Inventario</a><a class="{{'on' if active=='recetas' else ''}}" href="{{url_for('recetas')}}">🍽️<br>Recetas</a><a class="{{'on' if active=='caja' else ''}}" href="{{url_for('caja')}}">💵<br>Caja</a><a class="{{'on' if active=='delivery' else ''}}" href="{{url_for('delivery')}}">🛵<br>Delivery</a><a class="{{'on' if active=='indicadores' else ''}}" href="{{url_for('indicadores')}}">📈<br>Indic.</a><a class="{{'on' if active=='reportes' else ''}}" href="{{url_for('reportes')}}">📄<br>Reportes</a><a class="{{'on' if active=='admin' else ''}}" href="{{url_for('admin')}}">⚙️<br>Admin</a><a href="{{url_for('logout')}}">🚪<br>Salir</a>
         {% else %}
-        <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="pos-link {{'on' if active=='pos' else ''}}" href="{{url_for('pos_rapido')}}">⚡<br>POS</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a class="{{'on' if active=='cierre' else ''}}" href="{{url_for('cierre')}}">🔒<br>Cierre</a><a href="{{url_for('logout')}}">🚪<br>Salir</a>
+        <a class="{{'on' if active=='ventas' else ''}}" href="{{url_for('ventas')}}">🧾<br>Venta</a><a class="pos-link {{'on' if active=='pos' else ''}}" href="{{url_for('pos_rapido')}}">⚡<br>POS</a><a class="{{'on' if active=='pedidos' else ''}}" href="{{url_for('pedidos')}}">🚚<br>Pedido</a><a class="{{'on' if active=='catalogo' else ''}}" href="{{url_for('catalogo_admin')}}">🖼️<br>Catálogo</a><a href="{{url_for('logout')}}">🚪<br>Salir</a>
         {% endif %}
       </div>
 
@@ -1632,7 +1650,6 @@ def tabs():
         ("pos", "POS rápido", "pos_rapido"),
         ("pedidos", "Pedido", "pedidos"),
         ("catalogo", "Catálogo", "catalogo_admin"),
-        ("cierre", "Cierre", "cierre"),
     ]
 
 def page(content, active="dashboard"):
@@ -1881,6 +1898,7 @@ def dashboard():
 
 @app.route("/cierre", methods=["GET", "POST"])
 @login_required
+@admin_required
 def cierre():
     f = get_ctx("dia_abierto", today())
     sucid = session.get("sucursal_id", 1)
@@ -2467,6 +2485,7 @@ def inventario():
     sin_stock = q_one("SELECT COUNT(*) c FROM productos WHERE activo=1 AND COALESCE(stock,0)<=0")["c"]
     html = f'''
     <div class="mobile-active-title">📦 Inventario</div>
+    <div class="product-count-hero"><div class="count-icon">📦</div><div><span>Total de productos en inventario</span><b>{total_productos}</b><small>Vista rápida para controlar productos registrados, stock bajo y productos sin stock.</small></div></div>
     <div class="panel"><div class="section-title">📦 Inventario: carga individual / masiva</div><div class="inventory-indicator"><div class="metric"><b>{total_productos}</b><span>Productos registrados</span></div><div class="metric"><b>{stock_bajo}</b><span>Stock bajo</span></div><div class="metric"><b>{sin_stock}</b><span>Sin stock</span></div></div><div class="inventory-tabs"><div class="inventory-tab active">Individual</div><div class="inventory-tab">Masiva Excel/CSV</div><div class="inventory-tab">Stock</div></div><div class="hint-card"><b>SKU:</b> letras y números. Ejemplos: PIZ-MUZ-01, BEB-COCA-500, PL-001. Todo precio y stock trabaja con números enteros.</div></div>
     <div class="panel"><div class="section-title">➕ Producto individual</div><form method="post"><input type="hidden" name="accion" value="producto"><div class="inventory-sku-row"><div><label>Código/SKU</label><input list="sku_sugeridos" name="codigo" placeholder="Ej. PIZ-MUZ-01" pattern="[A-Za-z0-9-]+"><datalist id="sku_sugeridos"><option value="PIZ-MUZ-01"><option value="PIZ-AME-01"><option value="PARR-POL-01"><option value="BEB-COCA-500"><option value="PL-001"></datalist></div><div><label>Nombre producto</label><input name="nombre" placeholder="Nombre producto"></div><div><label>Categoría</label><select name="categoria"><option>PIZZAS</option><option>PLATOS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>ADICIONALES</option><option>INSUMOS</option></select></div><div><label>Tipo</label><select name="tipo"><option>VENTA</option><option>INSUMO</option></select></div><div><label>Unidad</label><select name="unidad"><option>PLATO</option><option>UND</option><option>KG</option><option>PORCION</option></select></div></div><br><div class="inventory-num-row"><div><label>Precio venta</label><input name="precio" type="number" step="1" min="0"></div><div><label>Costo</label><input name="costo" type="number" step="1" min="0"></div><div><label>Stock</label><input name="stock" type="number" step="1" min="0"></div><div><label>Stock mínimo</label><input name="stock_min" type="number" step="1" min="0"></div><button class="primary">Guardar producto</button></div></form></div>
     <div class="panel"><div class="section-title">📥 Carga masiva / inicio de día</div><form method="post" enctype="multipart/form-data" class="actions"><input type="hidden" name="accion" value="importar"><input type="file" name="archivo" accept=".xlsx,.csv" style="max-width:340px"><button class="btn-warning">Importar Excel/CSV</button><a class="btn" href="{url_for('plantilla_inventario')}">Descargar plantilla</a><a class="btn" href="{url_for('export_inventario')}">Exportar inventario</a></form></div>
@@ -2700,7 +2719,9 @@ def delivery():
       .crm-badge.frecuente{{background:#fef3c7;color:#92400e}}
       .crm-help{{background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;border-radius:18px;padding:14px;font-weight:850;margin-bottom:14px}}
       @media(max-width:900px){{.crm-grid{{grid-template-columns:1fr}}}}
-    </style>
+    
+
+</style>
     <div class="crm-grid">
       <div class="crm-kpi">👥<br><b>{total_clientes}</b><br>Total clientes</div>
       <div class="crm-kpi">⭐<br><b>{frecuentes}</b><br>Frecuentes automáticos</div>
@@ -3052,7 +3073,8 @@ def catalogo_admin():
     html = f"""
     <div class="mobile-active-title">🖼️ Catálogo / QR</div>
     <div class="same-place-anchor" id="catalogo-top"></div>
-    <div class="grid2 catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="catalog-indicator"><div class="metric"><b>{total_catalogo}</b><span>Productos publicados</span></div><div class="metric"><b>{total_productos_base}</b><span>Productos base</span></div><div class="metric"><b>{total_destacados}</b><span>Destacados</span></div></div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">WhatsApp</a></div></div></div><div class="qr-camera-box"><b>📷 Lector QR con cámara</b><p class="muted">Apunta a un QR del catálogo y se abrirá automáticamente.</p><button class="btn-warning" type="button" onclick="scanCatalogQR()">Leer QR con cámara</button><video id="qr_video" playsinline></video><div id="qr_result" class="muted"></div></div></div>{admin_block}</div>
+    <div class="product-count-hero"><div class="count-icon">🍽️</div><div><span>Total de productos publicados</span><b>{total_catalogo}</b><small>Control rápido de catálogo: publicados, base y destacados en una sola vista.</small></div></div>
+    <div class="catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="catalog-indicator"><div class="metric"><b>{total_catalogo}</b><span>Productos publicados</span></div><div class="metric"><b>{total_productos_base}</b><span>Productos base</span></div><div class="metric"><b>{total_destacados}</b><span>Destacados</span></div></div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><div class="actions"><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">WhatsApp</a></div></div></div><div class="qr-camera-box"><b>📷 Lector QR con cámara</b><p class="muted">Apunta a un QR del catálogo y se abrirá automáticamente.</p><button class="btn-warning" type="button" onclick="scanCatalogQR()">Leer QR con cámara</button><video id="qr_video" playsinline muted></video><canvas id="qr_canvas" style="display:none"></canvas><div id="qr_result" class="muted"></div></div></div>{admin_block}</div>
     <div class="panel same-place-anchor" id="productos-catalogo"><div class="section-title">Productos publicados</div><div class="catalog-grid">{cards}</div></div>
     <script>
     function goCatForm(){{const el=document.getElementById('cat_titulo'); if(el) window.scrollTo({{top:el.getBoundingClientRect().top+window.scrollY-140,behavior:'smooth'}});}}
@@ -3062,13 +3084,34 @@ def catalogo_admin():
     function filterCatalogPicker(){{const q=(document.getElementById('buscar_catalog_picker')?.value||'').toUpperCase();const c=(document.getElementById('filtro_catalog_picker')?.value||'').toUpperCase();document.querySelectorAll('.catalog-pick').forEach(b=>{{const name=(b.dataset.name||b.textContent||'').toUpperCase();const cat=(b.dataset.cat||'').toUpperCase();b.style.display=(!q||name.includes(q)||cat.includes(q))&&(!c||cat===c)?'flex':'none';}});}}
     function resetCatalogForm(clear){{const f=document.getElementById('catalog_form'); if(clear!==false && f) f.reset();document.getElementById('cat_accion').value='crear_item';document.getElementById('cat_item_id').value='';document.getElementById('cat_mode').textContent='Nuevo producto';document.getElementById('cat_submit').textContent='Agregar al catálogo';}}
     function toggleCatalogUpload(){{const p=document.getElementById('catalog_upload_panel'); if(p) p.classList.toggle('collapsed');}}
+    function loadQRLib(){{
+      return new Promise((resolve,reject)=>{{
+        if(window.jsQR) return resolve();
+        const sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+        sc.onload=resolve; sc.onerror=()=>reject(new Error('No se pudo cargar lector QR de respaldo.')); document.head.appendChild(sc);
+      }});
+    }}
+    function openQRValue(val){{
+      const out=document.getElementById('qr_result'); val=(val||'').trim(); if(!val) return; out.textContent='QR detectado: '+val;
+      if(val.startsWith('http')) window.open(val,'_blank'); else window.open('{url_for('menu_publico')}','_blank');
+    }}
     async function scanCatalogQR(){{
-      const out=document.getElementById('qr_result'); const video=document.getElementById('qr_video');
-      if(!('BarcodeDetector' in window)){{out.textContent='Tu navegador no soporta lector QR directo. Usa Chrome/Edge actualizado o abre el link público.'; return;}}
-      const detector=new BarcodeDetector({{formats:['qr_code']}});
-      try{{const stream=await navigator.mediaDevices.getUserMedia({{video:{{facingMode:'environment'}}}}); video.srcObject=stream; video.style.display='block'; await video.play(); out.textContent='Leyendo QR...';
-        const timer=setInterval(async()=>{{const codes=await detector.detect(video); if(codes.length){{clearInterval(timer); stream.getTracks().forEach(t=>t.stop()); const val=codes[0].rawValue||''; out.textContent=val; if(val.startsWith('http')) window.open(val,'_blank');}}}},700);
-      }}catch(e){{out.textContent='No se pudo activar la cámara: '+e;}}
+      const out=document.getElementById('qr_result'); const video=document.getElementById('qr_video'); const canvas=document.getElementById('qr_canvas');
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){{out.textContent='Tu navegador no permite cámara. Abre el link público del catálogo.'; return;}}
+      try{{
+        const stream=await navigator.mediaDevices.getUserMedia({{video:{{facingMode:{{ideal:'environment'}}}}, audio:false}});
+        video.srcObject=stream; video.classList.add('on'); await video.play(); out.textContent='Cámara activa. Apunta al QR del catálogo...';
+        if('BarcodeDetector' in window){{
+          const detector=new BarcodeDetector({{formats:['qr_code']}});
+          const timer=setInterval(async()=>{{try{{const codes=await detector.detect(video); if(codes.length){{clearInterval(timer); stream.getTracks().forEach(t=>t.stop()); video.classList.remove('on'); openQRValue(codes[0].rawValue||'');}}}}catch(e){{}}}},500);
+          return;
+        }}
+        await loadQRLib(); const ctx=canvas.getContext('2d');
+        const tick=()=>{{
+          if(video.readyState===video.HAVE_ENOUGH_DATA){{canvas.width=video.videoWidth; canvas.height=video.videoHeight; ctx.drawImage(video,0,0,canvas.width,canvas.height); const img=ctx.getImageData(0,0,canvas.width,canvas.height); const code=jsQR(img.data,img.width,img.height); if(code&&code.data){{stream.getTracks().forEach(t=>t.stop()); video.classList.remove('on'); openQRValue(code.data); return;}}}}
+          requestAnimationFrame(tick);
+        }}; tick();
+      }}catch(e){{out.textContent='No se pudo activar la cámara. Revisa permisos del navegador o usa Abrir catálogo.';}}
     }}
     </script>
     """
@@ -3078,7 +3121,7 @@ def catalogo_admin():
 def menu_publico():
     negocio = get_ctx("negocio_nombre", "EL TORO RESTAURANT GRILL")
     items = q_all("SELECT * FROM catalogo_publico WHERE activo=1 ORDER BY destacado DESC,id DESC")
-    css = BASE_HTML.split("<style>")[1].split("</style>")[0]
+    css = BASE_HTML.split("<style>", 1)[1].split("</style>", 1)[0]
     cards = ""
     for i in items:
         img = url_for("static", filename=(i["imagen"] or "toro_logo.png"))
@@ -3086,7 +3129,9 @@ def menu_publico():
     if not cards:
         cards = "<div class='hint-card'>Catálogo en preparación.</div>"
     logo = url_for('static', filename='toro_logo.png')
-    return f"""<!doctype html><html lang='es'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>{negocio}</title><style>{css}</style></head><body style='background:#101016;color:white'><div style='max-width:1100px;margin:auto;padding:24px'><div class='catalog-hero'><div><img src='{logo}' style='width:120px'><h2>{negocio}</h2><p>Menú digital · Platos · Pizzas · Parrillas · Promociones</p></div></div><br><div class='catalog-grid'>{cards}</div></div></body></html>"""
+    return f"""<!doctype html><html lang='es'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>{negocio}</title><style>{css}
+
+</style></head><body style='background:#101016;color:white'><div style='max-width:1100px;margin:auto;padding:24px'><div class='catalog-hero'><div><img src='{logo}' style='width:120px'><h2>{negocio}</h2><p>Menú digital · Platos · Pizzas · Parrillas · Promociones</p></div></div><br><div class='catalog-grid'>{cards}</div></div></body></html>"""
 
 # =========================
 # INDICADORES
