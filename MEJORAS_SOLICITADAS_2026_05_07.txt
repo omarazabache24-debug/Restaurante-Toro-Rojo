@@ -1,0 +1,10 @@
+MEJORAS APLICADAS
+1. Venta: se retiró Limpiar venta, Nuevo producto y Método pago en Nueva venta / pedido.
+2. POS rápido: se retiró Pago y se agregó checkbox para generar un solo pedido con varios ítems.
+3. Cobro: solo permite cobrar pedidos con estado ENTREGADO.
+4. Ticket renombrado a Boleta, ruta /boleta y archivo boleta_*.txt.
+5. Pedidos/Cobro rápido: lista de cobro filtrada solo por ENTREGADO y no pagado.
+6. Catálogo: lector QR con cámara para abrir catálogo.
+7. Catálogo: carga de imagen de producto ahora se muestra/oculta con un clic.
+8. Inventario y catálogo: indicadores de cantidad de productos.
+9. Indicadores: gráficas para ventas por método de pago y top productos vendidos.
