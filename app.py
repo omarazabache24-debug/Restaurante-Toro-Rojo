@@ -19,6 +19,7 @@ Usuarios iniciales:
 - caja / caja123
 """
 
+import base64
 import csv
 import os
 import sqlite3
@@ -1992,8 +1993,8 @@ def ventas():
             flash("Sucursal Principal está CERRADA. No se pueden registrar ventas, pedidos ni cobros.", "error")
             return redirect(url_for("ventas"))
         if accion != "importar_productos" and get_ctx("caja_abierta", "0") != "1":
-            flash("Primero debes ABRIR CAJA para registrar ventas, pedidos o cobros.", "error")
-            return redirect(url_for("caja"))
+            flash("💵 Para registrar venta primero debes abrir caja. Te estoy llevando al módulo CAJA para aperturarla.", "error")
+            return redirect(url_for("caja", motivo="venta_bloqueada"))
         if accion == "importar_productos" and "archivo" in request.files:
             if not is_admin():
                 flash("Carga de inicio de día restringida: solo administrador.", "error")
@@ -2036,7 +2037,7 @@ def ventas():
             pedido_id = int(request.form.get("pedido_id") or 0)
             metodo = request.form.get("metodo_pago", "EFECTIVO")
             vid = crear_venta_desde_pedido(pedido_id, metodo)
-            if vid and metodo in ("YAPE", "PLIN", "TRANSFERENCIA"):
+            if vid and metodo in ("YAPE", "PLIN", "TRANSFERENCIA", "TARJETA"):
                 return redirect(url_for("pago_qr", pedido_id=pedido_id, metodo=metodo))
             flash("Pedido cobrado y boleta generada." if vid else "No se pudo cobrar: verifica que el pedido exista y no esté pagado.", "ok" if vid else "error")
             return redirect(url_for("ventas"))
@@ -2085,7 +2086,7 @@ def ventas():
     if not sucursal_abierta():
         estado_operativo_html += "<div class='flash error'>🔒 Sucursal Principal CERRADA: abre la sucursal desde Usuarios/Admin para iniciar pruebas.</div>"
     if get_ctx("caja_abierta", "0") != "1":
-        estado_operativo_html += f"<div class='flash error'>💵 Caja SIN ABRIR: abre caja antes de vender. <a class='btn-warning' href='{url_for('caja')}'>Abrir caja</a></div>"
+        estado_operativo_html += f"<div class='flash error'>💵 Caja SIN ABRIR: para registrar ventas primero abre caja. <a class='btn-warning' href='{url_for('caja', motivo='venta_bloqueada')}'>Ir a Caja</a></div>"
     else:
         estado_operativo_html += "<div class='flash ok'>💵 Caja ABIERTA: ventas y pedidos habilitados.</div>"
     html = f"""
@@ -2126,7 +2127,7 @@ def ventas():
         el.addEventListener('blur',()=>autocompletarVentaDesde(el));
       }});
     </script>
-    <div class='panel'><div class='box-title'>Cobro rápido</div><br><form method='post' class='actions'><input type='hidden' name='accion' value='cobrar_boleta'><select name='pedido_id' style='max-width:680px'>{opts_ped}</select><select name='metodo_pago' style='max-width:220px'><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select><button class='btn-success'>Cobrar y boleta / QR</button></form></div>
+    <div class='panel'><div class='box-title'>Cobro rápido</div><br><form method='post' class='actions'><input type='hidden' name='accion' value='cobrar_boleta'><select name='pedido_id' style='max-width:680px'>{opts_ped}</select><select name='metodo_pago' style='max-width:220px'><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select><button class='btn-success'>💳 Pagar / QR POS</button></form></div>
     <div class='panel filter-sticky' id='filtros-venta'><form method='get' action='{url_for('ventas')}#catalogo-productos' class='catalog-filter-actions'><div><label>Buscar producto</label><input name='buscar' value='{buscar_prod}' placeholder='Buscar producto por nombre, código o categoría'></div><div><label>Categoría</label><select name='categoria' onchange='this.form.submit()'>{cat_opts}</select></div><button name='disponible' value='1'>✅ Filtrar disponibles</button><a class='btn' href='{url_for('ventas')}#catalogo-productos'>Limpiar</a></form></div>
     <div class='panel' id='catalogo-productos'><div class='section-title'>🍽️ Catálogo de productos <span class="title-count-pill">{len(productos)} productos</span></div><div class="catalog-mini-kpi"><b>{len(productos)}</b><span>productos visibles según filtro</span></div><div class='table-wrap small'><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div>{load_day_html}
     <div class='panel'><div class='section-title'>🧩 Últimos ítems registrados</div><div class='table-wrap small'><table><thead><tr><th>Pedido</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{tr_det}</tbody></table></div></div>
@@ -2161,8 +2162,8 @@ def pos_rapido():
             flash("Sucursal Principal está CERRADA. No se puede usar POS rápido.", "error")
             return redirect(url_for("pos_rapido"))
         if get_ctx("caja_abierta", "0") != "1":
-            flash("Primero debes ABRIR CAJA para registrar pedidos desde POS rápido.", "error")
-            return redirect(url_for("caja"))
+            flash("💵 Para usar POS rápido primero debes abrir caja. Te estoy llevando al módulo CAJA.", "error")
+            return redirect(url_for("caja", motivo="pos_bloqueado"))
         producto_id = int(request.form.get("producto_id") or 0)
         cantidad = int(float(request.form.get("cantidad") or 1))
         prod = q_one("SELECT * FROM productos WHERE id=? AND activo=1", (producto_id,))
@@ -2343,7 +2344,11 @@ def pedidos():
             if pedido_actual and (pedido_actual["pagado"] == "SI" or pedido_actual["estado"] == "PAGADO"):
                 flash("Este pedido ya está pagado; no aparece en el cobro pendiente.", "error")
                 return redirect(url_for("pedidos"))
-            vid = crear_venta_desde_pedido(pedido_id, request.form.get("metodo_pago", "EFECTIVO"))
+            metodo_pago = request.form.get("metodo_pago", "EFECTIVO")
+            vid = crear_venta_desde_pedido(pedido_id, metodo_pago)
+            if vid and metodo_pago in ("YAPE", "PLIN", "TRANSFERENCIA", "TARJETA"):
+                flash("Cuenta lista para pago. Muestra el QR/POS al cliente desde el celular.", "ok")
+                return redirect(url_for("pago_qr", pedido_id=pedido_id, metodo=metodo_pago))
             flash("Pedido marcado como pagado." if vid else "Primero cambia el estado del pedido a ENTREGADO para poder cobrar.", "ok" if vid else "error")
         elif accion == "quitar_item":
             if pedido_actual and (pedido_actual["estado"] in ("ENTREGADO", "PAGADO") or pedido_actual["pagado"] == "SI"):
@@ -2405,9 +2410,9 @@ def pedidos():
     for r in rows[:24]:
         editable = (r["estado"] not in ("ENTREGADO", "PAGADO") and r["pagado"] != "SI")
         if editable:
-            action_html = f'''<form method="post" class="pedido-bloque-actions"><input type="hidden" name="pedido_id" value="{r['id']}"><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select><button name="accion" value="estado" class="btn-success">Actualizar</button><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select><button name="accion" value="pagado" class="btn-success" onclick="return confirm('Solo se cobra si el pedido está ENTREGADO')">Cobrar</button><a class="btn-warning full" href="{url_for('boleta', pedido_id=r['id'])}">Imprimir boleta</a></form>''' 
+            action_html = f'''<form method="post" class="pedido-bloque-actions"><input type="hidden" name="pedido_id" value="{r['id']}"><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select><button name="accion" value="estado" class="btn-success">Actualizar</button><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select><button name="accion" value="pagado" class="btn-success" onclick="return confirm('Solo se cobra si el pedido está ENTREGADO')">💳 Pagar / QR</button><a class="btn-warning full" href="{url_for('imprimir_boleta', pedido_id=r['id'], tipo='BOLETA')}">🖨️ Imprimir boleta</a></form>''' 
         else:
-            action_html = f'''<div class="pedido-bloque-actions"><a class="btn-warning full" href="{url_for('boleta', pedido_id=r['id'])}">Imprimir boleta</a></div>''' 
+            action_html = f'''<div class="pedido-bloque-actions"><a class="btn-warning full" href="{url_for('imprimir_boleta', pedido_id=r['id'], tipo='BOLETA')}">🖨️ Imprimir boleta</a></div>''' 
         pedido_bloques += f'''<div class="pedido-bloque"><div class="pedido-bloque-head"><div><h3>{r['cliente'] or 'CLIENTE GENERAL'}</h3><span class="pedido-code">{r['codigo']}</span></div><span class="badge warn">{r['estado']}</span></div><div class="pedido-products">{r['productos'] or 'Sin ítems'}</div><div class="pedido-meta"><span>Hora: {r['fecha']} {r['hora']}</span><span>Mesa/servicio: {r['mesa'] or r['servicio']}</span><span>Pagado: {r['pagado']}</span><span>Usuario: {r['usuario'] or ''}</span></div><div class="pedido-total">{money(r['total'])}</div>{action_html}</div>''' 
     if not pedido_bloques:
         pedido_bloques = '<div class="hint-card">Sin pedidos para mostrar.</div>' 
@@ -2419,7 +2424,7 @@ def pedidos():
       <div class="section-title">📦 Pedidos en bloques</div><div class="pedido-bloques">{pedido_bloques}</div><br>
       <div class="pedido-operaciones-grid">
         <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">🔁 Cambiar estado</div><div><label>Pedido pendiente / cliente</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Cambiar a estado</label><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button name="accion" value="estado" class="btn-success">Actualizar estado</button></form>
-        <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">💵 Cobrar pedido</div><div><label>Pedido para cobrar</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_cobro}</select><small class="muted">Solo pedidos ENTREGADOS y no pagados.</small></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">Marcar pagado</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('boleta', pedido_id=selected_first)}">Imprimir boleta</a></div></form>
+        <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">💵 Cobrar pedido</div><div><label>Pedido para cobrar</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_cobro}</select><small class="muted">Solo pedidos ENTREGADOS y no pagados.</small></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">💳 Pagar / QR POS</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('imprimir_boleta', pedido_id=selected_first, tipo='BOLETA')}">🖨️ Imprimir boleta</a></div></form>
         <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">✏️ Editar ítems</div><div><label>Pedido editable</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Ítem del pedido</label><select name="item_id">{item_opts}</select></div><button name="accion" value="quitar_item" class="btn-warning">➖ Quitar ítem</button></form>
       </div>
       <script>
@@ -2450,16 +2455,71 @@ def pedidos():
 @app.route("/boleta/<int:pedido_id>")
 @login_required
 def boleta(pedido_id):
+    # Descarga comprobante en TXT para respaldo.
     p = q_one("SELECT * FROM pedidos WHERE id=?", (pedido_id,)) if pedido_id else q_one("SELECT * FROM pedidos ORDER BY id DESC LIMIT 1")
     if not p:
         return "Sin pedido"
-    det = q_all("SELECT * FROM pedido_detalle WHERE pedido_id=?", (p["id"],))
-    lines = ["EL TORO RESTAURANT GRILL", "BOLETA", f"Pedido: {p['codigo']}", f"Fecha: {p['fecha']} {p['hora']}", f"Cliente: {p['cliente']}", "-" * 32]
-    for d in det:
-        lines.append(f"{d['cantidad']} x {d['producto']} {money(d['total'])}")
-    lines += ["-" * 32, f"TOTAL: {money(p['total'])}"]
-    bio = BytesIO("\n".join(lines).encode("utf-8"))
+    txt = comprobante_texto(p["id"], tipo=request.args.get("tipo", "BOLETA"))
+    bio = BytesIO(txt.encode("utf-8"))
     return send_file(bio, as_attachment=True, download_name=f"boleta_{p['codigo']}.txt", mimetype="text/plain")
+
+
+def comprobante_texto(pedido_id, tipo="BOLETA"):
+    p = q_one("SELECT * FROM pedidos WHERE id=?", (pedido_id,))
+    if not p:
+        return "SIN PEDIDO"
+    det = q_all("SELECT * FROM pedido_detalle WHERE pedido_id=?", (p["id"],))
+    tipo = up(tipo or "BOLETA")
+    lines = [
+        "EL TORO RESTAURANT GRILL",
+        tipo,
+        f"Pedido: {p['codigo']}",
+        f"Fecha: {p['fecha']} {p['hora']}",
+        f"Cliente: {p['cliente']}",
+        f"Mesa/Servicio: {p['mesa'] or p['servicio']}",
+        f"Método pago: {p['metodo_pago']}",
+        "-" * 42,
+    ]
+    for d in det:
+        lines.append(f"{int(float(d['cantidad'] or 0))} x {d['producto']}  {money(d['total'])}")
+    lines += ["-" * 42, f"SUBTOTAL: {money(p['subtotal'])}", f"DESCUENTO: {money(p['descuento'])}", f"TOTAL: {money(p['total'])}", "", "Gracias por su compra"]
+    return "\n".join(lines)
+
+
+@app.route("/imprimir_boleta/<int:pedido_id>")
+@login_required
+def imprimir_boleta(pedido_id):
+    # Pantalla de impresión con diálogo de impresora del navegador y opción directa local Windows.
+    tipo = up(request.args.get("tipo", "BOLETA"))
+    p = q_one("SELECT * FROM pedidos WHERE id=?", (pedido_id,))
+    if not p:
+        flash("Pedido no encontrado para imprimir.", "error")
+        return redirect(url_for("pedidos"))
+    texto = comprobante_texto(pedido_id, tipo=tipo)
+    direct_msg = ""
+    if os.getenv("PRINT_DIRECT", "0") == "1" and os.name == "nt":
+        try:
+            import tempfile
+            import win32api
+            tmp = os.path.join(tempfile.gettempdir(), f"{tipo.lower()}_{p['codigo']}.txt")
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(texto)
+            win32api.ShellExecute(0, "print", tmp, None, ".", 0)
+            direct_msg = "<div class='flash ok'>✅ Enviado a la impresora predeterminada de Windows.</div>"
+        except Exception as e:
+            direct_msg = f"<div class='flash error'>⚠️ No se pudo imprimir directo. Usa Ctrl+P o el botón Imprimir. Detalle: {str(e)}</div>"
+    html = f"""
+    <div class="panel print-ticket-panel">
+      <div class="section-title">🖨️ Imprimir {tipo}</div>
+      <div class="hint-card">Se abrirá el diálogo de impresión del navegador para usar la impresora instalada en la PC/celular. En Render/web no se puede controlar físicamente una impresora sin permiso del equipo; por eso este modo usa impresión segura del navegador.</div>
+      {direct_msg}
+      <div class="actions"><button class="btn-success" onclick="window.print()">🖨️ Imprimir ahora</button><a class="btn" href="{url_for('boleta', pedido_id=pedido_id, tipo=tipo)}">Descargar TXT</a><a class="btn" href="{url_for('pedidos')}">Volver pedidos</a></div>
+      <pre class="ticket-preview">{texto}</pre>
+    </div>
+    <script>setTimeout(function(){{ window.print(); }}, 650);</script>
+    <style>@media print{{.sidebar,.mobile-tabs,.actions,.topbar,.flash,.hint-card{{display:none!important}}body{{background:white!important}}.main{{margin:0!important}}.panel{{box-shadow:none!important;border:0!important}}.ticket-preview{{font-size:12pt;color:#000}}}}</style>
+    """
+    return page(html, "pedidos")
 
 
 @app.route('/pago_qr/<int:pedido_id>/<metodo>')
@@ -2469,7 +2529,7 @@ def pago_qr(pedido_id, metodo):
     if not p:
         flash('Pedido no encontrado.', 'error')
         return redirect(url_for('ventas'))
-    data = f"EL TORO RESTAURANT GRILL|PEDIDO:{p['codigo']}|METODO:{metodo}|MONTO:{float(p['total'] or 0):.2f}|CLIENTE:{p['cliente']}"
+    data = f"EL TORO RESTAURANT GRILL|POS-PAGO|PEDIDO:{p['codigo']}|METODO:{metodo}|MONTO:{float(p['total'] or 0):.2f}|CLIENTE:{p['cliente']}|FECHA:{today()} {hour()}"
     if QRCODE_OK:
         bio = BytesIO()
         img = qrcode.make(data)
@@ -2477,7 +2537,7 @@ def pago_qr(pedido_id, metodo):
         qr_src = 'data:image/png;base64,' + base64.b64encode(bio.getvalue()).decode('ascii')
     else:
         qr_src = url_for('static', filename='toro_logo.png')
-    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div><p class="hint-card">Muestra este QR al cliente para lectura de pago. Contiene pedido, método y monto. Para conciliación automática real se puede conectar luego con API bancaria/Yape Empresa/Plin.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><div class="actions" style="justify-content:center"><a class="btn-primary" href="{url_for('boleta', pedido_id=pedido_id)}">Imprimir boleta</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
+    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div><p class="hint-card">Modo POS móvil: muestra este QR al cliente para que pague desde su celular. Incluye pedido, método, monto y cliente.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><div class="actions" style="justify-content:center"><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
     return page(html, 'ventas')
 
 # =========================
@@ -2630,9 +2690,12 @@ def recetas():
 # =========================
 @app.route("/caja", methods=["GET", "POST"])
 @login_required
-@admin_required
 def caja():
+    puede_operar_caja = session.get("rol") in ("ADMIN", "CAJA")
     if request.method == "POST":
+        if not puede_operar_caja:
+            flash("Solo ADMIN o usuario CAJA puede abrir/cerrar caja. Aviso visible para ventas: solicita apertura antes de registrar ventas.", "error")
+            return redirect(url_for("caja", motivo="sin_permiso"))
         accion = request.form.get("accion")
         if accion == "abrir":
             monto = float(request.form.get("monto_apertura") or 0)
@@ -2653,11 +2716,17 @@ def caja():
     egresos = q_one("SELECT COALESCE(SUM(monto),0) t FROM caja WHERE fecha=? AND tipo='EGRESO'", (f,))["t"]
     trs = "".join(f'<tr><td>{r["hora"]}</td><td>{r["tipo"]}</td><td>{r["concepto"]}</td><td>{money(r["monto"])}</td><td>{r["usuario"]}</td></tr>' for r in rows) or '<tr><td colspan="5">Sin movimientos.</td></tr>'
     estado = "ABIERTA" if get_ctx("caja_abierta", "0") == "1" else "SIN ABRIR"
+    aviso_caja = ""
+    if request.args.get("motivo"):
+        aviso_caja = "<div class='flash error'>💵 CAJA SIN ABRIR: antes de vender debes aperturar caja. Si no tienes permiso, solicita al administrador o usuario CAJA.</div>"
+    permiso_msg = "" if puede_operar_caja else "<div class='hint-card'>Tu usuario puede ver el estado de caja, pero solo ADMIN o usuario CAJA puede abrir/cerrar caja.</div>"
+    disabled = "" if puede_operar_caja else "disabled"
     html = f"""
-    <div class="panel"><div class="box-title">Caja</div><br>
-      <form method="post" class="actions"><input type="hidden" name="accion" value="abrir"><label>Monto apertura:</label><input name="monto_apertura" type="number" step="1" value="100.00" style="max-width:180px"><button>Abrir caja</button></form><br>
-      <form method="post" class="actions"><input type="hidden" name="accion" value="cerrar"><button>Cerrar caja</button></form><br>
-      <form method="post" class="actions"><input type="hidden" name="accion" value="gasto"><label>Egreso:</label><input name="concepto" placeholder="Concepto" style="max-width:240px"><input name="monto" type="number" step="1" value="0.00" style="max-width:180px"><button>Registrar gasto</button></form>
+    {aviso_caja}
+    <div class="panel"><div class="box-title">Caja</div>{permiso_msg}<br>
+      <form method="post" class="actions"><input type="hidden" name="accion" value="abrir"><label>Monto apertura:</label><input name="monto_apertura" type="number" step="1" value="100.00" style="max-width:180px" {disabled}><button {disabled}>Abrir caja</button></form><br>
+      <form method="post" class="actions"><input type="hidden" name="accion" value="cerrar"><button {disabled}>Cerrar caja</button></form><br>
+      <form method="post" class="actions"><input type="hidden" name="accion" value="gasto"><label>Egreso:</label><input name="concepto" placeholder="Concepto" style="max-width:240px"><input name="monto" type="number" step="1" value="0.00" style="max-width:180px" {disabled}><button {disabled}>Registrar gasto</button></form>
     </div>
     <div class="panel"><div class="box-title">Resumen de caja</div><h2 style="color:#dc2626">Caja: {estado}</h2><div class="grid"><div>Apertura: <b>{money(get_ctx('monto_apertura','0'))}</b></div><div>Efectivo sistema: <b>{money(ingresos-egresos)}</b></div><div>Ingresos: <b>{money(ingresos)}</b></div><div>Gastos: <b>{money(egresos)}</b></div></div></div>
     <div class="panel"><form method="get" class="actions"><input type="date" name="fecha" value="{f}" style="max-width:180px"><button>Filtrar</button></form><br><div class="table-wrap"><table><thead><tr><th>Hora</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Usuario</th></tr></thead><tbody>{trs}</tbody></table></div></div>
