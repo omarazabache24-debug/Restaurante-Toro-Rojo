@@ -1,0 +1,7 @@
+MEJORAS APLICADAS:
+- QR OFICIAL mantenido.
+- Cliente digita el importe manualmente.
+- Ocultamiento reforzado de nombre/titular/CCI.
+- Máscara visual de privacidad sobre QR.
+- Eliminado cualquier texto sensible visible en pantalla.
+- Compatible con Yape y Plin.

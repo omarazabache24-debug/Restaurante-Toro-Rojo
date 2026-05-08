@@ -1562,6 +1562,29 @@ body{
 
 /* === FIX FINAL CATÁLOGO QR / POS / FACTURA === */
 .catalog-admin-clean{grid-template-columns:minmax(620px,780px) minmax(420px,1fr)!important;gap:24px!important;align-items:start!important}.catalog-admin-clean .panel:first-child{max-width:none!important;width:100%!important;overflow:hidden!important;background:linear-gradient(135deg,#ffffff,#fff7f7)!important}.catalog-admin-clean input[readonly]{font-size:16px!important;color:#071827!important;background:#fff!important;border:2px solid #dbeafe!important;min-width:280px!important}.catalog-admin-clean .actions .btn-success,.catalog-admin-clean .actions .btn-warning,.catalog-admin-clean .actions button,.catalog-admin-clean .actions a{color:#fff!important;text-shadow:none!important;box-shadow:0 12px 25px rgba(15,23,42,.15)!important;font-weight:1000!important;min-width:160px!important;text-align:center!important;display:inline-flex!important;justify-content:center!important;align-items:center!important}.catalog-admin-clean .qr-box{grid-template-columns:270px minmax(280px,1fr)!important;background:#fff!important;border:2px solid #fecdd3!important;border-radius:26px!important;padding:22px!important;box-shadow:0 18px 45px rgba(15,23,42,.08)!important;overflow:hidden!important}.catalog-admin-clean .qr-img{width:240px!important;height:240px!important;background:#fff!important;border:16px solid #fff!important;border-radius:18px!important;image-rendering:pixelated!important;box-shadow:0 14px 35px rgba(15,23,42,.14)!important}.payment-qr-card img{width:min(430px,90vw)!important;height:auto!important;background:#fff!important;border:18px solid #fff!important;border-radius:22px!important;image-rendering:pixelated!important;box-shadow:0 20px 50px rgba(15,23,42,.16)!important}.print-ticket-panel .ticket-preview{background:#fff!important;color:#000!important;border:1px dashed #94a3b8!important;border-radius:18px!important;padding:18px!important;white-space:pre-wrap!important;max-width:520px!important;margin:auto!important}@media(max-width:900px){.catalog-admin-clean{grid-template-columns:1fr!important}.catalog-admin-clean .qr-box{grid-template-columns:1fr!important;text-align:center!important}.catalog-admin-clean .qr-img{margin:auto!important;width:260px!important;height:260px!important}.catalog-admin-clean input[readonly]{min-width:0!important;width:100%!important}}
+
+.qr-privacy-mask{
+    position:relative;
+    overflow:hidden;
+}
+.qr-privacy-mask::after{
+    content:'QR OFICIAL PRIVADO';
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
+    background:rgba(0,0,0,.82);
+    color:#fff;
+    padding:8px;
+    font-size:12px;
+    text-align:center;
+    letter-spacing:1px;
+    font-weight:700;
+}
+
+
+input[type=file]{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.panel,.hint-card{word-break:normal!important}
 </style>
 </head>
 <body>
@@ -2616,11 +2639,15 @@ def pedidos():
     chips = "".join(f'<div class="item-chip"><b>{r["producto"]}</b><span>{r["codigo"]} · {r["cliente"]}</span><br>Cant. {int(float(r["cantidad"] or 0))} · {money(r["precio"])} · <b>{money(r["total"])}</b></div>' for r in detalles) or '<div class="hint-card">Sin detalle de ítems.</div>'
     html = f'''
     <div class="mobile-active-title">🚚 Pedidos</div>
+    <style>
+      .pedido-operaciones-grid{{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))!important;gap:18px!important;align-items:start!important}}
+      .pedido-flow-note{{grid-column:1/-1!important;font-size:16px!important;line-height:1.45!important;background:#ecfdf5!important;border:1px solid #86efac!important;color:#065f46!important}}
+    </style>
     <div class="panel"><div class="section-title">🚚 Control de pedidos / cocina</div>{resumen_cards}
       <form method="get" class="clean-grid"><div><label>Filtrar por estado</label><select name="estado"><option>TODOS</option><option>PENDIENTE</option><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button>Refrescar</button><a class="btn" href="{url_for('ventas')}">Nuevo pedido</a></form><br>
       <div class="section-title">📦 Pedidos en bloques</div><div class="pedido-bloques">{pedido_bloques}</div><br>
       <div class="pedido-operaciones-grid">
-        <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">🔁 Cambiar estado</div><div><label>Pedido pendiente / cliente</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Cambiar a estado</label><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select></div><button name="accion" value="estado" class="btn-success">Actualizar estado</button></form>
+        <div class="hint-card pedido-flow-note"><b>Recomendación aplicada:</b> se retiró el cuadro “Cambiar estado” para evitar cambios manuales innecesarios. Usa los botones directos de cada pedido en los bloques: preparar, listo, entregar, cobrar o editar.</div>
         <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">💵 Cobrar pedido</div><div><label>Pedido para cobrar</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_cobro}</select><small class="muted">Solo pedidos ENTREGADOS y no pagados.</small></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">💳 Pagar / QR POS</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('imprimir_boleta', pedido_id=selected_first, tipo='BOLETA')}">🖨️ Imprimir boleta</a></div></form>
         <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">✏️ Editar ítems</div><div><label>Pedido editable</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Ítem del pedido</label><select name="item_id">{item_opts}</select></div><button name="accion" value="quitar_item" class="btn-warning">➖ Quitar ítem</button></form>
       </div>
@@ -2830,8 +2857,8 @@ def pago_qr(pedido_id, metodo):
     # por seguridad se muestra el importe grande, copiable y auditable junto al pedido.
     importe_hint = '''<div class="hint-card"><b>Importe a cobrar:</b> el monto se muestra grande para que el cliente lo confirme en Yape.
     Si necesitas que Yape abra con importe ya llenado automáticamente, genera/carga desde Yape un QR oficial con importe o usa Yape Empresas/API.
-    El sistema no vuelve a crear QR falso porque Yape lo lee pero luego lo rechaza.</div>'''
-    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}{importe_hint}<p class="hint-card"><b>Privacidad:</b> nombre del titular, número, CCI y nombre del archivo QR están ocultos en esta pantalla de pago.</p><img src="{qr_src}" alt="QR oficial de pago"><h2>{p['codigo']}</h2><div style="max-width:420px;margin:12px auto;padding:18px;border-radius:24px;background:#fff4f6;border:2px solid #ffd1dc;text-align:center"><div style="font-weight:900;color:#082036;font-size:18px">IMPORTE A PAGAR</div><h1 style="color:#ff1744;font-size:54px;margin:6px 0">{money(p['total'])}</h1><button type="button" class="btn-warning" onclick="navigator.clipboard && navigator.clipboard.writeText('{monto_plain}'); alert('Importe copiado: S/ {monto_plain}')">Copiar importe</button></div><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Cuenta destino:</b> OCULTA POR SEGURIDAD</p><div class="actions" style="justify-content:center"><a class="btn-success" target="_blank" href="{yape_link}">Enviar importe por WhatsApp</a><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
+    El sistema utiliza únicamente QR OFICIAL para evitar rechazo en Yape/Plin y mantener ocultos los datos visibles del titular.</div>'''
+    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}{importe_hint}<p class="hint-card"><b>Privacidad:</b> el nombre del titular, número Yape/Plin, CCI, nombre del QR y cualquier dato sensible están completamente ocultos en esta pantalla de pago.</p><div class="qr-privacy-mask"><img src="{qr_src}" alt="QR oficial de pago"></div><h2>{p['codigo']}</h2><div style="max-width:420px;margin:12px auto;padding:18px;border-radius:24px;background:#fff4f6;border:2px solid #ffd1dc;text-align:center"><div style="font-weight:900;color:#082036;font-size:18px">IMPORTE A PAGAR</div><h1 style="color:#ff1744;font-size:54px;margin:6px 0">{money(p['total'])}</h1><button type="button" class="btn-warning" onclick="navigator.clipboard && navigator.clipboard.writeText('{monto_plain}'); alert('Importe copiado: S/ {monto_plain}')">Copiar importe</button></div><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Cuenta destino:</b> OCULTA POR SEGURIDAD</p><div class="actions" style="justify-content:center"><a class="btn-success" target="_blank" href="{yape_link}">Enviar importe por WhatsApp</a><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
     return page(html, 'ventas')
 
 # =========================
@@ -3189,7 +3216,16 @@ def delivery():
 # CATÁLOGO ONLINE / IMÁGENES / QR
 # =========================
 def catalog_public_url():
+    """
+    URL estable para el QR del catálogo.
+    - En Render usa la URL pública real.
+    - Si defines CATALOG_PUBLIC_URL o PUBLIC_BASE_URL, usa esa.
+    - En local mantiene /menu con _external para pruebas.
+    """
+    forced = os.environ.get("CATALOG_PUBLIC_URL") or os.environ.get("PUBLIC_BASE_URL") or os.environ.get("RENDER_EXTERNAL_URL")
     try:
+        if forced:
+            return forced.rstrip("/") + url_for("menu_publico")
         return url_for("menu_publico", _external=True)
     except Exception:
         return "/menu"
@@ -3333,21 +3369,25 @@ def importar_catalogo_masivo(file_storage, actualizar_productos=True):
     return insertados, actualizados, omitidos, productos_sync
 
 def qr_svg_data(text):
-    # QR PRO: PNG en alto contraste, margen amplio y corrección alta.
-    # Esto mejora mucho la lectura desde cámara del celular/navegador.
+    # QR PRO OFICIAL DEL CATÁLOGO:
+    # PNG alto contraste + borde blanco amplio + corrección H.
+    # Compatible con cámara celular, WhatsApp Web, navegador y app móvil.
     try:
         import qrcode
         from qrcode.constants import ERROR_CORRECT_H
         import base64
-        qr_obj = qrcode.QRCode(version=None, error_correction=ERROR_CORRECT_H, box_size=12, border=5)
-        qr_obj.add_data(text)
+        qr_obj = qrcode.QRCode(version=None, error_correction=ERROR_CORRECT_H, box_size=16, border=6)
+        qr_obj.add_data(str(text or "").strip())
         qr_obj.make(fit=True)
-        img = qr_obj.make_image(fill_color="black", back_color="white")
+        img = qr_obj.make_image(fill_color="black", back_color="white").convert("RGB")
         bio = BytesIO()
-        img.save(bio, format="PNG")
+        img.save(bio, format="PNG", optimize=False)
         return "data:image/png;base64," + base64.b64encode(bio.getvalue()).decode("ascii")
     except Exception:
-        return ""
+        try:
+            return qr_png_base64(str(text or "").strip(), box_size=16, border=6)
+        except Exception:
+            return ""
 
 
 @app.route("/plantilla_catalogo")
@@ -3476,18 +3516,36 @@ def catalogo_admin():
         phone_items += f"""<div class='phone-food'><img src='{img}'><b>{i['titulo']}</b><small>{money(i['precio'])}</small></div>"""
     if not phone_items:
         phone_items = f"""<div class='phone-food'><img src='{url_for('static', filename='toro_logo.png')}'><b>Sube tu plato</b><small>Desde S/ 0.00</small></div>"""
-    qr_html = f"<img class='qr-img' src='{qr}'>" if qr else "<div class='qr-img' style='display:grid;place-items:center'>QR</div>"
+    qr_html = f"<div class='qr-official-wrap'><img class='qr-img qr-img-official' src='{qr}' alt='QR oficial del catálogo'></div>" if qr else "<div class='qr-img' style='display:grid;place-items:center'>QR</div>"
 
     if is_admin():
         admin_block = f"""
-        <div class="panel upload-drop"><style>.catalog-admin-clean .upload-drop:first-of-type{{border:2px solid #fed7aa!important;background:linear-gradient(135deg,#fff7ed,#ffffff)!important;box-shadow:0 18px 45px rgba(249,115,22,.12)!important}}.upload-drop form.clean-grid{{display:grid!important;grid-template-columns:minmax(260px,1.25fr) minmax(230px,.9fr) minmax(190px,.7fr) minmax(190px,.7fr)!important;gap:18px!important;align-items:end!important}}.upload-drop input[type=file]{{width:100%!important;min-height:56px!important;padding:12px!important;background:#fff!important;border:2px dashed #fb923c!important;border-radius:18px!important}}.upload-drop label{{font-weight:950!important;color:#071827!important}}.upload-drop .hint-card{{font-size:18px!important;line-height:1.42!important}}@media(max-width:900px){{.upload-drop form.clean-grid{{grid-template-columns:1fr!important}}.upload-drop .btn,.upload-drop button{{width:100%!important}}}}</style><div class="section-title">📥 Carga masiva de catálogo</div>
+        <div class="panel upload-drop catalog-upload-pro"><style>
+.catalog-upload-pro{{border:2px solid #fed7aa!important;background:linear-gradient(135deg,#fff7ed,#ffffff)!important;box-shadow:0 18px 45px rgba(249,115,22,.12)!important;overflow:visible!important}}
+.catalog-upload-pro .section-title{{font-size:clamp(22px,3.2vw,34px)!important;line-height:1.15!important;white-space:normal!important;overflow:visible!important}}
+.catalog-upload-pro .hint-card{{font-size:clamp(15px,2.3vw,20px)!important;line-height:1.42!important;color:#7c2d12!important;white-space:normal!important;overflow:visible!important;word-break:normal!important}}
+.catalog-upload-grid{{display:grid!important;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr)!important;gap:16px!important;align-items:end!important;margin-top:14px!important}}
+.catalog-upload-grid .file-zone{{min-width:0!important}}
+.catalog-upload-pro input[type=file]{{width:100%!important;max-width:100%!important;min-height:62px!important;padding:14px!important;background:#fff!important;border:2px dashed #fb923c!important;border-radius:18px!important;font-size:16px!important;box-sizing:border-box!important}}
+.catalog-upload-pro label{{font-weight:950!important;color:#071827!important;white-space:normal!important}}
+.catalog-sync-check{{display:flex!important;gap:12px!important;align-items:flex-start!important;line-height:1.25!important;font-size:16px!important;font-weight:900!important;background:#fff!important;border:1px solid #fed7aa!important;border-radius:16px!important;padding:14px!important}}
+.catalog-sync-check input{{margin-top:3px!important;min-width:18px!important;width:18px!important;height:18px!important}}
+.catalog-upload-actions{{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important;margin-top:14px!important}}
+.catalog-upload-actions .btn,.catalog-upload-actions button{{width:100%!important;min-height:52px!important;white-space:normal!important}}
+@media(max-width:820px){{
+  .catalog-upload-grid{{grid-template-columns:1fr!important}}
+  .catalog-upload-actions{{grid-template-columns:1fr!important}}
+  .catalog-upload-pro{{padding:22px!important}}
+}}
+</style><div class="section-title">📥 Carga masiva de catálogo</div>
           <div class="hint-card">Importa Excel/CSV para crear o actualizar productos publicados. La plantilla incluye código, título/producto, categoría, descripción, precio, stock, stock mínimo, unidad, destacado, activo e imagen. Marca sincronizar para enlazar con Ventas/POS e Inventario.</div>
-          <form method="post" enctype="multipart/form-data" class="clean-grid" style="margin-top:14px">
+          <form method="post" enctype="multipart/form-data">
             <input type="hidden" name="accion" value="importar_catalogo">
-            <div><label>Archivo Excel/CSV</label><input type="file" name="archivo_catalogo" accept=".xlsx,.xlsm,.csv" required></div>
-            <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" name="sincronizar_productos" checked style="width:auto"> Sincronizar con Ventas/POS e Inventario</label>
-            <button class="btn-warning">📥 Importar catálogo</button>
-            <a class="btn" href="{url_for('plantilla_catalogo')}">📄 Descargar plantilla</a>
+            <div class="catalog-upload-grid">
+              <div class="file-zone"><label>Archivo Excel/CSV</label><input type="file" name="archivo_catalogo" accept=".xlsx,.xlsm,.csv" required></div>
+              <label class="catalog-sync-check"><input type="checkbox" name="sincronizar_productos" checked> <span>Sincronizar con Ventas/POS e Inventario</span></label>
+            </div>
+            <div class="catalog-upload-actions"><button class="btn-warning">📥 Importar catálogo</button><a class="btn" href="{url_for('plantilla_catalogo')}">📄 Descargar plantilla</a></div>
           </form><div class="keep-position-note">Columnas aceptadas: codigo, titulo/producto/nombre, categoria, descripcion, precio, stock, stock_min/minimo, unidad, destacado, activo, imagen.</div>
         </div>
         <div class="panel upload-drop catalog-collapsible collapsed" id="catalog_upload_panel"><div class="section-title">Cargar imagen de producto <button type="button" class="catalog-toggle-btn" onclick="toggleCatalogUpload()">Mostrar / ocultar</button></div><div class="catalog-collapsible-body">
@@ -3510,9 +3568,22 @@ def catalogo_admin():
 
     html = f"""
     <div class="mobile-active-title">🖼️ Catálogo / QR</div>
+    <style>
+      .qr-official-wrap{{display:inline-grid;place-items:center;background:#fff;padding:18px;border-radius:24px;border:8px solid #fff;box-shadow:0 14px 35px rgba(0,0,0,.18)}}
+      .qr-img-official{{width:260px!important;height:260px!important;min-width:260px!important;min-height:260px!important;image-rendering:pixelated;background:#fff!important;display:block!important}}
+      .qr-box{{align-items:center!important;gap:22px!important;overflow:visible!important}}
+      .qr-box input{{font-size:15px!important;min-height:48px!important}}
+      .qr-camera-box{{overflow:visible!important}}
+      #qr_video.on{{display:block!important;width:100%!important;max-width:360px!important;border-radius:18px!important;margin-top:12px!important;background:#000!important}}
+      @media(max-width:720px){{
+        .qr-box{{display:grid!important;grid-template-columns:1fr!important;text-align:center!important}}
+        .qr-img-official{{width:230px!important;height:230px!important;min-width:230px!important;min-height:230px!important}}
+        .qr-official-wrap{{margin:auto!important;padding:16px!important}}
+      }}
+    </style>
     <div class="same-place-anchor" id="catalogo-top"></div>
     <div class="product-count-hero"><div class="count-icon">🍽️</div><div><span>Total de productos publicados</span><b>{total_catalogo}</b><small>Control rápido de catálogo: publicados, base y destacados en una sola vista.</small></div></div>
-    <div class="catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="catalog-indicator"><div class="metric"><b>{total_catalogo}</b><span>Productos publicados</span></div><div class="metric"><b>{total_productos_base}</b><span>Productos base</span></div><div class="metric"><b>{total_destacados}</b><span>Destacados</span></div></div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><div class="actions"><a class="btn-success catalog-open-main" href="{url_for('menu_publico')}" target="_blank">🚀 Ver catálogo publicado</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">WhatsApp</a></div></div></div><div class="qr-camera-box"><b>📷 Lector QR con cámara</b><p class="muted">Apunta a un QR del catálogo y se abrirá automáticamente.</p><button class="btn-warning" type="button" onclick="scanCatalogQR()">Leer QR con cámara</button><video id="qr_video" playsinline muted></video><canvas id="qr_canvas" style="display:none"></canvas><div id="qr_result" class="muted"></div></div></div>{admin_block}</div>
+    <div class="catalog-admin-clean"><div class="panel"><div class="section-title">Compartir catálogo</div><div class="catalog-indicator"><div class="metric"><b>{total_catalogo}</b><span>Productos publicados</span></div><div class="metric"><b>{total_productos_base}</b><span>Productos base</span></div><div class="metric"><b>{total_destacados}</b><span>Destacados</span></div></div><div class="qr-box">{qr_html}<div><b>Link público</b><input readonly value="{url}" onclick="this.select()"><p class="muted">Comparte por WhatsApp, Facebook, Instagram o imprímelo en mesa.</p><div class="actions"><a class="btn-success catalog-open-main" href="{url_for('menu_publico')}" target="_blank">🚀 Ver catálogo publicado</a><button type="button" onclick="navigator.clipboard.writeText('{url}')" class="btn-warning">Copiar link</button><a class="btn-success" target="_blank" href="https://wa.me/?text={url}">WhatsApp</a></div></div></div><div class="qr-camera-box"><b>📷 Lector QR con cámara</b><p class="muted">Apunta a un QR del catálogo y se abrirá automáticamente.</p><div class="actions"><button class="btn-warning" type="button" onclick="scanCatalogQR()">Leer QR con cámara</button><a class="btn-success" href="{url_for('menu_publico')}" target="_blank">Abrir catálogo</a></div><video id="qr_video" playsinline muted></video><canvas id="qr_canvas" style="display:none"></canvas><div id="qr_result" class="muted"></div></div></div>{admin_block}</div>
     <div class="panel same-place-anchor" id="productos-catalogo"><div class="section-title">Productos publicados <span class="title-count-pill">{total_catalogo} productos</span> <a class="btn-success btn-mini" href="{url_for('menu_publico')}" target="_blank">Ver catálogo publicado</a></div><div class="catalog-grid catalog-grid-pro">{cards}</div></div>
     <script>
     function goCatForm(){{const el=document.getElementById('cat_titulo'); if(el) window.scrollTo({{top:el.getBoundingClientRect().top+window.scrollY-140,behavior:'smooth'}});}}

@@ -1,0 +1,6 @@
+MEJORAS APLICADAS:
+1. Catálogo organizado: carga masiva responsive, textos completos, casillas completas y botones ordenados.
+2. QR del catálogo corregido: QR PNG oficial con borde blanco amplio, alto contraste, mayor tamaño y corrección H.
+3. QR compatible web/app/celular: lector por cámara con BarcodeDetector y respaldo jsQR; botón Abrir catálogo como alternativa.
+4. Link público del QR mejorado: usa RENDER_EXTERNAL_URL, PUBLIC_BASE_URL o CATALOG_PUBLIC_URL si existen.
+5. Pedidos: se quitó el cuadro innecesario 'Cambiar estado' y se dejó recomendación para usar botones directos por pedido.
