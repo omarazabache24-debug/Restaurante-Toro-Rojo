@@ -120,6 +120,19 @@ def money(v):
     except Exception:
         return "S/ 0.00"
 
+
+def ctx_admin_pago():
+    return {"titular": get_ctx("pago_titular", "ADMINISTRADOR EL TORO"), "yape": get_ctx("pago_yape", ""), "plin": get_ctx("pago_plin", ""), "banco": get_ctx("pago_banco", ""), "cci": get_ctx("pago_cci", ""), "correo": get_ctx("pago_correo", "")}
+
+def qr_png_base64(data, box_size=10, border=4):
+    if not QRCODE_OK:
+        return url_for('static', filename='toro_logo.png')
+    qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=box_size, border=border)
+    qr.add_data(data); qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    bio = BytesIO(); img.save(bio, format='PNG')
+    return 'data:image/png;base64,' + base64.b64encode(bio.getvalue()).decode('ascii')
+
 def clean(v):
     return str(v or "").strip()
 
@@ -343,12 +356,21 @@ def init_db():
             "origen_ultimo": "ALTER TABLE clientes ADD COLUMN origen_ultimo TEXT DEFAULT ''",
             "ultima_visita": "ALTER TABLE clientes ADD COLUMN ultima_visita TEXT DEFAULT ''",
             "clave_cliente": "ALTER TABLE clientes ADD COLUMN clave_cliente TEXT DEFAULT ''",
+            "email": "ALTER TABLE clientes ADD COLUMN email TEXT DEFAULT ''",
+            "ruc": "ALTER TABLE clientes ADD COLUMN ruc TEXT DEFAULT ''",
+            "razon_social": "ALTER TABLE clientes ADD COLUMN razon_social TEXT DEFAULT ''",
+            "direccion_fiscal": "ALTER TABLE clientes ADD COLUMN direccion_fiscal TEXT DEFAULT ''",
         }.items():
             if _col not in _cols:
                 q_exec(_ddl)
         # Completar códigos vacíos sin romper bases existentes.
         for _r in q_all("SELECT id FROM clientes WHERE codigo_cliente IS NULL OR codigo_cliente='' ORDER BY id"):
             q_exec("UPDATE clientes SET codigo_cliente=? WHERE id=?", (f"CLI-{int(_r['id']):06d}", _r['id']))
+    except Exception:
+        pass
+
+    try:
+        q_exec("""CREATE TABLE IF NOT EXISTS comprobantes(id INTEGER PRIMARY KEY AUTOINCREMENT,pedido_id INTEGER,tipo TEXT DEFAULT 'BOLETA',ruc TEXT DEFAULT '',razon_social TEXT DEFAULT '',direccion_fiscal TEXT DEFAULT '',correo TEXT DEFAULT '',fecha TEXT DEFAULT '',hora TEXT DEFAULT '',usuario TEXT DEFAULT '')""")
     except Exception:
         pass
 
@@ -392,6 +414,12 @@ def init_db():
         "recetas_activas": "0",
         # SUCURSAL ABIERTA/CERRADA para modo prueba real. 0 = abierta, 1 = cerrada.
         "sucursal_cerrada": "0",
+        "pago_titular": "ADMINISTRADOR EL TORO",
+        "pago_yape": "",
+        "pago_plin": "",
+        "pago_banco": "",
+        "pago_cci": "",
+        "pago_correo": "",
     }.items():
         if not q_one("SELECT clave FROM contexto WHERE clave=?", (k,)):
             q_exec("INSERT INTO contexto(clave,valor) VALUES(?,?)", (k, v))
@@ -1480,6 +1508,9 @@ body{
 .admin-centered-grid .table-wrap.small{max-height:540px!important;overflow:auto!important;}
 .admin-centered-grid table{min-width:780px!important;}
 @media(max-width:900px){.catalog-grid-pro{grid-template-columns:1fr!important}.catalog-grid-pro .catalog-card{min-height:auto!important}.catalog-grid-pro .catalog-card img{height:190px!important}.qr-box{grid-template-columns:1fr!important}.qr-img{width:230px!important;height:230px!important}.admin-centered-grid{grid-template-columns:1fr!important;max-width:100%!important}.admin-centered-grid table{min-width:780px!important}}
+
+/* === FIX FINAL CATÁLOGO QR / POS / FACTURA === */
+.catalog-admin-clean{grid-template-columns:minmax(620px,780px) minmax(420px,1fr)!important;gap:24px!important;align-items:start!important}.catalog-admin-clean .panel:first-child{max-width:none!important;width:100%!important;overflow:hidden!important;background:linear-gradient(135deg,#ffffff,#fff7f7)!important}.catalog-admin-clean input[readonly]{font-size:16px!important;color:#071827!important;background:#fff!important;border:2px solid #dbeafe!important;min-width:280px!important}.catalog-admin-clean .actions .btn-success,.catalog-admin-clean .actions .btn-warning,.catalog-admin-clean .actions button,.catalog-admin-clean .actions a{color:#fff!important;text-shadow:none!important;box-shadow:0 12px 25px rgba(15,23,42,.15)!important;font-weight:1000!important;min-width:160px!important;text-align:center!important;display:inline-flex!important;justify-content:center!important;align-items:center!important}.catalog-admin-clean .qr-box{grid-template-columns:270px minmax(280px,1fr)!important;background:#fff!important;border:2px solid #fecdd3!important;border-radius:26px!important;padding:22px!important;box-shadow:0 18px 45px rgba(15,23,42,.08)!important;overflow:hidden!important}.catalog-admin-clean .qr-img{width:240px!important;height:240px!important;background:#fff!important;border:16px solid #fff!important;border-radius:18px!important;image-rendering:pixelated!important;box-shadow:0 14px 35px rgba(15,23,42,.14)!important}.payment-qr-card img{width:min(430px,90vw)!important;height:auto!important;background:#fff!important;border:18px solid #fff!important;border-radius:22px!important;image-rendering:pixelated!important;box-shadow:0 20px 50px rgba(15,23,42,.16)!important}.print-ticket-panel .ticket-preview{background:#fff!important;color:#000!important;border:1px dashed #94a3b8!important;border-radius:18px!important;padding:18px!important;white-space:pre-wrap!important;max-width:520px!important;margin:auto!important}@media(max-width:900px){.catalog-admin-clean{grid-template-columns:1fr!important}.catalog-admin-clean .qr-box{grid-template-columns:1fr!important;text-align:center!important}.catalog-admin-clean .qr-img{margin:auto!important;width:260px!important;height:260px!important}.catalog-admin-clean input[readonly]{min-width:0!important;width:100%!important}}
 </style>
 </head>
 <body>
@@ -2298,6 +2329,8 @@ SELECT * FROM pedidos
       </section>
     </div>
     <script>
+      async function buscarClientePOS(term){{ term=(term||'').trim(); if(term.length<3) return null; try{{const r=await fetch('/api/clientes/buscar?term='+encodeURIComponent(term)); const data=await r.json(); return data.ok?data.cliente:null;}}catch(e){{return null;}} }}
+      async function autocompletarPOS(){{ const input=document.getElementById('pos_cliente'); const tel=document.getElementById('pos_telefono'); const c=await buscarClientePOS((tel.value||input.value||'').trim()); if(!c){{syncPOSClient();return;}} if(input) input.value=c.nombre||input.value; if(tel&&!tel.value) tel.value=c.telefono||''; const dir=document.getElementById('pos_direccion'); const ref=document.getElementById('pos_referencia'); if(dir&&!dir.value) dir.value=c.direccion||c.direccion_fiscal||''; if(ref&&!ref.value) ref.value=c.referencia||''; syncPOSClient(); }}
       function syncPOSClient(){{
         const cliente=(document.getElementById('pos_cliente').value||'CLIENTE GENERAL').trim() || 'CLIENTE GENERAL';
         const telefono=(document.getElementById('pos_telefono').value||'').trim();
@@ -2308,13 +2341,16 @@ SELECT * FROM pedidos
         const unico=document.getElementById('pos_unico')?.checked ? '1' : '';
         document.querySelectorAll('.pos_cliente_hidden').forEach(e=>e.value=cliente);
         document.querySelectorAll('.pos_telefono_hidden').forEach(e=>e.value=telefono);
+        document.querySelectorAll('.pos_direccion_hidden').forEach(e=>e.value=direccion);
+        document.querySelectorAll('.pos_referencia_hidden').forEach(e=>e.value=referencia);
         document.querySelectorAll('.pos_mesa_hidden').forEach(e=>e.value=mesa);
         document.querySelectorAll('.pos_servicio_hidden').forEach(e=>e.value=servicio);
         document.querySelectorAll('.pos_unico_hidden').forEach(e=>e.value=unico);
-        try{{sessionStorage.setItem('pos_cliente',cliente);sessionStorage.setItem('pos_telefono',telefono);sessionStorage.setItem('pos_mesa',mesa);sessionStorage.setItem('pos_servicio',servicio);sessionStorage.setItem('pos_unico',unico);}}catch(e){{}}
+        try{{sessionStorage.setItem('pos_cliente',cliente);sessionStorage.setItem('pos_telefono',telefono);sessionStorage.setItem('pos_direccion',direccion);sessionStorage.setItem('pos_referencia',referencia);sessionStorage.setItem('pos_mesa',mesa);sessionStorage.setItem('pos_servicio',servicio);sessionStorage.setItem('pos_unico',unico);}}catch(e){{}}
       }}
-      ['pos_cliente','pos_telefono','pos_mesa','pos_servicio','pos_unico'].forEach(id=>{{const el=document.getElementById(id); if(el) el.addEventListener('input',syncPOSClient); if(el) el.addEventListener('change',syncPOSClient);}});
-      window.addEventListener('load',function(){{try{{document.getElementById('pos_cliente').value=sessionStorage.getItem('pos_cliente')||'';document.getElementById('pos_telefono').value=sessionStorage.getItem('pos_telefono')||'';document.getElementById('pos_mesa').value=sessionStorage.getItem('pos_mesa')||'';document.getElementById('pos_servicio').value=sessionStorage.getItem('pos_servicio')||'SALÓN';document.getElementById('pos_unico').checked=(sessionStorage.getItem('pos_unico')==='1');}}catch(e){{}} syncPOSClient();}});
+      ['pos_cliente','pos_telefono','pos_direccion','pos_referencia','pos_mesa','pos_servicio','pos_unico'].forEach(id=>{{const el=document.getElementById(id); if(el) el.addEventListener('input',syncPOSClient); if(el) el.addEventListener('change',syncPOSClient);}});
+      window.addEventListener('load',function(){{try{{document.getElementById('pos_cliente').value=sessionStorage.getItem('pos_cliente')||'';document.getElementById('pos_telefono').value=sessionStorage.getItem('pos_telefono')||'';document.getElementById('pos_direccion').value=sessionStorage.getItem('pos_direccion')||'';document.getElementById('pos_referencia').value=sessionStorage.getItem('pos_referencia')||'';document.getElementById('pos_mesa').value=sessionStorage.getItem('pos_mesa')||'';document.getElementById('pos_servicio').value=sessionStorage.getItem('pos_servicio')||'SALÓN';document.getElementById('pos_unico').checked=(sessionStorage.getItem('pos_unico')==='1');}}catch(e){{}} syncPOSClient();}});
+      ['pos_cliente','pos_telefono'].forEach(id=>{{const el=document.getElementById(id); if(el){{el.addEventListener('change',autocompletarPOS);el.addEventListener('blur',autocompletarPOS);}}}});
       document.querySelectorAll('.keep-pos-form').forEach(f=>f.addEventListener('submit',syncPOSClient));
     </script>
     """
@@ -2470,21 +2506,60 @@ def comprobante_texto(pedido_id, tipo="BOLETA"):
         return "SIN PEDIDO"
     det = q_all("SELECT * FROM pedido_detalle WHERE pedido_id=?", (p["id"],))
     tipo = up(tipo or "BOLETA")
+    comp = q_one("SELECT * FROM comprobantes WHERE pedido_id=? AND tipo=? ORDER BY id DESC LIMIT 1", (p['id'], tipo))
     lines = [
         "EL TORO RESTAURANT GRILL",
         tipo,
         f"Pedido: {p['codigo']}",
         f"Fecha: {p['fecha']} {p['hora']}",
         f"Cliente: {p['cliente']}",
+        (f"RUC: {comp['ruc']}" if comp and tipo == 'FACTURA' else ""),
+        (f"Razón Social: {comp['razon_social']}" if comp and tipo == 'FACTURA' else ""),
+        (f"Dirección Fiscal: {comp['direccion_fiscal']}" if comp and tipo == 'FACTURA' else ""),
         f"Mesa/Servicio: {p['mesa'] or p['servicio']}",
         f"Método pago: {p['metodo_pago']}",
         "-" * 42,
     ]
+    lines = [x for x in lines if x]
     for d in det:
         lines.append(f"{int(float(d['cantidad'] or 0))} x {d['producto']}  {money(d['total'])}")
     lines += ["-" * 42, f"SUBTOTAL: {money(p['subtotal'])}", f"DESCUENTO: {money(p['descuento'])}", f"TOTAL: {money(p['total'])}", "", "Gracias por su compra"]
     return "\n".join(lines)
 
+
+
+@app.route("/factura_datos/<int:pedido_id>", methods=["GET", "POST"])
+@login_required
+def factura_datos(pedido_id):
+    p = q_one("SELECT * FROM pedidos WHERE id=?", (pedido_id,))
+    if not p:
+        flash("Pedido no encontrado.", "error"); return redirect(url_for("pedidos"))
+    if p["pagado"] != "SI":
+        flash("Para emitir factura primero debe estar pagado el consumo.", "error"); return redirect(url_for("pedidos"))
+    comp = q_one("SELECT * FROM comprobantes WHERE pedido_id=? AND tipo='FACTURA' ORDER BY id DESC LIMIT 1", (pedido_id,))
+    if request.method == "POST":
+        ruc=clean(request.form.get("ruc")); razon=up(request.form.get("razon_social")); direccion=up(request.form.get("direccion_fiscal")); correo=clean(request.form.get("correo"))
+        if len(ruc)!=11 or not ruc.isdigit() or not razon or not direccion:
+            flash("Factura: registra RUC de 11 dígitos, Razón Social y Dirección Fiscal.", "error"); return redirect(url_for("factura_datos", pedido_id=pedido_id))
+        q_exec("INSERT INTO comprobantes(pedido_id,tipo,ruc,razon_social,direccion_fiscal,correo,fecha,hora,usuario) VALUES(?,?,?,?,?,?,?,?,?)", (pedido_id,"FACTURA",ruc,razon,direccion,correo,today(),hour(),session.get("user","")))
+        flash("Datos de factura guardados. Ya puedes imprimir o enviar al correo.", "ok"); return redirect(url_for("imprimir_boleta", pedido_id=pedido_id, tipo="FACTURA"))
+    vals=comp or {}
+    html = f"""
+    <div class='panel factura-panel'><div class='section-title'>🧾 Datos mínimos para Factura</div><div class='hint-card'>La factura solo se habilita si el consumo está pagado. Registra RUC, Razón Social, Dirección Fiscal y correo del cliente.</div><br>
+      <form method='post' class='clean-grid'><div><label>RUC cliente *</label><input name='ruc' maxlength='11' pattern='[0-9]{{11}}' value='{vals['ruc'] if comp else ''}' required></div><div><label>Razón Social *</label><input name='razon_social' value='{vals['razon_social'] if comp else p['cliente']}' required></div><div><label>Dirección Fiscal *</label><input name='direccion_fiscal' value='{vals['direccion_fiscal'] if comp else p['direccion']}' required></div><div><label>Correo para envío</label><input type='email' name='correo' value='{vals['correo'] if comp else ''}' placeholder='cliente@correo.com'></div><button class='btn-success'>Guardar y generar factura</button><a class='btn' href='{url_for('pedidos')}'>Volver</a></form></div>"""
+    return page(html, "pedidos")
+
+@app.route("/enviar_factura_correo/<int:pedido_id>")
+@login_required
+def enviar_factura_correo(pedido_id):
+    comp=q_one("SELECT * FROM comprobantes WHERE pedido_id=? AND tipo='FACTURA' ORDER BY id DESC LIMIT 1", (pedido_id,)); p=q_one("SELECT * FROM pedidos WHERE id=?", (pedido_id,))
+    if not p or not comp:
+        flash("Primero registra los datos de factura.", "error"); return redirect(url_for("factura_datos", pedido_id=pedido_id))
+    correo=clean(comp["correo"])
+    if not correo:
+        flash("La factura no tiene correo registrado.", "error"); return redirect(url_for("factura_datos", pedido_id=pedido_id))
+    subject=f"Factura {p['codigo']} - EL TORO RESTAURANT GRILL"; body=comprobante_texto(pedido_id, tipo="FACTURA")
+    return redirect("mailto:"+correo+"?subject="+subject.replace(" ","%20")+"&body="+body.replace("\n","%0A").replace(" ","%20"))
 
 @app.route("/imprimir_boleta/<int:pedido_id>")
 @login_required
@@ -2495,6 +2570,11 @@ def imprimir_boleta(pedido_id):
     if not p:
         flash("Pedido no encontrado para imprimir.", "error")
         return redirect(url_for("pedidos"))
+    if p["pagado"] != "SI":
+        flash("Primero debe pagarse el consumo para imprimir boleta o factura.", "error")
+        return redirect(url_for("pedidos"))
+    if tipo == "FACTURA" and not q_one("SELECT id FROM comprobantes WHERE pedido_id=? AND tipo='FACTURA' ORDER BY id DESC LIMIT 1", (pedido_id,)):
+        return redirect(url_for("factura_datos", pedido_id=pedido_id))
     texto = comprobante_texto(pedido_id, tipo=tipo)
     direct_msg = ""
     if os.getenv("PRINT_DIRECT", "0") == "1" and os.name == "nt":
@@ -2513,7 +2593,7 @@ def imprimir_boleta(pedido_id):
       <div class="section-title">🖨️ Imprimir {tipo}</div>
       <div class="hint-card">Se abrirá el diálogo de impresión del navegador para usar la impresora instalada en la PC/celular. En Render/web no se puede controlar físicamente una impresora sin permiso del equipo; por eso este modo usa impresión segura del navegador.</div>
       {direct_msg}
-      <div class="actions"><button class="btn-success" onclick="window.print()">🖨️ Imprimir ahora</button><a class="btn" href="{url_for('boleta', pedido_id=pedido_id, tipo=tipo)}">Descargar TXT</a><a class="btn" href="{url_for('pedidos')}">Volver pedidos</a></div>
+      <div class="actions"><button class="btn-success" onclick="window.print()">🖨️ Imprimir ahora</button><a class="btn" href="{url_for('boleta', pedido_id=pedido_id, tipo=tipo)}">Descargar TXT</a>{'<a class="btn-warning" href="' + url_for('factura_datos', pedido_id=pedido_id) + '">Editar datos factura</a>' if tipo=='FACTURA' else ''}{'<a class="btn-success" href="' + url_for('enviar_factura_correo', pedido_id=pedido_id) + '">Enviar factura al correo</a>' if tipo=='FACTURA' else ''}<a class="btn" href="{url_for('pedidos')}">Volver pedidos</a></div>
       <pre class="ticket-preview">{texto}</pre>
     </div>
     <script>setTimeout(function(){{ window.print(); }}, 650);</script>
@@ -2529,15 +2609,12 @@ def pago_qr(pedido_id, metodo):
     if not p:
         flash('Pedido no encontrado.', 'error')
         return redirect(url_for('ventas'))
-    data = f"EL TORO RESTAURANT GRILL|POS-PAGO|PEDIDO:{p['codigo']}|METODO:{metodo}|MONTO:{float(p['total'] or 0):.2f}|CLIENTE:{p['cliente']}|FECHA:{today()} {hour()}"
-    if QRCODE_OK:
-        bio = BytesIO()
-        img = qrcode.make(data)
-        img.save(bio, format='PNG')
-        qr_src = 'data:image/png;base64,' + base64.b64encode(bio.getvalue()).decode('ascii')
-    else:
-        qr_src = url_for('static', filename='toro_logo.png')
-    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div><p class="hint-card">Modo POS móvil: muestra este QR al cliente para que pague desde su celular. Incluye pedido, método, monto y cliente.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><div class="actions" style="justify-content:center"><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
+    cuenta = ctx_admin_pago()
+    destino = cuenta.get('yape') if metodo == 'YAPE' else cuenta.get('plin') if metodo == 'PLIN' else cuenta.get('cci') if metodo == 'TRANSFERENCIA' else cuenta.get('titular')
+    data = f"EL TORO RESTAURANT GRILL|CUENTA_ADMIN:{cuenta.get('titular')}|DESTINO:{destino or 'CONFIGURAR EN CAJA'}|POS-PAGO|PEDIDO:{p['codigo']}|METODO:{metodo}|MONTO:{float(p['total'] or 0):.2f}|CLIENTE:{p['cliente']}|FECHA:{today()} {hour()}"
+    qr_src = qr_png_base64(data, box_size=12, border=5)
+    aviso = '' if destino else '<div class="flash error">⚠️ Configura la cuenta del administrador en CAJA: Yape/Plin/CCI para que el QR salga conectado a tu cuenta.</div>'
+    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}<p class="hint-card">Modo POS móvil: muestra este QR al cliente para que pague desde su celular. Conectado a la cuenta del administrador configurada en CAJA.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Titular:</b> {cuenta.get('titular')} · <b>Destino:</b> {destino or 'SIN CONFIGURAR'}</p><div class="actions" style="justify-content:center"><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
     return page(html, 'ventas')
 
 # =========================
@@ -2709,6 +2786,9 @@ def caja():
         elif accion == "gasto":
             q_exec("INSERT INTO caja(fecha,hora,tipo,concepto,monto,usuario) VALUES(?,?,?,?,?,?)", (today(), hour(), "EGRESO", up(request.form.get("concepto")), float(request.form.get("monto") or 0), session.get("user")))
             flash("Gasto registrado.", "ok")
+        elif accion == "config_pago":
+            set_ctx("pago_titular", up(request.form.get("pago_titular") or "ADMINISTRADOR EL TORO")); set_ctx("pago_yape", clean(request.form.get("pago_yape"))); set_ctx("pago_plin", clean(request.form.get("pago_plin"))); set_ctx("pago_banco", up(request.form.get("pago_banco"))); set_ctx("pago_cci", clean(request.form.get("pago_cci"))); set_ctx("pago_correo", clean(request.form.get("pago_correo")))
+            flash("Cuenta de pago del administrador actualizada para QR/POS.", "ok")
         return redirect(url_for("caja"))
     f = request.args.get("fecha", today())
     rows = q_all("SELECT * FROM caja WHERE fecha=? ORDER BY id DESC", (f,))
@@ -2721,6 +2801,7 @@ def caja():
         aviso_caja = "<div class='flash error'>💵 CAJA SIN ABRIR: antes de vender debes aperturar caja. Si no tienes permiso, solicita al administrador o usuario CAJA.</div>"
     permiso_msg = "" if puede_operar_caja else "<div class='hint-card'>Tu usuario puede ver el estado de caja, pero solo ADMIN o usuario CAJA puede abrir/cerrar caja.</div>"
     disabled = "" if puede_operar_caja else "disabled"
+    cuenta = ctx_admin_pago()
     html = f"""
     {aviso_caja}
     <div class="panel"><div class="box-title">Caja</div>{permiso_msg}<br>
@@ -2728,6 +2809,7 @@ def caja():
       <form method="post" class="actions"><input type="hidden" name="accion" value="cerrar"><button {disabled}>Cerrar caja</button></form><br>
       <form method="post" class="actions"><input type="hidden" name="accion" value="gasto"><label>Egreso:</label><input name="concepto" placeholder="Concepto" style="max-width:240px"><input name="monto" type="number" step="1" value="0.00" style="max-width:180px" {disabled}><button {disabled}>Registrar gasto</button></form>
     </div>
+    <div class="panel"><div class="section-title">💳 Cuenta administrador para QR/POS</div><div class="hint-card">Estos datos salen dentro del QR de pago para Yape, Plin, transferencia o tarjeta.</div><br><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config_pago"><div><label>Titular / Administrador</label><input name="pago_titular" value="{cuenta.get('titular','')}"></div><div><label>Yape / celular</label><input name="pago_yape" value="{cuenta.get('yape','')}"></div><div><label>Plin / celular</label><input name="pago_plin" value="{cuenta.get('plin','')}"></div><div><label>Banco</label><input name="pago_banco" value="{cuenta.get('banco','')}"></div><div><label>CCI / cuenta</label><input name="pago_cci" value="{cuenta.get('cci','')}"></div><div><label>Correo emisor</label><input type="email" name="pago_correo" value="{cuenta.get('correo','')}"></div><button class="btn-warning" {disabled}>Guardar cuenta QR</button></form></div>
     <div class="panel"><div class="box-title">Resumen de caja</div><h2 style="color:#dc2626">Caja: {estado}</h2><div class="grid"><div>Apertura: <b>{money(get_ctx('monto_apertura','0'))}</b></div><div>Efectivo sistema: <b>{money(ingresos-egresos)}</b></div><div>Ingresos: <b>{money(ingresos)}</b></div><div>Gastos: <b>{money(egresos)}</b></div></div></div>
     <div class="panel"><form method="get" class="actions"><input type="date" name="fecha" value="{f}" style="max-width:180px"><button>Filtrar</button></form><br><div class="table-wrap"><table><thead><tr><th>Hora</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Usuario</th></tr></thead><tbody>{trs}</tbody></table></div></div>
     """
