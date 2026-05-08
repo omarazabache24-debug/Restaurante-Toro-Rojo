@@ -27,6 +27,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from io import BytesIO, StringIO
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 from flask import (
@@ -123,6 +124,30 @@ def money(v):
 
 def ctx_admin_pago():
     return {"titular": get_ctx("pago_titular", "ADMINISTRADOR EL TORO"), "yape": get_ctx("pago_yape", ""), "plin": get_ctx("pago_plin", ""), "banco": get_ctx("pago_banco", ""), "cci": get_ctx("pago_cci", ""), "correo": get_ctx("pago_correo", "")}
+
+def cuenta_pago_configurada():
+    """Bloquea ventas/POS si no existe celular Yape o Plin configurado.
+    La CCI queda como dato bancario, pero para POS rápido se exige número móvil.
+    """
+    c = ctx_admin_pago()
+    yape = ''.join(ch for ch in str(c.get('yape','')) if ch.isdigit())
+    plin = ''.join(ch for ch in str(c.get('plin','')) if ch.isdigit())
+    titular = clean(c.get('titular'))
+    return bool(titular and (len(yape) >= 9 or len(plin) >= 9))
+
+def bloquear_si_sin_cuenta_pago(destino='caja'):
+    if not cuenta_pago_configurada():
+        flash('💳 Antes de vender debes registrar Titular y número Yape o Plin en CAJA / Cuenta QR-POS.', 'error')
+        return redirect(url_for(destino, motivo='pago_config'))
+    return None
+
+def sincronizar_todo_catalogo_productos():
+    """Repara enlaces inventario ↔ catálogo para que precio/stock visual se actualicen siempre."""
+    try:
+        for pr in q_all("SELECT id FROM productos WHERE activo=1"):
+            sincronizar_catalogo_producto(pr['id'])
+    except Exception:
+        pass
 
 def qr_png_base64(data, box_size=10, border=4):
     if not QRCODE_OK:
@@ -1751,7 +1776,12 @@ def descontar_receta(producto_id, cantidad_producto):
 
 def descontar_producto(producto_id, cantidad):
     # El stock del producto sí puede bajar; el descuento de INSUMOS depende de RECETAS OFF/ON.
-    q_exec("UPDATE productos SET stock=COALESCE(stock,0)-? WHERE id=?", (float(cantidad or 0), producto_id))
+    q_exec("UPDATE productos SET stock=MAX(COALESCE(stock,0)-?,0) WHERE id=?", (float(cantidad or 0), producto_id))
+    try:
+        log_event("STOCK", f"DESCUENTO producto_id={producto_id} cantidad={cantidad}")
+    except Exception:
+        pass
+    sincronizar_catalogo_producto(producto_id)
     descontar_receta(producto_id, cantidad)
 
 def devolver_producto(producto_id, cantidad):
@@ -1760,6 +1790,29 @@ def devolver_producto(producto_id, cantidad):
     """
     try:
         q_exec("UPDATE productos SET stock=COALESCE(stock,0)+? WHERE id=?", (float(cantidad or 0), producto_id))
+        try:
+            log_event("STOCK", f"DEVOLUCION producto_id={producto_id} cantidad={cantidad}")
+        except Exception:
+            pass
+        sincronizar_catalogo_producto(producto_id)
+    except Exception:
+        pass
+
+
+
+def sincronizar_catalogo_producto(producto_id):
+    """Mantiene productos, inventario y catálogo enlazados.
+    El catálogo publicado conserva el producto visible; el stock real se lee desde productos.
+    """
+    try:
+        prod = q_one("SELECT * FROM productos WHERE id=?", (producto_id,))
+        if not prod:
+            return
+        cat = q_one("SELECT id FROM catalogo_publico WHERE UPPER(titulo)=UPPER(?) ORDER BY id DESC LIMIT 1", (prod['nombre'],))
+        if cat:
+            q_exec("UPDATE catalogo_publico SET precio=?, categoria=?, activo=1 WHERE id=?", (float(prod['precio'] or 0), prod['categoria'] or 'PLATOS', cat['id']))
+        else:
+            q_exec("INSERT INTO catalogo_publico(titulo,descripcion,precio,categoria,imagen,destacado,activo) VALUES(?,?,?,?,?,?,1)", (prod['nombre'], 'Sincronizado desde inventario/POS', float(prod['precio'] or 0), prod['categoria'] or 'PLATOS', 'toro_logo.png', 0))
     except Exception:
         pass
 
@@ -2035,6 +2088,10 @@ def ventas():
         if accion != "importar_productos" and get_ctx("caja_abierta", "0") != "1":
             flash("💵 Para registrar venta primero debes abrir caja. Te estoy llevando al módulo CAJA para aperturarla.", "error")
             return redirect(url_for("caja", motivo="venta_bloqueada"))
+        if accion != "importar_productos":
+            bloqueo_pago = bloquear_si_sin_cuenta_pago('caja')
+            if bloqueo_pago:
+                return bloqueo_pago
         if accion == "importar_productos" and "archivo" in request.files:
             if not is_admin():
                 flash("Carga de inicio de día restringida: solo administrador.", "error")
@@ -2105,6 +2162,7 @@ def ventas():
     categorias = q_all("SELECT DISTINCT categoria FROM productos WHERE activo=1 AND COALESCE(categoria,'')<>'' ORDER BY categoria")
     opts_prod = '<option value="" data-cat="">Selecciona producto</option>' + "".join(f'<option value="{p["id"]}" data-cat="{str(p["categoria"] or "").upper()}">{p["codigo"] or p["id"]} · {p["nombre"]} · {money(p["precio"])} · Stock {int(float(p["stock"] or 0))}</option>' for p in productos)
     tr_prod = "".join(f'<tr class="{"row-ok" if float(r["stock"] or 0)>0 else "row-bad"}"><td>{r["codigo"]}</td><td><b>{r["nombre"]}</b></td><td>{r["categoria"]}</td><td>{money(r["precio"])}</td><td>{int(float(r["stock"] or 0))}</td><td>{"DISPONIBLE" if float(r["stock"] or 0)>0 else "SIN STOCK"}</td></tr>' for r in productos[:150]) or '<tr><td colspan="6">Sin productos.</td></tr>'
+    stock_total_visible = int(sum(float(r["stock"] or 0) for r in productos))
     pedidos_pend = q_all("SELECT p.*, COALESCE((SELECT GROUP_CONCAT(producto || ' x' || CAST(cantidad AS INT), ' + ') FROM pedido_detalle d WHERE d.pedido_id=p.id),'') productos FROM pedidos p WHERE p.pagado='NO' ORDER BY p.id DESC LIMIT 80")
     opts_ped = '<option value="">Selecciona pedido abierto</option>' + "".join(f'<option value="{p["id"]}">{p["codigo"]} · {p["cliente"]} · {p["productos"]} · {money(p["total"])} · {p["estado"]}</option>' for p in pedidos_pend)
     cat_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}" {"selected" if cat_filtro==c["categoria"] else ""}>{c["categoria"]}</option>' for c in categorias)
@@ -2179,7 +2237,7 @@ def ventas():
     </script>
     <div class='panel'><div class='box-title'>Cobro rápido</div><br><form method='post' class='actions'><input type='hidden' name='accion' value='cobrar_boleta'><select name='pedido_id' style='max-width:680px'>{opts_ped}</select><select name='metodo_pago' style='max-width:220px'><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option><option>TRANSFERENCIA</option></select><button class='btn-success'>💳 Pagar / QR POS</button></form></div>
     <div class='panel filter-sticky' id='filtros-venta'><form method='get' action='{url_for('ventas')}#catalogo-productos' class='catalog-filter-actions'><div><label>Buscar producto</label><input name='buscar' value='{buscar_prod}' placeholder='Buscar producto por nombre, código o categoría'></div><div><label>Categoría</label><select name='categoria' onchange='this.form.submit()'>{cat_opts}</select></div><button name='disponible' value='1'>✅ Filtrar disponibles</button><a class='btn' href='{url_for('ventas')}#catalogo-productos'>Limpiar</a></form></div>
-    <div class='panel' id='catalogo-productos'><div class='section-title'>🍽️ Catálogo de productos <span class="title-count-pill">{len(productos)} productos</span></div><div class="catalog-mini-kpi"><b>{len(productos)}</b><span>productos visibles según filtro</span></div><div class='table-wrap small'><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div>{load_day_html}
+    <div class='panel' id='catalogo-productos'><div class='section-title'>🍽️ Catálogo de productos <span class="title-count-pill">{len(productos)} productos</span></div><div class="catalog-mini-kpi"><b>{stock_total_visible}</b><span>stock total disponible según filtro</span></div><div class='table-wrap small'><table><thead><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead><tbody>{tr_prod}</tbody></table></div></div>{load_day_html}
     <div class='panel'><div class='section-title'>🧩 Últimos ítems registrados</div><div class='table-wrap small'><table><thead><tr><th>Pedido</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>{tr_det}</tbody></table></div></div>
     <script>
     document.querySelectorAll('.venta-cat-filter').forEach(function(sel){{
@@ -2214,6 +2272,9 @@ def pos_rapido():
         if get_ctx("caja_abierta", "0") != "1":
             flash("💵 Para usar POS rápido primero debes abrir caja. Te estoy llevando al módulo CAJA.", "error")
             return redirect(url_for("caja", motivo="pos_bloqueado"))
+        bloqueo_pago = bloquear_si_sin_cuenta_pago('caja')
+        if bloqueo_pago:
+            return bloqueo_pago
         producto_id = int(request.form.get("producto_id") or 0)
         cantidad = int(float(request.form.get("cantidad") or 1))
         prod = q_one("SELECT * FROM productos WHERE id=? AND activo=1", (producto_id,))
@@ -2334,7 +2395,7 @@ SELECT * FROM pedidos
       <div class="hint-card">Identifica cliente, mesa y servicio. Marca pedido único para agregar varios productos al mismo pedido. El pago se define en Pedidos.</div><br>
       <datalist id="clientes_pos_list">{cliente_options}</datalist>
       <form method="get" class="pos-client-grid">
-        <div style="grid-column:1/-1"><label>Agregar a pedido abierto del cliente</label><select id="pos_pedido_abierto" onchange="seleccionarPedidoPOS()">{pedidos_pos_opts}</select><small class="muted">Selecciona un pedido ya registrado para agregar productos al mismo pedido.</small></div>
+        <div style="grid-column:1/-1"><label>Agregar a pedido abierto del cliente</label><select id="pos_pedido_abierto" onchange="seleccionarPedidoPOS()">{pedidos_pos_opts}</select><small class="muted">Selecciona un pedido ya registrado para agregar productos al mismo pedido.</small><button type="button" class="btn-warning" onclick="nuevoPedidoPOS()" style="margin-top:8px">🧹 Nuevo pedido / limpiar campos</button></div>
         <div><label>Cliente</label><input id="pos_cliente" list="clientes_pos_list" placeholder="CLIENTE GENERAL / nombre"></div>
         <div><label>Teléfono / DNI</label><input id="pos_telefono" placeholder="Celular o DNI"></div>
         <div><label>Dirección</label><input id="pos_direccion" placeholder="Para delivery"></div>
@@ -2385,6 +2446,15 @@ SELECT * FROM pedidos
         document.querySelectorAll('.pos_pedido_hidden').forEach(e=>e.value=pedido);
         try{{sessionStorage.setItem('pos_cliente',cliente);sessionStorage.setItem('pos_telefono',telefono);sessionStorage.setItem('pos_direccion',direccion);sessionStorage.setItem('pos_referencia',referencia);sessionStorage.setItem('pos_mesa',mesa);sessionStorage.setItem('pos_servicio',servicio);sessionStorage.setItem('pos_unico',unico);}}catch(e){{}}
       }}
+      function nuevoPedidoPOS(){{
+        const sel=document.getElementById('pos_pedido_abierto'); if(sel) sel.value='';
+        ['pos_cliente','pos_telefono','pos_direccion','pos_referencia'].forEach(id=>{{const e=document.getElementById(id); if(e) e.value='';}});
+        const m=document.getElementById('pos_mesa'); if(m) m.value='';
+        const sv=document.getElementById('pos_servicio'); if(sv) sv.value='SALÓN';
+        const un=document.getElementById('pos_unico'); if(un) un.checked=false;
+        try{{['pos_cliente','pos_telefono','pos_direccion','pos_referencia','pos_mesa','pos_unico'].forEach(k=>sessionStorage.removeItem(k));}}catch(e){{}}
+        syncPOSClient();
+      }}
       function seleccionarPedidoPOS(){{
         const sel=document.getElementById('pos_pedido_abierto'); const opt=sel?.selectedOptions?.[0];
         if(opt && sel.value){{
@@ -2395,6 +2465,12 @@ SELECT * FROM pedidos
           document.getElementById('pos_mesa').value=opt.dataset.mesa||'';
           document.getElementById('pos_servicio').value=opt.dataset.servicio||'SALÓN';
           document.getElementById('pos_unico').checked=false;
+        }} else {{
+          ['pos_cliente','pos_telefono','pos_direccion','pos_referencia'].forEach(id=>{{const e=document.getElementById(id); if(e) e.value='';}});
+          const m=document.getElementById('pos_mesa'); if(m) m.value='';
+          const sv=document.getElementById('pos_servicio'); if(sv) sv.value='SALÓN';
+          const un=document.getElementById('pos_unico'); if(un) un.checked=false;
+          try{{['pos_cliente','pos_telefono','pos_direccion','pos_referencia','pos_mesa','pos_unico'].forEach(k=>sessionStorage.removeItem(k));}}catch(e){{}}
         }}
         syncPOSClient();
       }}
@@ -2483,6 +2559,10 @@ def pedidos():
     opts_cobro = '<option value="">Selecciona pedido abierto por cliente o código</option>' + "".join(
         f'<option value="{r["id"]}">{pedido_label(r)}</option>' for r in pedidos_cobro
     )
+    pedidos_pagados_factura = [r for r in rows if r["pagado"] == "SI"]
+    opts_factura = '<option value="">Selecciona cliente / pedido pagado</option>' + "".join(
+        f'<option value="{r["id"]}">{r["cliente"] or "CLIENTE GENERAL"} · {r["codigo"]} · {money(r["total"])} · {r["fecha"]}</option>' for r in pedidos_pagados_factura
+    )
     selected_first = (pedidos_cobro[0]["id"] if pedidos_cobro else (pedidos_estado[0]["id"] if pedidos_estado else 0))
     detalles = q_all("SELECT d.*,p.codigo,p.cliente,p.estado,p.pagado FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 120")
     detalles_editables = [r for r in detalles if r["pedido_id"] in pedidos_editables_ids]
@@ -2503,7 +2583,7 @@ def pedidos():
         if editable:
             action_html = f'''<form method="post" class="pedido-bloque-actions"><input type="hidden" name="pedido_id" value="{r['id']}"><select name="estado"><option>PREPARACIÓN</option><option>LISTO</option><option>ENTREGADO</option></select><button name="accion" value="estado" class="btn-success">Actualizar</button><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select><button name="accion" value="pagado" class="btn-success" onclick="return confirm('Solo se cobra si el pedido está ENTREGADO')">💳 Pagar / QR</button><a class="btn-warning full" href="{url_for('imprimir_boleta', pedido_id=r['id'], tipo='BOLETA')}">🖨️ Imprimir boleta</a></form>''' 
         else:
-            action_html = f'''<div class="pedido-bloque-actions"><a class="btn-warning full" href="{url_for('imprimir_boleta', pedido_id=r['id'], tipo='BOLETA')}">🖨️ Imprimir boleta</a></div>''' 
+            action_html = f'''<div class="pedido-bloque-actions"><a class="btn-warning full" href="{url_for('imprimir_boleta', pedido_id=r['id'], tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-success full" href="{url_for('factura_datos', pedido_id=r['id'])}">🧾 Factura / datos cliente</a><a class="btn-success full" target="_blank" href="{url_for('enviar_comprobante_whatsapp', pedido_id=r['id'], tipo='BOLETA')}">WhatsApp</a></div>''' 
         pedido_bloques += f'''<div class="pedido-bloque"><div class="pedido-bloque-head"><div><h3>{r['cliente'] or 'CLIENTE GENERAL'}</h3><span class="pedido-code">{r['codigo']}</span></div><span class="badge warn">{r['estado']}</span></div><div class="pedido-products">{r['productos'] or 'Sin ítems'}</div><div class="pedido-meta"><span>Hora: {r['fecha']} {r['hora']}</span><span>Mesa/servicio: {r['mesa'] or r['servicio']}</span><span>Pagado: {r['pagado']}</span><span>Usuario: {r['usuario'] or ''}</span></div><div class="pedido-total">{money(r['total'])}</div>{action_html}</div>''' 
     if not pedido_bloques:
         pedido_bloques = '<div class="hint-card">Sin pedidos para mostrar.</div>' 
@@ -2518,7 +2598,23 @@ def pedidos():
         <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">💵 Cobrar pedido</div><div><label>Pedido para cobrar</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_cobro}</select><small class="muted">Solo pedidos ENTREGADOS y no pagados.</small></div><div><label>Método pago</label><select name="metodo_pago"><option>EFECTIVO</option><option>YAPE</option><option>PLIN</option><option>TARJETA</option></select></div><div class="actions"><button name="accion" value="pagado" class="btn-success">💳 Pagar / QR POS</button><button name="accion" value="limpiar" class="btn-danger" onclick="return confirm('¿Eliminar pedido completo?')">Eliminar pedido</button><a class="btn" href="{url_for('imprimir_boleta', pedido_id=selected_first, tipo='BOLETA')}">🖨️ Imprimir boleta</a></div></form>
         <form method="post" class="pedido-op-card smart-pedido-form"><div class="pedido-op-title">✏️ Editar ítems</div><div><label>Pedido editable</label><input class="pedido-search" placeholder="Buscar por nombre, código o producto"><select name="pedido_id" class="pedido-select">{opts_estado}</select><small class="muted">No muestra entregados ni pagados.</small></div><div><label>Ítem del pedido</label><select name="item_id">{item_opts}</select></div><button name="accion" value="quitar_item" class="btn-warning">➖ Quitar ítem</button></form>
       </div>
+      <details class="panel factura-folder" open>
+        <summary class="section-title">🧾 Factura / boleta electrónica - subcarpeta auditable</summary>
+        <div class="hint-card">Primero cobra el pedido. Luego selecciona el cliente/pedido pagado y completa los datos mínimos: RUC para factura, DNI para boleta, razón social o nombres, dirección fiscal, correo y teléfono. Desde ahí puedes imprimir, enviar por correo o WhatsApp.</div><br>
+        <div class="clean-grid"><div><label>Cliente / pedido pagado</label><select id="factura_pedido_select">{opts_factura}</select></div><div class="actions" style="align-self:end"><a class="btn-warning" id="btn_factura_datos" href="#">Llenar datos factura</a><a class="btn" id="btn_boleta_print" href="#">Imprimir boleta</a><a class="btn-success" id="btn_factura_whatsapp" target="_blank" href="#">Enviar WhatsApp</a><a class="btn-success" id="btn_factura_correo" href="#">Reenviar factura correo</a></div></div>
+      </details>
       <script>
+      function syncFacturaFolder(){{
+        const sel=document.getElementById('factura_pedido_select'); if(!sel) return; const id=sel.value||'0';
+        const b1=document.getElementById('btn_factura_datos'), b2=document.getElementById('btn_boleta_print'), b3=document.getElementById('btn_factura_whatsapp'), b4=document.getElementById('btn_factura_correo');
+        if(id==='0' || !id){{[b1,b2,b3,b4].forEach(b=>{{if(b){{b.href='#'; b.style.opacity=.45;}}}}); return;}}
+        if(b1){{b1.href='/factura_datos/'+id; b1.style.opacity=1;}}
+        if(b2){{b2.href='/imprimir_boleta/'+id+'?tipo=BOLETA'; b2.style.opacity=1;}}
+        if(b3){{b3.href='/enviar_comprobante_whatsapp/'+id+'?tipo=FACTURA'; b3.style.opacity=1;}}
+        if(b4){{b4.href='/enviar_factura_correo/'+id; b4.style.opacity=1;}}
+      }}
+      document.addEventListener('change',e=>{{if(e.target&&e.target.id==='factura_pedido_select') syncFacturaFolder();}});
+      setTimeout(syncFacturaFolder,50);
       document.querySelectorAll('.smart-pedido-form').forEach(function(form){{
         const input=form.querySelector('.pedido-search');
         const select=form.querySelector('.pedido-select');
@@ -2600,7 +2696,7 @@ def factura_datos(pedido_id):
         flash("Datos de factura guardados. Ya puedes imprimir o enviar al correo.", "ok"); return redirect(url_for("imprimir_boleta", pedido_id=pedido_id, tipo="FACTURA"))
     vals=comp or {}
     html = f"""
-    <div class='panel factura-panel'><div class='section-title'>🧾 Datos mínimos para Factura</div><div class='hint-card'>La factura solo se habilita si el consumo está pagado. Registra RUC, Razón Social, Dirección Fiscal y correo del cliente.</div><br>
+    <div class='panel factura-panel'><div class='section-title'>🧾 Datos mínimos para Factura</div><div class='hint-card'>La factura solo se habilita si el consumo está pagado. Datos mínimos auditables: tipo de comprobante, RUC/DNI del cliente, razón social o nombres, dirección fiscal, fecha, detalle, IGV/total y correo.</div><br>
       <form method='post' class='clean-grid'><div><label>RUC cliente *</label><input name='ruc' maxlength='11' pattern='[0-9]{{11}}' value='{vals['ruc'] if comp else ''}' required></div><div><label>Razón Social *</label><input name='razon_social' value='{vals['razon_social'] if comp else p['cliente']}' required></div><div><label>Dirección Fiscal *</label><input name='direccion_fiscal' value='{vals['direccion_fiscal'] if comp else p['direccion']}' required></div><div><label>Correo para envío</label><input type='email' name='correo' value='{vals['correo'] if comp else ''}' placeholder='cliente@correo.com'></div><button class='btn-success'>Guardar y generar factura</button><a class='btn' href='{url_for('pedidos')}'>Volver</a></form></div>"""
     return page(html, "pedidos")
 
@@ -2615,6 +2711,20 @@ def enviar_factura_correo(pedido_id):
         flash("La factura no tiene correo registrado.", "error"); return redirect(url_for("factura_datos", pedido_id=pedido_id))
     subject=f"Factura {p['codigo']} - EL TORO RESTAURANT GRILL"; body=comprobante_texto(pedido_id, tipo="FACTURA")
     return redirect("mailto:"+correo+"?subject="+subject.replace(" ","%20")+"&body="+body.replace("\n","%0A").replace(" ","%20"))
+
+
+
+@app.route("/enviar_comprobante_whatsapp/<int:pedido_id>")
+@login_required
+def enviar_comprobante_whatsapp(pedido_id):
+    tipo = up(request.args.get("tipo", "BOLETA"))
+    p = q_one("SELECT * FROM pedidos WHERE id=?", (pedido_id,))
+    if not p:
+        flash("Pedido no encontrado.", "error"); return redirect(url_for("pedidos"))
+    msg = comprobante_texto(pedido_id, tipo=tipo)
+    tel = ''.join(ch for ch in str(p['telefono'] or '') if ch.isdigit())
+    pref = ('51' + tel) if len(tel) == 9 else tel
+    return redirect('https://wa.me/' + pref + '?text=' + quote(msg))
 
 @app.route("/imprimir_boleta/<int:pedido_id>")
 @login_required
@@ -2648,7 +2758,7 @@ def imprimir_boleta(pedido_id):
       <div class="section-title">🖨️ Imprimir {tipo}</div>
       <div class="hint-card">Se abrirá el diálogo de impresión del navegador para usar la impresora instalada en la PC/celular. En Render/web no se puede controlar físicamente una impresora sin permiso del equipo; por eso este modo usa impresión segura del navegador.</div>
       {direct_msg}
-      <div class="actions"><button class="btn-success" onclick="window.print()">🖨️ Imprimir ahora</button><a class="btn" href="{url_for('boleta', pedido_id=pedido_id, tipo=tipo)}">Descargar TXT</a>{'<a class="btn-warning" href="' + url_for('factura_datos', pedido_id=pedido_id) + '">Editar datos factura</a>' if tipo=='FACTURA' else ''}{'<a class="btn-success" href="' + url_for('enviar_factura_correo', pedido_id=pedido_id) + '">Enviar factura al correo</a>' if tipo=='FACTURA' else ''}<a class="btn" href="{url_for('pedidos')}">Volver pedidos</a></div>
+      <div class="actions"><button class="btn-success" onclick="window.print()">🖨️ Imprimir ahora</button><a class="btn" href="{url_for('boleta', pedido_id=pedido_id, tipo=tipo)}">Descargar TXT</a>{'<a class="btn-warning" href="' + url_for('factura_datos', pedido_id=pedido_id) + '">Editar datos factura</a>' if tipo=='FACTURA' else ''}{'<a class="btn-success" href="' + url_for('enviar_factura_correo', pedido_id=pedido_id) + '">Enviar factura al correo</a>' if tipo=='FACTURA' else ''}<a class="btn-success" target="_blank" href="{url_for('enviar_comprobante_whatsapp', pedido_id=pedido_id, tipo=tipo)}">Enviar por WhatsApp</a><a class="btn" href="{url_for('pedidos')}">Volver pedidos</a></div>
       <pre class="ticket-preview">{texto}</pre>
     </div>
     <script>setTimeout(function(){{ window.print(); }}, 650);</script>
@@ -2667,15 +2777,18 @@ def pago_qr(pedido_id, metodo):
     cuenta = ctx_admin_pago()
     destino = cuenta.get('yape') if metodo == 'YAPE' else cuenta.get('plin') if metodo == 'PLIN' else cuenta.get('cci') if metodo == 'TRANSFERENCIA' else cuenta.get('titular')
     total_qr = float(p['total'] or 0)
+    cel = ''.join(ch for ch in str(destino or '') if ch.isdigit())
     if metodo == 'YAPE':
-        data = f"YAPE|CELULAR:{destino or cuenta.get('cci') or 'CONFIGURAR_YAPE_EN_CAJA'}|MONTO:{total_qr:.2f}|PEDIDO:{p['codigo']}|CLIENTE:{p['cliente']}"
+        # QR liviano: algunas versiones de Yape no aceptan QR externos; por eso el contenido queda mínimo y legible.
+        data = f"YAPE|{cel or 'CONFIGURAR'}|{total_qr:.2f}|{p['codigo']}"
     elif metodo == 'PLIN':
-        data = f"PLIN|CELULAR:{destino or cuenta.get('cci') or 'CONFIGURAR_PLIN_EN_CAJA'}|MONTO:{total_qr:.2f}|PEDIDO:{p['codigo']}|CLIENTE:{p['cliente']}"
+        data = f"PLIN|{cel or 'CONFIGURAR'}|{total_qr:.2f}|{p['codigo']}"
     else:
-        data = f"TRANSFERENCIA|CCI:{destino or 'CONFIGURAR_CCI_EN_CAJA'}|MONTO:{total_qr:.2f}|PEDIDO:{p['codigo']}|TITULAR:{cuenta.get('titular')}"
-    qr_src = qr_png_base64(data, box_size=14, border=6)
-    aviso = '' if destino else '<div class="flash error">⚠️ Configura en CAJA el número Yape/Plin. La CCI del BCP sirve para transferencia, pero Yape normalmente necesita número/QR de Yape.</div>'
-    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}<p class="hint-card">QR PRO generado con importe, pedido y destino. Para Yape/Plin registra el celular asociado; si solo colocas CCI, úsalo como transferencia bancaria.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Titular:</b> {cuenta.get('titular')} · <b>Destino:</b> {destino or cuenta.get('cci') or 'SIN CONFIGURAR'}</p><div class="actions" style="justify-content:center"><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
+        data = f"TRANSFERENCIA|{destino or 'CONFIGURAR_CCI'}|{total_qr:.2f}|{p['codigo']}|{cuenta.get('titular')}"
+    qr_src = qr_png_base64(data, box_size=12, border=6)
+    aviso = '' if destino else '<div class="flash error">⚠️ Configura en CAJA el celular Yape/Plin. La CCI BCP no reemplaza un QR oficial de Yape.</div>'
+    yape_link = f"https://wa.me/?text={quote('Pago '+p['codigo']+' S/'+format(total_qr,'.2f')+' al celular '+(cel or 'CONFIGURAR'))}"
+    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}<p class="hint-card">QR POS generado con celular, importe y pedido. Si la app Yape muestra error, usa el botón WhatsApp o yapea directo al número mostrado: Yape no siempre acepta QR externos; el sistema no marca pagado hasta presionar Pagar.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Titular:</b> {cuenta.get('titular')} · <b>Destino:</b> {destino or cuenta.get('cci') or 'SIN CONFIGURAR'}</p><div class="actions" style="justify-content:center"><a class="btn-success" target="_blank" href="{yape_link}">Enviar datos por WhatsApp</a><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
     return page(html, 'ventas')
 
 # =========================
@@ -2697,17 +2810,21 @@ def inventario():
             data = (codigo, nombre, up(request.form.get("categoria") or "PLATOS"), request.form.get("tipo", "VENTA"), up(request.form.get("unidad") or "PLATO"), int(float(request.form.get("precio") or 0)), int(float(request.form.get("costo") or 0)), int(float(request.form.get("stock") or 0)), int(float(request.form.get("stock_min") or 0)))
             if existe:
                 q_exec("UPDATE productos SET codigo=?,categoria=?,tipo=?,unidad=?,precio=?,costo=?,stock=?,stock_min=?,activo=1 WHERE nombre=?", data[:1]+data[2:]+(nombre,))
+                pid_sync = existe["id"]
             else:
-                q_exec("INSERT INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)", data)
-            flash("Producto individual guardado.", "ok")
+                pid_sync = q_exec("INSERT INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)", data)
+            sincronizar_catalogo_producto(pid_sync)
+            flash("Producto individual guardado y sincronizado con catálogo/POS.", "ok")
         elif accion == "stock_in":
             pid = int(request.form.get("producto_id"))
             q_exec("UPDATE productos SET stock=CAST(COALESCE(stock,0) AS INTEGER)+? WHERE id=?", (int(float(request.form.get("cantidad") or 0)), pid))
-            flash("Entrada de stock registrada.", "ok")
+            sincronizar_catalogo_producto(pid)
+            flash("Entrada de stock registrada y sincronizada con catálogo.", "ok")
         elif accion == "stock_out":
             pid = int(request.form.get("producto_id"))
-            q_exec("UPDATE productos SET stock=CAST(COALESCE(stock,0) AS INTEGER)-? WHERE id=?", (int(float(request.form.get("cantidad") or 0)), pid))
-            flash("Salida de stock registrada.", "ok")
+            q_exec("UPDATE productos SET stock=MAX(CAST(COALESCE(stock,0) AS INTEGER)-?,0) WHERE id=?", (int(float(request.form.get("cantidad") or 0)), pid))
+            sincronizar_catalogo_producto(pid)
+            flash("Salida de stock registrada y sincronizada con catálogo.", "ok")
         elif accion == "importar" and "archivo" in request.files:
             count = importar_productos(request.files["archivo"])
             flash(f"Carga masiva completada: {count} productos.", "ok")
@@ -2718,10 +2835,11 @@ def inventario():
     trp = "".join(f'<tr class="{"row-bad" if float(p["stock"] or 0)<=float(p["stock_min"] or 0) else ""}"><td>{p["id"]}</td><td>{p["codigo"]}</td><td>{p["nombre"]}</td><td>{p["categoria"]}</td><td>{p["tipo"]}</td><td>{p["unidad"]}</td><td>{money(p["precio"])}</td><td>{money(p["costo"])}</td><td>{int(float(p["stock"] or 0))}</td><td>{int(float(p["stock_min"] or 0))}</td><td>{"SIN STOCK" if float(p["stock"] or 0)<=0 else "OK"}</td></tr>' for p in productos)
     stock_bajo = q_one("SELECT COUNT(*) c FROM productos WHERE activo=1 AND stock<=stock_min")["c"]
     total_productos = len(productos)
+    total_unidades_stock = int(float(q_one("SELECT COALESCE(SUM(stock),0) s FROM productos WHERE activo=1")["s"] or 0))
     sin_stock = q_one("SELECT COUNT(*) c FROM productos WHERE activo=1 AND COALESCE(stock,0)<=0")["c"]
     html = f'''
     <div class="mobile-active-title">📦 Inventario</div>
-    <div class="product-count-hero"><div class="count-icon">📦</div><div><span>Total de productos en inventario</span><b>{total_productos}</b><small>Vista rápida para controlar productos registrados, stock bajo y productos sin stock.</small></div></div>
+    <div class="product-count-hero"><div class="count-icon">📦</div><div><span>Unidades totales en stock</span><b>{total_unidades_stock}</b><small>El número baja al vender/agregar pedido y vuelve cuando eliminas o retiras ítems. Productos registrados: {total_productos}.</small></div></div>
     <div class="panel"><div class="section-title">📦 Inventario: carga individual / masiva</div><div class="inventory-indicator"><div class="metric"><b>{total_productos}</b><span>Productos registrados</span></div><div class="metric"><b>{stock_bajo}</b><span>Stock bajo</span></div><div class="metric"><b>{sin_stock}</b><span>Sin stock</span></div></div><div class="inventory-tabs"><div class="inventory-tab active">Individual</div><div class="inventory-tab">Masiva Excel/CSV</div><div class="inventory-tab">Stock</div></div><div class="hint-card"><b>SKU:</b> letras y números. Ejemplos: PIZ-MUZ-01, BEB-COCA-500, PL-001. Todo precio y stock trabaja con números enteros.</div></div>
     <div class="panel"><div class="section-title">➕ Producto individual</div><form method="post"><input type="hidden" name="accion" value="producto"><div class="inventory-sku-row"><div><label>Código/SKU</label><input list="sku_sugeridos" name="codigo" placeholder="Ej. PIZ-MUZ-01" pattern="[A-Za-z0-9-]+"><datalist id="sku_sugeridos"><option value="PIZ-MUZ-01"><option value="PIZ-AME-01"><option value="PARR-POL-01"><option value="BEB-COCA-500"><option value="PL-001"></datalist></div><div><label>Nombre producto</label><input name="nombre" placeholder="Nombre producto"></div><div><label>Categoría</label><select name="categoria"><option>PIZZAS</option><option>PLATOS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>ADICIONALES</option><option>INSUMOS</option></select></div><div><label>Tipo</label><select name="tipo"><option>VENTA</option><option>INSUMO</option></select></div><div><label>Unidad</label><select name="unidad"><option>PLATO</option><option>UND</option><option>KG</option><option>PORCION</option></select></div></div><br><div class="inventory-num-row"><div><label>Precio venta</label><input name="precio" type="number" step="1" min="0"></div><div><label>Costo</label><input name="costo" type="number" step="1" min="0"></div><div><label>Stock</label><input name="stock" type="number" step="1" min="0"></div><div><label>Stock mínimo</label><input name="stock_min" type="number" step="1" min="0"></div><button class="primary">Guardar producto</button></div></form></div>
     <div class="panel"><div class="section-title">📥 Carga masiva / inicio de día</div><form method="post" enctype="multipart/form-data" class="actions"><input type="hidden" name="accion" value="importar"><input type="file" name="archivo" accept=".xlsx,.csv" style="max-width:340px"><button class="btn-warning">Importar Excel/CSV</button><a class="btn" href="{url_for('plantilla_inventario')}">Descargar plantilla</a><a class="btn" href="{url_for('export_inventario')}">Exportar inventario</a></form></div>
@@ -2747,6 +2865,8 @@ def importar_productos(file_storage):
                 continue
             codigo = clean(d.get("CODIGO") or d.get("CÓDIGO") or "") or "P" + str(count + 1).zfill(4)
             q_exec("INSERT OR REPLACE INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)", (codigo, nombre, up(d.get("CATEGORIA") or "PLATOS"), up(d.get("TIPO") or "VENTA"), up(d.get("UNIDAD") or "UND"), float(d.get("PRECIO") or 0), float(d.get("COSTO") or 0), float(d.get("STOCK") or 0), float(d.get("MINIMO") or d.get("STOCK_MIN") or 0)))
+            pr=q_one("SELECT id FROM productos WHERE codigo=? OR nombre=? ORDER BY id DESC LIMIT 1", (codigo,nombre))
+            if pr: sincronizar_catalogo_producto(pr["id"])
             count += 1
     else:
         content = file_storage.read().decode("utf-8-sig", errors="ignore")
@@ -2756,6 +2876,8 @@ def importar_productos(file_storage):
                 continue
             codigo = clean(d.get("CODIGO") or "") or "P" + str(count + 1).zfill(4)
             q_exec("INSERT OR REPLACE INTO productos(codigo,nombre,categoria,tipo,unidad,precio,costo,stock,stock_min,activo) VALUES(?,?,?,?,?,?,?,?,?,1)", (codigo, nombre, up(d.get("CATEGORIA") or "PLATOS"), up(d.get("TIPO") or "VENTA"), up(d.get("UNIDAD") or "UND"), float(d.get("PRECIO") or 0), float(d.get("COSTO") or 0), float(d.get("STOCK") or 0), float(d.get("MINIMO") or 0)))
+            pr=q_one("SELECT id FROM productos WHERE codigo=? OR nombre=? ORDER BY id DESC LIMIT 1", (codigo,nombre))
+            if pr: sincronizar_catalogo_producto(pr["id"])
             count += 1
     return count
 
@@ -2849,7 +2971,7 @@ def caja():
             flash("Gasto registrado.", "ok")
         elif accion == "config_pago":
             set_ctx("pago_titular", up(request.form.get("pago_titular") or "ADMINISTRADOR EL TORO")); set_ctx("pago_yape", clean(request.form.get("pago_yape"))); set_ctx("pago_plin", clean(request.form.get("pago_plin"))); set_ctx("pago_banco", up(request.form.get("pago_banco"))); set_ctx("pago_cci", clean(request.form.get("pago_cci"))); set_ctx("pago_correo", clean(request.form.get("pago_correo")))
-            flash("Cuenta de pago del administrador actualizada para QR/POS.", "ok")
+            flash("Cuenta QR/POS guardada. No se cobró ni se pagó ningún pedido; los pedidos solo se pagan con el botón Pagar.", "ok")
         return redirect(url_for("caja"))
     f = request.args.get("fecha", today())
     rows = q_all("SELECT * FROM caja WHERE fecha=? ORDER BY id DESC", (f,))
@@ -2858,7 +2980,9 @@ def caja():
     trs = "".join(f'<tr><td>{r["hora"]}</td><td>{r["tipo"]}</td><td>{r["concepto"]}</td><td>{money(r["monto"])}</td><td>{r["usuario"]}</td></tr>' for r in rows) or '<tr><td colspan="5">Sin movimientos.</td></tr>'
     estado = "ABIERTA" if get_ctx("caja_abierta", "0") == "1" else "SIN ABRIR"
     aviso_caja = ""
-    if request.args.get("motivo"):
+    if request.args.get("motivo") == "pago_config":
+        aviso_caja = "<div class='flash error'>💳 CONFIGURACIÓN OBLIGATORIA: registra Titular y celular Yape o Plin antes de vender.</div>"
+    elif request.args.get("motivo"):
         aviso_caja = "<div class='flash error'>💵 CAJA SIN ABRIR: antes de vender debes aperturar caja. Si no tienes permiso, solicita al administrador o usuario CAJA.</div>"
     permiso_msg = "" if puede_operar_caja else "<div class='hint-card'>Tu usuario puede ver el estado de caja, pero solo ADMIN o usuario CAJA puede abrir/cerrar caja.</div>"
     disabled = "" if puede_operar_caja else "disabled"
@@ -3224,7 +3348,11 @@ def catalogo_admin():
                     imagen,
                     1 if request.form.get("destacado") else 0,
                 ))
-                flash("Producto con imagen agregado al catálogo.", "ok")
+                
+                prod_sync = q_one("SELECT id FROM productos WHERE UPPER(nombre)=UPPER(?) LIMIT 1", (up(request.form.get("titulo")),))
+                if prod_sync:
+                    sincronizar_catalogo_producto(prod_sync["id"])
+                flash("Producto con imagen agregado al catálogo y sincronizado.", "ok")
             except Exception as ex:
                 flash(str(ex), "error")
         elif accion == "actualizar_item":
@@ -3254,6 +3382,7 @@ def catalogo_admin():
                 flash(f"Error en carga masiva de catálogo: {ex}", "error")
         return redirect(url_for("catalogo_admin"))
 
+    sincronizar_todo_catalogo_productos()
     negocio = get_ctx("negocio_nombre", "EL TORO RESTAURANT GRILL")
     slug = get_ctx("catalogo_slug", "el-toro-restaurant-grill")
     url = catalog_public_url()
@@ -3297,14 +3426,14 @@ def catalogo_admin():
     if is_admin():
         admin_block = f"""
         <div class="panel upload-drop"><style>.catalog-admin-clean .upload-drop:first-of-type{{border:2px solid #fed7aa!important;background:linear-gradient(135deg,#fff7ed,#ffffff)!important;box-shadow:0 18px 45px rgba(249,115,22,.12)!important}}.upload-drop form.clean-grid{{display:grid!important;grid-template-columns:minmax(260px,1.25fr) minmax(230px,.9fr) minmax(190px,.7fr) minmax(190px,.7fr)!important;gap:18px!important;align-items:end!important}}.upload-drop input[type=file]{{width:100%!important;min-height:56px!important;padding:12px!important;background:#fff!important;border:2px dashed #fb923c!important;border-radius:18px!important}}.upload-drop label{{font-weight:950!important;color:#071827!important}}.upload-drop .hint-card{{font-size:18px!important;line-height:1.42!important}}@media(max-width:900px){{.upload-drop form.clean-grid{{grid-template-columns:1fr!important}}.upload-drop .btn,.upload-drop button{{width:100%!important}}}}</style><div class="section-title">📥 Carga masiva de catálogo</div>
-          <div class="hint-card">Importa Excel/CSV para crear o actualizar productos publicados. Marca sincronizar para que también aparezcan en Ventas y POS rápido.</div>
+          <div class="hint-card">Importa Excel/CSV para crear o actualizar productos publicados. La plantilla incluye código, título/producto, categoría, descripción, precio, stock, stock mínimo, unidad, destacado, activo e imagen. Marca sincronizar para enlazar con Ventas/POS e Inventario.</div>
           <form method="post" enctype="multipart/form-data" class="clean-grid" style="margin-top:14px">
             <input type="hidden" name="accion" value="importar_catalogo">
             <div><label>Archivo Excel/CSV</label><input type="file" name="archivo_catalogo" accept=".xlsx,.xlsm,.csv" required></div>
-            <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" name="sincronizar_productos" checked style="width:auto"> Sincronizar también con Ventas/POS</label>
+            <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" name="sincronizar_productos" checked style="width:auto"> Sincronizar con Ventas/POS e Inventario</label>
             <button class="btn-warning">📥 Importar catálogo</button>
             <a class="btn" href="{url_for('plantilla_catalogo')}">📄 Descargar plantilla</a>
-          </form>
+          </form><div class="keep-position-note">Columnas aceptadas: codigo, titulo/producto/nombre, categoria, descripcion, precio, stock, stock_min/minimo, unidad, destacado, activo, imagen.</div>
         </div>
         <div class="panel upload-drop catalog-collapsible collapsed" id="catalog_upload_panel"><div class="section-title">Cargar imagen de producto <button type="button" class="catalog-toggle-btn" onclick="toggleCatalogUpload()">Mostrar / ocultar</button></div><div class="catalog-collapsible-body">
           <div class="hint-card">Haz clic en un producto para cargar sus datos automáticamente y abrir el selector de imagen. También puedes hacer clic en una tarjeta publicada para actualizar datos o cambiar imagen.</div>

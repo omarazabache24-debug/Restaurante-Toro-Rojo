@@ -1,0 +1,9 @@
+FIX FINAL URGENTE:
+1. Stock del producto baja al crear pedido, POS rápido o agregar ítem a pedido abierto.
+2. Stock regresa al quitar ítem o eliminar pedido completo.
+3. Catálogo se resincroniza con inventario/productos al abrir catálogo.
+4. POS rápido incluye botón Nuevo pedido / limpiar campos.
+5. Ventas y POS bloquean si no existe caja abierta y cuenta Yape/Plin configurada.
+6. Guardar Cuenta QR/POS no cobra ni entrega pedidos. Solo configura datos.
+7. QR de pago se genera liviano con celular, importe y pedido; se mantiene WhatsApp como respaldo porque Yape puede rechazar QR no oficiales.
+8. Subcarpeta Factura permite volver a elegir pedido pagado y reenviar factura por correo o WhatsApp.

@@ -1,0 +1,31 @@
+MEJORAS URGENTES APLICADAS
+
+1. POS rápido:
+- Selector de pedido abierto del cliente.
+- Al elegir "Nuevo pedido / cliente sin pedido abierto" limpia cliente, teléfono, dirección, referencia, mesa y servicio.
+
+2. Stock e inventario:
+- Al crear pedido o agregar ítem, baja stock del producto.
+- Al quitar ítem o eliminar pedido, devuelve stock.
+- El indicador principal de inventario ahora muestra unidades totales en stock, no solo cantidad de productos registrados.
+- Productos, POS, inventario y catálogo quedan sincronizados automáticamente.
+
+3. Catálogo:
+- Carga masiva más clara.
+- Plantilla con columnas: codigo, titulo/producto/nombre, categoria, descripcion, precio, stock, stock_min/minimo, unidad, destacado, activo, imagen.
+- Sincronización con Ventas/POS e Inventario.
+
+4. Caja / QR:
+- Guardar cuenta QR/POS no marca ningún pedido como pagado.
+- Los pedidos solo pasan a pagado desde botón Pagar / QR POS.
+- QR de pago con mayor tamaño, borde amplio y datos auditables.
+- Aviso claro: Yape/Plin pueden requerir QR oficial de la propia app; se muestra celular destino para validar manualmente.
+
+5. Factura / boleta:
+- Subcarpeta expandible en Pedidos para factura/boleta.
+- Selector de cliente/pedido pagado.
+- Pantalla de datos mínimos auditables de factura.
+- Opciones de imprimir, correo y WhatsApp.
+
+VALIDACIÓN TÉCNICA
+- app.py compila correctamente con python -m py_compile.
