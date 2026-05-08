@@ -123,7 +123,33 @@ def money(v):
 
 
 def ctx_admin_pago():
-    return {"titular": get_ctx("pago_titular", "ADMINISTRADOR EL TORO"), "yape": get_ctx("pago_yape", ""), "plin": get_ctx("pago_plin", ""), "banco": get_ctx("pago_banco", ""), "cci": get_ctx("pago_cci", ""), "correo": get_ctx("pago_correo", "")}
+    return {
+        "titular": get_ctx("pago_titular", "ADMINISTRADOR EL TORO"),
+        "yape": get_ctx("pago_yape", ""),
+        "plin": get_ctx("pago_plin", ""),
+        "banco": get_ctx("pago_banco", ""),
+        "cci": get_ctx("pago_cci", ""),
+        "correo": get_ctx("pago_correo", ""),
+        "qr_yape": get_ctx("pago_qr_yape", ""),
+        "qr_plin": get_ctx("pago_qr_plin", ""),
+    }
+
+def static_img_data_uri(filename):
+    """Devuelve imagen local como data URI para que Render/local la muestren sin rutas rotas."""
+    try:
+        if not filename:
+            return ""
+        safe = os.path.basename(filename)
+        path = os.path.join(BASE_DIR, "static", safe)
+        if not os.path.exists(path):
+            return ""
+        ext = os.path.splitext(safe)[1].lower().replace('.', '') or 'png'
+        if ext == 'jpg':
+            ext = 'jpeg'
+        with open(path, 'rb') as f:
+            return 'data:image/' + ext + ';base64,' + base64.b64encode(f.read()).decode('ascii')
+    except Exception:
+        return ""
 
 def cuenta_pago_configurada():
     """Bloquea ventas/POS si no existe celular Yape o Plin configurado.
@@ -2775,20 +2801,30 @@ def pago_qr(pedido_id, metodo):
         flash('Pedido no encontrado.', 'error')
         return redirect(url_for('ventas'))
     cuenta = ctx_admin_pago()
+    metodo = up(metodo)
     destino = cuenta.get('yape') if metodo == 'YAPE' else cuenta.get('plin') if metodo == 'PLIN' else cuenta.get('cci') if metodo == 'TRANSFERENCIA' else cuenta.get('titular')
     total_qr = float(p['total'] or 0)
     cel = ''.join(ch for ch in str(destino or '') if ch.isdigit())
+
+    # FIX DEFINITIVO: Yape/Plin no aceptan un QR inventado con texto tipo "YAPE|celular|monto".
+    # Ese QR se lee pero luego la app muestra error. Para evitarlo se muestra el QR OFICIAL
+    # descargado desde la billetera y cargado en Caja. Si no existe, se muestra QR informativo.
+    qr_oficial = ''
     if metodo == 'YAPE':
-        # QR liviano: algunas versiones de Yape no aceptan QR externos; por eso el contenido queda mínimo y legible.
-        data = f"YAPE|{cel or 'CONFIGURAR'}|{total_qr:.2f}|{p['codigo']}"
+        qr_oficial = static_img_data_uri(cuenta.get('qr_yape'))
     elif metodo == 'PLIN':
-        data = f"PLIN|{cel or 'CONFIGURAR'}|{total_qr:.2f}|{p['codigo']}"
+        qr_oficial = static_img_data_uri(cuenta.get('qr_plin'))
+
+    if qr_oficial:
+        qr_src = qr_oficial
+        aviso = '<div class="flash ok">✅ QR oficial cargado. Este es el QR correcto para escanear desde Yape/Plin sin error.</div>'
     else:
-        data = f"TRANSFERENCIA|{destino or 'CONFIGURAR_CCI'}|{total_qr:.2f}|{p['codigo']}|{cuenta.get('titular')}"
-    qr_src = qr_png_base64(data, box_size=12, border=6)
-    aviso = '' if destino else '<div class="flash error">⚠️ Configura en CAJA el celular Yape/Plin. La CCI BCP no reemplaza un QR oficial de Yape.</div>'
+        data = f"COBRO {metodo}\nCelular: {cel or 'CONFIGURAR'}\nPedido: {p['codigo']}\nImporte: S/ {total_qr:.2f}"
+        qr_src = qr_png_base64(data, box_size=10, border=4)
+        aviso = '<div class="flash error">⚠️ Falta cargar el QR oficial en CAJA. Yape puede leer este QR informativo, pero puede rechazarlo. Para evitar error, sube el QR descargado desde Yape.</div>'
+
     yape_link = f"https://wa.me/?text={quote('Pago '+p['codigo']+' S/'+format(total_qr,'.2f')+' al celular '+(cel or 'CONFIGURAR'))}"
-    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}<p class="hint-card">QR POS generado con celular, importe y pedido. Si la app Yape muestra error, usa el botón WhatsApp o yapea directo al número mostrado: Yape no siempre acepta QR externos; el sistema no marca pagado hasta presionar Pagar.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Titular:</b> {cuenta.get('titular')} · <b>Destino:</b> {destino or cuenta.get('cci') or 'SIN CONFIGURAR'}</p><div class="actions" style="justify-content:center"><a class="btn-success" target="_blank" href="{yape_link}">Enviar datos por WhatsApp</a><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
+    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}<p class="hint-card"><b>Importante:</b> El sistema NO marca pagado por mostrar QR. Solo se cobra cuando presionas Pagar. Yape/Plin validan su QR oficial; por eso el QR oficial cargado en Caja evita el error del aplicativo.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Titular:</b> {cuenta.get('titular')} · <b>Destino:</b> {destino or cuenta.get('cci') or 'SIN CONFIGURAR'}</p><div class="actions" style="justify-content:center"><a class="btn-success" target="_blank" href="{yape_link}">Enviar datos por WhatsApp</a><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
     return page(html, 'ventas')
 
 # =========================
@@ -2837,10 +2873,12 @@ def inventario():
     total_productos = len(productos)
     total_unidades_stock = int(float(q_one("SELECT COALESCE(SUM(stock),0) s FROM productos WHERE activo=1")["s"] or 0))
     sin_stock = q_one("SELECT COUNT(*) c FROM productos WHERE activo=1 AND COALESCE(stock,0)<=0")["c"]
+    vendidos_hoy = int(float(q_one("SELECT COALESCE(SUM(d.cantidad),0) s FROM venta_detalle d JOIN ventas v ON v.id=d.venta_id WHERE v.fecha=?", (today(),))["s"] or 0))
+    reservados_abiertos = int(float(q_one("SELECT COALESCE(SUM(d.cantidad),0) s FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id WHERE p.pagado='NO' AND p.estado IN ('PENDIENTE','PREPARACIÓN','LISTO','ENTREGADO')", ())["s"] or 0))
     html = f'''
     <div class="mobile-active-title">📦 Inventario</div>
-    <div class="product-count-hero"><div class="count-icon">📦</div><div><span>Unidades totales en stock</span><b>{total_unidades_stock}</b><small>El número baja al vender/agregar pedido y vuelve cuando eliminas o retiras ítems. Productos registrados: {total_productos}.</small></div></div>
-    <div class="panel"><div class="section-title">📦 Inventario: carga individual / masiva</div><div class="inventory-indicator"><div class="metric"><b>{total_productos}</b><span>Productos registrados</span></div><div class="metric"><b>{stock_bajo}</b><span>Stock bajo</span></div><div class="metric"><b>{sin_stock}</b><span>Sin stock</span></div></div><div class="inventory-tabs"><div class="inventory-tab active">Individual</div><div class="inventory-tab">Masiva Excel/CSV</div><div class="inventory-tab">Stock</div></div><div class="hint-card"><b>SKU:</b> letras y números. Ejemplos: PIZ-MUZ-01, BEB-COCA-500, PL-001. Todo precio y stock trabaja con números enteros.</div></div>
+    <div class="product-count-hero"><div class="count-icon">📦</div><div><span>Inventario total enlazado</span><b>{total_unidades_stock}</b><small>Unidades disponibles actuales. Baja al vender/agregar pedido y vuelve cuando eliminas o retiras ítems.</small></div></div>
+    <div class="panel"><div class="section-title">📦 Inventario: carga individual / masiva</div><div class="inventory-indicator"><div class="metric"><b>{total_productos}</b><span>Productos/SKU registrados</span></div><div class="metric"><b>{total_unidades_stock}</b><span>Unidades totales</span></div><div class="metric"><b>{vendidos_hoy}</b><span>Vendidos hoy</span></div><div class="metric"><b>{reservados_abiertos}</b><span>Reservados pedidos abiertos</span></div><div class="metric"><b>{stock_bajo}</b><span>Stock bajo</span></div><div class="metric"><b>{sin_stock}</b><span>Sin stock</span></div></div><div class="inventory-tabs"><div class="inventory-tab active">Individual</div><div class="inventory-tab">Masiva Excel/CSV</div><div class="inventory-tab">Stock</div></div><div class="hint-card"><b>Control profesional:</b> Productos/SKU = productos distintos. Unidades totales = suma real del stock. Vendidos hoy y reservados se actualizan automático con POS/Pedidos.</div></div>
     <div class="panel"><div class="section-title">➕ Producto individual</div><form method="post"><input type="hidden" name="accion" value="producto"><div class="inventory-sku-row"><div><label>Código/SKU</label><input list="sku_sugeridos" name="codigo" placeholder="Ej. PIZ-MUZ-01" pattern="[A-Za-z0-9-]+"><datalist id="sku_sugeridos"><option value="PIZ-MUZ-01"><option value="PIZ-AME-01"><option value="PARR-POL-01"><option value="BEB-COCA-500"><option value="PL-001"></datalist></div><div><label>Nombre producto</label><input name="nombre" placeholder="Nombre producto"></div><div><label>Categoría</label><select name="categoria"><option>PIZZAS</option><option>PLATOS</option><option>PARRILLAS</option><option>BEBIDAS</option><option>ADICIONALES</option><option>INSUMOS</option></select></div><div><label>Tipo</label><select name="tipo"><option>VENTA</option><option>INSUMO</option></select></div><div><label>Unidad</label><select name="unidad"><option>PLATO</option><option>UND</option><option>KG</option><option>PORCION</option></select></div></div><br><div class="inventory-num-row"><div><label>Precio venta</label><input name="precio" type="number" step="1" min="0"></div><div><label>Costo</label><input name="costo" type="number" step="1" min="0"></div><div><label>Stock</label><input name="stock" type="number" step="1" min="0"></div><div><label>Stock mínimo</label><input name="stock_min" type="number" step="1" min="0"></div><button class="primary">Guardar producto</button></div></form></div>
     <div class="panel"><div class="section-title">📥 Carga masiva / inicio de día</div><form method="post" enctype="multipart/form-data" class="actions"><input type="hidden" name="accion" value="importar"><input type="file" name="archivo" accept=".xlsx,.csv" style="max-width:340px"><button class="btn-warning">Importar Excel/CSV</button><a class="btn" href="{url_for('plantilla_inventario')}">Descargar plantilla</a><a class="btn" href="{url_for('export_inventario')}">Exportar inventario</a></form></div>
     <div class="panel"><div class="section-title">🔁 Movimientos de stock</div><form method="post" class="actions"><input type="hidden" name="accion" value="stock_in"><select name="producto_id" style="max-width:380px">{opts_prod}</select><input name="cantidad" type="number" step="1" placeholder="Cantidad" style="max-width:160px"><button>Entrada stock</button></form><br><form method="post" class="actions"><input type="hidden" name="accion" value="stock_out"><select name="producto_id" style="max-width:380px">{opts_prod}</select><input name="cantidad" type="number" step="1" placeholder="Cantidad" style="max-width:160px"><button class="btn-danger">Salida stock</button><b style="color:#c2410c">Alertas: {stock_bajo} con stock bajo</b></form></div>
@@ -2971,7 +3009,17 @@ def caja():
             flash("Gasto registrado.", "ok")
         elif accion == "config_pago":
             set_ctx("pago_titular", up(request.form.get("pago_titular") or "ADMINISTRADOR EL TORO")); set_ctx("pago_yape", clean(request.form.get("pago_yape"))); set_ctx("pago_plin", clean(request.form.get("pago_plin"))); set_ctx("pago_banco", up(request.form.get("pago_banco"))); set_ctx("pago_cci", clean(request.form.get("pago_cci"))); set_ctx("pago_correo", clean(request.form.get("pago_correo")))
-            flash("Cuenta QR/POS guardada. No se cobró ni se pagó ningún pedido; los pedidos solo se pagan con el botón Pagar.", "ok")
+            os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
+            for campo, clave, pref in [("qr_yape_file", "pago_qr_yape", "qr_yape_oficial"), ("qr_plin_file", "pago_qr_plin", "qr_plin_oficial")]:
+                fqr = request.files.get(campo)
+                if fqr and fqr.filename:
+                    ext = os.path.splitext(secure_filename(fqr.filename))[1].lower() or ".png"
+                    if ext not in (".png", ".jpg", ".jpeg", ".webp"):
+                        ext = ".png"
+                    nombre_qr = pref + ext
+                    fqr.save(os.path.join(BASE_DIR, "static", nombre_qr))
+                    set_ctx(clave, nombre_qr)
+            flash("Cuenta QR/POS guardada. Para que Yape no marque error se usa el QR oficial descargado desde Yape; no se cobró ningún pedido.", "ok")
         return redirect(url_for("caja"))
     f = request.args.get("fecha", today())
     rows = q_all("SELECT * FROM caja WHERE fecha=? ORDER BY id DESC", (f,))
@@ -2994,7 +3042,7 @@ def caja():
       <form method="post" class="actions"><input type="hidden" name="accion" value="cerrar"><button {disabled}>Cerrar caja</button></form><br>
       <form method="post" class="actions"><input type="hidden" name="accion" value="gasto"><label>Egreso:</label><input name="concepto" placeholder="Concepto" style="max-width:240px"><input name="monto" type="number" step="1" value="0.00" style="max-width:180px" {disabled}><button {disabled}>Registrar gasto</button></form>
     </div>
-    <div class="panel"><div class="section-title">💳 Cuenta administrador para QR/POS</div><div class="hint-card">Estos datos salen dentro del QR de pago para Yape, Plin, transferencia o tarjeta.</div><br><form method="post" class="clean-grid"><input type="hidden" name="accion" value="config_pago"><div><label>Titular / Administrador</label><input name="pago_titular" value="{cuenta.get('titular','')}"></div><div><label>Yape / celular</label><input name="pago_yape" value="{cuenta.get('yape','')}"></div><div><label>Plin / celular</label><input name="pago_plin" value="{cuenta.get('plin','')}"></div><div><label>Banco</label><input name="pago_banco" value="{cuenta.get('banco','')}"></div><div><label>CCI / cuenta</label><input name="pago_cci" value="{cuenta.get('cci','')}"></div><div><label>Correo emisor</label><input type="email" name="pago_correo" value="{cuenta.get('correo','')}"></div><button class="btn-warning" {disabled}>Guardar cuenta QR</button></form></div>
+    <div class="panel"><div class="section-title">💳 Cuenta administrador para QR/POS</div><div class="hint-card"><b>QR definitivo:</b> sube el QR oficial descargado desde Yape/Plin. Así la app Yape lo reconoce sin error. El número celular queda como respaldo visible.</div><br><form method="post" enctype="multipart/form-data" class="clean-grid"><input type="hidden" name="accion" value="config_pago"><div><label>Titular / Administrador</label><input name="pago_titular" value="{cuenta.get('titular','')}"></div><div><label>Yape / celular</label><input name="pago_yape" value="{cuenta.get('yape','')}"></div><div><label>Plin / celular</label><input name="pago_plin" value="{cuenta.get('plin','')}"></div><div><label>Banco</label><input name="pago_banco" value="{cuenta.get('banco','')}"></div><div><label>CCI / cuenta</label><input name="pago_cci" value="{cuenta.get('cci','')}"></div><div><label>Correo emisor</label><input type="email" name="pago_correo" value="{cuenta.get('correo','')}"></div><div><label>QR oficial Yape PNG/JPG</label><input type="file" name="qr_yape_file" accept="image/*"><small>Actual: {cuenta.get('qr_yape') or 'No cargado'}</small></div><div><label>QR oficial Plin PNG/JPG</label><input type="file" name="qr_plin_file" accept="image/*"><small>Actual: {cuenta.get('qr_plin') or 'No cargado'}</small></div><button class="btn-warning" {disabled}>Guardar cuenta QR</button></form></div>
     <div class="panel"><div class="box-title">Resumen de caja</div><h2 style="color:#dc2626">Caja: {estado}</h2><div class="grid"><div>Apertura: <b>{money(get_ctx('monto_apertura','0'))}</b></div><div>Efectivo sistema: <b>{money(ingresos-egresos)}</b></div><div>Ingresos: <b>{money(ingresos)}</b></div><div>Gastos: <b>{money(egresos)}</b></div></div></div>
     <div class="panel"><form method="get" class="actions"><input type="date" name="fecha" value="{f}" style="max-width:180px"><button>Filtrar</button></form><br><div class="table-wrap"><table><thead><tr><th>Hora</th><th>Tipo</th><th>Concepto</th><th>Monto</th><th>Usuario</th></tr></thead><tbody>{trs}</tbody></table></div></div>
     """
