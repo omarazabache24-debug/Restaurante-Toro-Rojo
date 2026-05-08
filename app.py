@@ -1754,6 +1754,15 @@ def descontar_producto(producto_id, cantidad):
     q_exec("UPDATE productos SET stock=COALESCE(stock,0)-? WHERE id=?", (float(cantidad or 0), producto_id))
     descontar_receta(producto_id, cantidad)
 
+def devolver_producto(producto_id, cantidad):
+    """Devuelve stock cuando se retira un ítem o se elimina un pedido.
+    Por ahora trabaja conectado al catálogo/productos, NO a recetas.
+    """
+    try:
+        q_exec("UPDATE productos SET stock=COALESCE(stock,0)+? WHERE id=?", (float(cantidad or 0), producto_id))
+    except Exception:
+        pass
+
 def clave_cliente_inteligente(nombre, telefono='', direccion=''):
     """Clave robusta: teléfono si existe; si no, nombre + dirección."""
     tel = clean(telefono)
@@ -2103,6 +2112,16 @@ def ventas():
     cat_links = '<div class="category-bar"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('ventas') + '#catalogo-productos">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("ventas", categoria=c["categoria"], disponible="1" if solo_disp else "")}#catalogo-productos">{c["categoria"]}</a>' for c in categorias) + '</div>'
     clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY es_frecuente DESC, visitas DESC, nombre LIMIT 300")
     cliente_options = "".join(f'<option value="{c["nombre"]}">⭐ {c["visitas"] if "visitas" in c.keys() else 0} · {c["telefono"] or "SIN CEL"} · {c["direccion"]}</option>' for c in clientes)
+    pedidos_abiertos_pos = q_all("""
+        SELECT p.*, COALESCE((SELECT GROUP_CONCAT(producto || ' x' || CAST(cantidad AS INT), ' + ') FROM pedido_detalle d WHERE d.pedido_id=p.id),'') productos
+          FROM pedidos p
+         WHERE p.pagado='NO' AND p.estado NOT IN ('PAGADO','ENTREGADO')
+         ORDER BY p.id DESC LIMIT 120
+    """)
+    pedidos_pos_opts = '<option value="">Nuevo pedido / cliente sin pedido abierto</option>' + ''.join(
+        f'<option value="{r["id"]}" data-cliente="{(r["cliente"] or "CLIENTE GENERAL").replace(chr(34), "")}" data-telefono="{(r["telefono"] or "").replace(chr(34), "")}" data-direccion="{(r["direccion"] or "").replace(chr(34), "")}" data-referencia="{(r["referencia"] or "").replace(chr(34), "")}" data-mesa="{(r["mesa"] or "").replace(chr(34), "")}" data-servicio="{(r["servicio"] or "SALÓN").replace(chr(34), "") }">{r["codigo"]} · {r["cliente"] or "CLIENTE GENERAL"} · {r["mesa"] or "SIN MESA"} · {r["productos"] or "Sin ítems"} · {money(r["total"])}</option>'
+        for r in pedidos_abiertos_pos
+    )
     detalle = q_all("SELECT d.*,p.codigo FROM pedido_detalle d JOIN pedidos p ON p.id=d.pedido_id ORDER BY d.id DESC LIMIT 40")
     tr_det = "".join(f'<tr><td>{r["codigo"]}</td><td><b>{r["producto"]}</b></td><td>{int(float(r["cantidad"] or 0))}</td><td>{money(r["precio"])}</td><td>{money(r["total"])}</td></tr>' for r in detalle) or '<tr><td colspan="5">Sin detalle.</td></tr>'
     pos_cards = ""
@@ -2213,6 +2232,11 @@ def pos_rapido():
         servicio = request.form.get("servicio", "SALÓN")
         metodo = request.form.get("metodo_pago", "EFECTIVO")
         asegurar_cliente(cliente, telefono, direccion, referencia, origen='POS')
+        pedido_existente_pos = int(request.form.get('pedido_existente_id_pos') or 0)
+        if pedido_existente_pos:
+            ok, msg = agregar_item_a_pedido(pedido_existente_pos, producto_id, cantidad)
+            flash(('Producto agregado al pedido abierto del cliente: ' + prod['nombre']) if ok else msg, 'ok' if ok else 'error')
+            return redirect(url_for('pos_rapido'))
         pedido_unico = 1 if request.form.get('pedido_unico') else 0
         if pedido_unico:
             existente = q_one("""
@@ -2255,6 +2279,16 @@ SELECT * FROM pedidos
     categorias = q_all("SELECT DISTINCT categoria FROM productos WHERE activo=1 AND COALESCE(categoria,'')<>'' ORDER BY categoria")
     clientes = q_all("SELECT * FROM clientes WHERE activo=1 ORDER BY es_frecuente DESC, visitas DESC, nombre LIMIT 300")
     cliente_options = "".join(f'<option value="{c["nombre"]}">⭐ {c["visitas"] if "visitas" in c.keys() else 0} · {c["telefono"] or "SIN CEL"} · {c["direccion"]}</option>' for c in clientes)
+    pedidos_abiertos_pos = q_all("""
+        SELECT p.*, COALESCE((SELECT GROUP_CONCAT(producto || ' x' || CAST(cantidad AS INT), ' + ') FROM pedido_detalle d WHERE d.pedido_id=p.id),'') productos
+          FROM pedidos p
+         WHERE p.pagado='NO' AND p.estado NOT IN ('PAGADO','ENTREGADO')
+         ORDER BY p.id DESC LIMIT 120
+    """)
+    pedidos_pos_opts = '<option value="">Nuevo pedido / cliente sin pedido abierto</option>' + ''.join(
+        f'<option value="{r["id"]}" data-cliente="{(r["cliente"] or "CLIENTE GENERAL").replace(chr(34), "")}" data-telefono="{(r["telefono"] or "").replace(chr(34), "")}" data-direccion="{(r["direccion"] or "").replace(chr(34), "")}" data-referencia="{(r["referencia"] or "").replace(chr(34), "")}" data-mesa="{(r["mesa"] or "").replace(chr(34), "")}" data-servicio="{(r["servicio"] or "SALÓN").replace(chr(34), "") }">{r["codigo"]} · {r["cliente"] or "CLIENTE GENERAL"} · {r["mesa"] or "SIN MESA"} · {r["productos"] or "Sin ítems"} · {money(r["total"])}</option>'
+        for r in pedidos_abiertos_pos
+    )
     cat_opts = '<option value="">Todas las categorías</option>' + ''.join(f'<option value="{c["categoria"]}" {"selected" if cat_filtro==c["categoria"] else ""}>{c["categoria"]}</option>' for c in categorias)
     cat_links = '<div class="pos-cat-chips"><a class="' + ('' if cat_filtro else 'on') + '" href="' + url_for('pos_rapido') + '">TODOS</a>' + ''.join(f'<a class="{"on" if cat_filtro==c["categoria"] else ""}" href="{url_for("pos_rapido", categoria=c["categoria"])}">{c["categoria"]}</a>' for c in categorias) + '</div>'
 
@@ -2268,7 +2302,7 @@ SELECT * FROM pedidos
         feature_cards += f"""<form method='post' class='keep-pos-form' onclick='event.stopPropagation()'>
           <input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'>
           <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''><input type='hidden' name='direccion' class='pos_direccion_hidden' value=''><input type='hidden' name='referencia' class='pos_referencia_hidden' value=''>
-          <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='pedido_unico' class='pos_unico_hidden' value=''>
+          <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='pedido_unico' class='pos_unico_hidden' value=''><input type='hidden' name='pedido_existente_id_pos' class='pos_pedido_hidden' value=''>
           <button class='pos-feature-card' type='submit'><img src='{img}' alt='{p['nombre']}'><b>{p['nombre']}</b><span>{money(p['precio'])}</span><em class='pos-mini-add'>Agregar</em></button>
         </form>"""
 
@@ -2278,7 +2312,7 @@ SELECT * FROM pedidos
         list_cards += f"""<form method='post' class='keep-pos-form pos-list-item'>
           <input type='hidden' name='producto_id' value='{p['id']}'><input type='hidden' name='cantidad' value='1'>
           <input type='hidden' name='cliente' class='pos_cliente_hidden' value='CLIENTE GENERAL'><input type='hidden' name='telefono' class='pos_telefono_hidden' value=''><input type='hidden' name='direccion' class='pos_direccion_hidden' value=''><input type='hidden' name='referencia' class='pos_referencia_hidden' value=''>
-          <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='pedido_unico' class='pos_unico_hidden' value=''>
+          <input type='hidden' name='mesa' class='pos_mesa_hidden' value=''><input type='hidden' name='servicio' class='pos_servicio_hidden' value='SALÓN'><input type='hidden' name='pedido_unico' class='pos_unico_hidden' value=''><input type='hidden' name='pedido_existente_id_pos' class='pos_pedido_hidden' value=''>
           <img class='pos-list-img' src='{img}' alt='{p['nombre']}'>
           <div class='pos-list-info'><b>{p['nombre']}</b><small>{p['categoria'] or 'PRODUCTO'} · SKU {p['codigo'] or p['id']} · Stock {int(float(p['stock'] or 0))}</small><span>{money(p['precio'])}</span></div>
           <button class='pos-list-add' type='submit'>Agregar</button>
@@ -2300,6 +2334,7 @@ SELECT * FROM pedidos
       <div class="hint-card">Identifica cliente, mesa y servicio. Marca pedido único para agregar varios productos al mismo pedido. El pago se define en Pedidos.</div><br>
       <datalist id="clientes_pos_list">{cliente_options}</datalist>
       <form method="get" class="pos-client-grid">
+        <div style="grid-column:1/-1"><label>Agregar a pedido abierto del cliente</label><select id="pos_pedido_abierto" onchange="seleccionarPedidoPOS()">{pedidos_pos_opts}</select><small class="muted">Selecciona un pedido ya registrado para agregar productos al mismo pedido.</small></div>
         <div><label>Cliente</label><input id="pos_cliente" list="clientes_pos_list" placeholder="CLIENTE GENERAL / nombre"></div>
         <div><label>Teléfono / DNI</label><input id="pos_telefono" placeholder="Celular o DNI"></div>
         <div><label>Dirección</label><input id="pos_direccion" placeholder="Para delivery"></div>
@@ -2339,6 +2374,7 @@ SELECT * FROM pedidos
         const mesa=document.getElementById('pos_mesa').value||'';
         const servicio=document.getElementById('pos_servicio').value||'SALÓN';
         const unico=document.getElementById('pos_unico')?.checked ? '1' : '';
+        const pedido=document.getElementById('pos_pedido_abierto')?.value || '';
         document.querySelectorAll('.pos_cliente_hidden').forEach(e=>e.value=cliente);
         document.querySelectorAll('.pos_telefono_hidden').forEach(e=>e.value=telefono);
         document.querySelectorAll('.pos_direccion_hidden').forEach(e=>e.value=direccion);
@@ -2346,9 +2382,23 @@ SELECT * FROM pedidos
         document.querySelectorAll('.pos_mesa_hidden').forEach(e=>e.value=mesa);
         document.querySelectorAll('.pos_servicio_hidden').forEach(e=>e.value=servicio);
         document.querySelectorAll('.pos_unico_hidden').forEach(e=>e.value=unico);
+        document.querySelectorAll('.pos_pedido_hidden').forEach(e=>e.value=pedido);
         try{{sessionStorage.setItem('pos_cliente',cliente);sessionStorage.setItem('pos_telefono',telefono);sessionStorage.setItem('pos_direccion',direccion);sessionStorage.setItem('pos_referencia',referencia);sessionStorage.setItem('pos_mesa',mesa);sessionStorage.setItem('pos_servicio',servicio);sessionStorage.setItem('pos_unico',unico);}}catch(e){{}}
       }}
-      ['pos_cliente','pos_telefono','pos_direccion','pos_referencia','pos_mesa','pos_servicio','pos_unico'].forEach(id=>{{const el=document.getElementById(id); if(el) el.addEventListener('input',syncPOSClient); if(el) el.addEventListener('change',syncPOSClient);}});
+      function seleccionarPedidoPOS(){{
+        const sel=document.getElementById('pos_pedido_abierto'); const opt=sel?.selectedOptions?.[0];
+        if(opt && sel.value){{
+          document.getElementById('pos_cliente').value=opt.dataset.cliente||'CLIENTE GENERAL';
+          document.getElementById('pos_telefono').value=opt.dataset.telefono||'';
+          document.getElementById('pos_direccion').value=opt.dataset.direccion||'';
+          document.getElementById('pos_referencia').value=opt.dataset.referencia||'';
+          document.getElementById('pos_mesa').value=opt.dataset.mesa||'';
+          document.getElementById('pos_servicio').value=opt.dataset.servicio||'SALÓN';
+          document.getElementById('pos_unico').checked=false;
+        }}
+        syncPOSClient();
+      }}
+      ['pos_cliente','pos_telefono','pos_direccion','pos_referencia','pos_mesa','pos_servicio','pos_unico','pos_pedido_abierto'].forEach(id=>{{const el=document.getElementById(id); if(el) el.addEventListener('input',syncPOSClient); if(el) el.addEventListener('change',syncPOSClient);}});
       window.addEventListener('load',function(){{try{{document.getElementById('pos_cliente').value=sessionStorage.getItem('pos_cliente')||'';document.getElementById('pos_telefono').value=sessionStorage.getItem('pos_telefono')||'';document.getElementById('pos_direccion').value=sessionStorage.getItem('pos_direccion')||'';document.getElementById('pos_referencia').value=sessionStorage.getItem('pos_referencia')||'';document.getElementById('pos_mesa').value=sessionStorage.getItem('pos_mesa')||'';document.getElementById('pos_servicio').value=sessionStorage.getItem('pos_servicio')||'SALÓN';document.getElementById('pos_unico').checked=(sessionStorage.getItem('pos_unico')==='1');}}catch(e){{}} syncPOSClient();}});
       ['pos_cliente','pos_telefono'].forEach(id=>{{const el=document.getElementById(id); if(el){{el.addEventListener('change',autocompletarPOS);el.addEventListener('blur',autocompletarPOS);}}}});
       document.querySelectorAll('.keep-pos-form').forEach(f=>f.addEventListener('submit',syncPOSClient));
@@ -2392,14 +2442,19 @@ def pedidos():
                 return redirect(url_for("pedidos"))
             item_id = int(request.form.get("item_id") or 0)
             if item_id:
+                item_row = q_one("SELECT producto_id,cantidad FROM pedido_detalle WHERE id=? AND pedido_id=?", (item_id, pedido_id))
+                if item_row:
+                    devolver_producto(item_row["producto_id"], item_row["cantidad"])
                 q_exec("DELETE FROM pedido_detalle WHERE id=? AND pedido_id=?", (item_id, pedido_id))
                 total = q_one("SELECT COALESCE(SUM(total),0) t FROM pedido_detalle WHERE pedido_id=?", (pedido_id,))["t"]
                 q_exec("UPDATE pedidos SET subtotal=?, total=max(?-COALESCE(descuento,0),0) WHERE id=?", (total, total, pedido_id))
                 flash("Item retirado del pedido.", "ok")
         elif accion == "limpiar":
+            for it in q_all("SELECT producto_id,cantidad FROM pedido_detalle WHERE pedido_id=?", (pedido_id,)):
+                devolver_producto(it["producto_id"], it["cantidad"])
             q_exec("DELETE FROM pedido_detalle WHERE pedido_id=?", (pedido_id,))
             q_exec("DELETE FROM pedidos WHERE id=?", (pedido_id,))
-            flash("Pedido eliminado.", "ok")
+            flash("Pedido eliminado y stock devuelto al inventario.", "ok")
         return redirect(url_for("pedidos"))
 
     estado = request.args.get("estado", "TODOS")
@@ -2611,10 +2666,16 @@ def pago_qr(pedido_id, metodo):
         return redirect(url_for('ventas'))
     cuenta = ctx_admin_pago()
     destino = cuenta.get('yape') if metodo == 'YAPE' else cuenta.get('plin') if metodo == 'PLIN' else cuenta.get('cci') if metodo == 'TRANSFERENCIA' else cuenta.get('titular')
-    data = f"EL TORO RESTAURANT GRILL|CUENTA_ADMIN:{cuenta.get('titular')}|DESTINO:{destino or 'CONFIGURAR EN CAJA'}|POS-PAGO|PEDIDO:{p['codigo']}|METODO:{metodo}|MONTO:{float(p['total'] or 0):.2f}|CLIENTE:{p['cliente']}|FECHA:{today()} {hour()}"
-    qr_src = qr_png_base64(data, box_size=12, border=5)
-    aviso = '' if destino else '<div class="flash error">⚠️ Configura la cuenta del administrador en CAJA: Yape/Plin/CCI para que el QR salga conectado a tu cuenta.</div>'
-    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}<p class="hint-card">Modo POS móvil: muestra este QR al cliente para que pague desde su celular. Conectado a la cuenta del administrador configurada en CAJA.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Titular:</b> {cuenta.get('titular')} · <b>Destino:</b> {destino or 'SIN CONFIGURAR'}</p><div class="actions" style="justify-content:center"><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
+    total_qr = float(p['total'] or 0)
+    if metodo == 'YAPE':
+        data = f"YAPE|CELULAR:{destino or cuenta.get('cci') or 'CONFIGURAR_YAPE_EN_CAJA'}|MONTO:{total_qr:.2f}|PEDIDO:{p['codigo']}|CLIENTE:{p['cliente']}"
+    elif metodo == 'PLIN':
+        data = f"PLIN|CELULAR:{destino or cuenta.get('cci') or 'CONFIGURAR_PLIN_EN_CAJA'}|MONTO:{total_qr:.2f}|PEDIDO:{p['codigo']}|CLIENTE:{p['cliente']}"
+    else:
+        data = f"TRANSFERENCIA|CCI:{destino or 'CONFIGURAR_CCI_EN_CAJA'}|MONTO:{total_qr:.2f}|PEDIDO:{p['codigo']}|TITULAR:{cuenta.get('titular')}"
+    qr_src = qr_png_base64(data, box_size=14, border=6)
+    aviso = '' if destino else '<div class="flash error">⚠️ Configura en CAJA el número Yape/Plin. La CCI del BCP sirve para transferencia, pero Yape normalmente necesita número/QR de Yape.</div>'
+    html = f'''<div class="panel payment-qr-card"><div class="section-title">💳 QR de pago {metodo}</div>{aviso}<p class="hint-card">QR PRO generado con importe, pedido y destino. Para Yape/Plin registra el celular asociado; si solo colocas CCI, úsalo como transferencia bancaria.</p><img src="{qr_src}" alt="QR pago"><h2>{p['codigo']}</h2><h1 style="color:#ff1744">{money(p['total'])}</h1><p><b>Cliente:</b> {p['cliente']} · <b>Método:</b> {metodo}</p><p><b>Titular:</b> {cuenta.get('titular')} · <b>Destino:</b> {destino or cuenta.get('cci') or 'SIN CONFIGURAR'}</p><div class="actions" style="justify-content:center"><a class="btn-primary" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='BOLETA')}">🖨️ Imprimir boleta</a><a class="btn-warning" href="{url_for('factura_datos', pedido_id=pedido_id)}">🧾 Datos factura</a><a class="btn-warning" href="{url_for('imprimir_boleta', pedido_id=pedido_id, tipo='FACTURA')}">🖨️ Imprimir factura</a><a class="btn" href="{url_for('ventas')}">Volver a ventas</a></div></div>'''
     return page(html, 'ventas')
 
 # =========================
@@ -3235,7 +3296,7 @@ def catalogo_admin():
 
     if is_admin():
         admin_block = f"""
-        <div class="panel upload-drop"><div class="section-title">📥 Carga masiva de catálogo</div>
+        <div class="panel upload-drop"><style>.catalog-admin-clean .upload-drop:first-of-type{{border:2px solid #fed7aa!important;background:linear-gradient(135deg,#fff7ed,#ffffff)!important;box-shadow:0 18px 45px rgba(249,115,22,.12)!important}}.upload-drop form.clean-grid{{display:grid!important;grid-template-columns:minmax(260px,1.25fr) minmax(230px,.9fr) minmax(190px,.7fr) minmax(190px,.7fr)!important;gap:18px!important;align-items:end!important}}.upload-drop input[type=file]{{width:100%!important;min-height:56px!important;padding:12px!important;background:#fff!important;border:2px dashed #fb923c!important;border-radius:18px!important}}.upload-drop label{{font-weight:950!important;color:#071827!important}}.upload-drop .hint-card{{font-size:18px!important;line-height:1.42!important}}@media(max-width:900px){{.upload-drop form.clean-grid{{grid-template-columns:1fr!important}}.upload-drop .btn,.upload-drop button{{width:100%!important}}}}</style><div class="section-title">📥 Carga masiva de catálogo</div>
           <div class="hint-card">Importa Excel/CSV para crear o actualizar productos publicados. Marca sincronizar para que también aparezcan en Ventas y POS rápido.</div>
           <form method="post" enctype="multipart/form-data" class="clean-grid" style="margin-top:14px">
             <input type="hidden" name="accion" value="importar_catalogo">
