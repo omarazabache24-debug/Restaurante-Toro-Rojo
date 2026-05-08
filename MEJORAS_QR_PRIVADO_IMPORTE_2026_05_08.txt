@@ -1,0 +1,7 @@
+MEJORAS APLICADAS - QR PRIVADO / IMPORTE
+
+1. Pantalla de pago QR ahora oculta titular, celular, CCI y nombre del archivo QR.
+2. Se mantiene QR oficial cargado desde Yape/Plin para evitar error del aplicativo.
+3. Se muestra el importe a pagar en grande y con botón Copiar importe.
+4. Se agrega aviso claro: un QR oficial estático de Yape no puede recibir importe dinámico desde el sistema. Para importe automático real se requiere QR oficial con monto generado desde Yape o integración Yape Empresas/API.
+5. Se evita volver a generar QR falso con texto porque Yape lo lee pero luego lo rechaza.
