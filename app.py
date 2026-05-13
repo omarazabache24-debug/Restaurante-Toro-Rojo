@@ -2016,7 +2016,6 @@ def login():
         <label>Usuario</label><input name="usuario" placeholder="Ingrese su usuario" autofocus>
         <label>Clave</label><input name="clave" type="password" placeholder="Ingrese su clave">
         <button class="primary">Ingresar</button>
-        <div class="promo-box">15% descuento<br><span style="font-size:16px;font-weight:800">primera compra · catálogo digital</span></div>
       </form>
     </div>
     """
