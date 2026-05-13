@@ -1595,7 +1595,7 @@ input[type=file]{white-space:normal!important;overflow:visible!important;text-ov
       <div class="brand-hero-card">
         <img class="brand-logo-img" src="/static/toro_logo.png" alt="EL TORO Restaurant Grill">
         <div class="brand-hero-title">Restaurant Grill</div>
-        <div class="brand-hero-sub">Restaurante · Pizzería · Parrillas · Delivery · Caja</div>
+        <div class="brand-hero-sub">Restaurante · Pizzería · Parrillas</div>
       </div>
       <div class="brand-user-card">
         <span>👤 {{session.get('user','')}} · {{session.get('rol','')}}</span>
